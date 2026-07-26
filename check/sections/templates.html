@@ -1,0 +1,285 @@
+<!-- Render templates. Styles: css/result.css
+     ==========================================================================
+     THE RULE THIS FILE EXISTS TO ENFORCE.
+
+     Every user-visible sentence on a result comes from the API response.
+     check.js is a renderer, not an interpreter: it clones one of these
+     templates and writes response text into the [data-slot] elements. It never
+     builds a Dutch sentence, never shortens one, and never decides what a
+     result means.
+
+     So the Dutch in THIS file is chrome only — headings, field labels, and the
+     transport-level messages for failures that happen before any response
+     exists. None of it is a statement about the law or about an address. If a
+     result ever needs a sentence that is not in the response, the API is
+     missing it; it does not get written here.
+
+     Slot names are the response's own field names on purpose, so a slot cannot
+     drift from what it renders.
+     ========================================================================== -->
+
+<!-- ---- The result shell ------------------------------------------------- -->
+<template id="tpl-result">
+  <section class="result">
+    <header class="result__head">
+      <p class="eyebrow">Uitkomst voor</p>
+      <h2 class="result__address" data-slot="address"></h2>
+      <p class="result__where note" data-slot="gemeente-line" hidden>
+        Gemeente <span data-slot="gemeente"></span>
+        (<span data-slot="gemeentecode"></span>)
+      </p>
+    </header>
+
+    <!-- The disclaimer is a FIELD of the response, so it renders on the result
+         itself rather than in a page footer someone can scroll past. -->
+    <aside class="disclosure disclosure--disclaimer">
+      <h3 class="disclosure__title">Lees dit eerst</h3>
+      <p data-slot="disclaimer"></p>
+    </aside>
+
+    <section class="disclosure disclosure--presumptions" data-slot="presumptions-block" hidden>
+      <h3 class="disclosure__title">Aannames die wij hebben gedaan</h3>
+      <div class="disclosure__items" data-slot="presumptions"></div>
+    </section>
+
+    <section class="disclosure disclosure--exclusions" data-slot="exclusions-block" hidden>
+      <h3 class="disclosure__title">Buiten toepassing gelaten op uw eigen opgave</h3>
+      <div class="disclosure__items" data-slot="declared_exclusions"></div>
+    </section>
+
+    <div class="result__activities" data-slot="activities"></div>
+
+    <section class="disclosure disclosure--caveats" data-slot="caveats-block" hidden>
+      <h3 class="disclosure__title">Kanttekeningen bij de gebruikte gegevens</h3>
+      <ul class="caveats" data-slot="caveats"></ul>
+    </section>
+  </section>
+</template>
+
+<template id="tpl-presumption">
+  <article class="disclosure-item">
+    <p class="disclosure-item__statement" data-slot="statement"></p>
+    <p class="disclosure-item__consequence" data-slot="consequence"></p>
+    <p class="citation" data-slot="citation"></p>
+  </article>
+</template>
+
+<template id="tpl-exclusion">
+  <article class="disclosure-item">
+    <p class="disclosure-item__statement" data-slot="statement"></p>
+    <p class="disclosure-item__consequence" data-slot="consequence"></p>
+    <p class="citation" data-slot="citation"></p>
+  </article>
+</template>
+
+<template id="tpl-caveat">
+  <li class="caveat"><span data-slot="text"></span></li>
+</template>
+
+<!-- ---- One activity ------------------------------------------------------
+     No three-step meter. `likely` is unreachable while the omgevingsplan layer
+     is unencoded, so a three-step scale would show the user a step they cannot
+     reach and read as "u haalde het niet". The verdict is a label and a
+     sentence, both from the response.
+
+     The verdict card carries NO tone colour. Tone is a property of a cited
+     rule entry, and the response gives none for the aggregate; colouring the
+     aggregate would mean this page deciding what the verdict means. Severity
+     shows up where it is actually grounded — on the blocking entry below. -->
+<template id="tpl-activity">
+  <section class="activity">
+    <h3 class="activity__name"><span data-slot="activity"></span></h3>
+
+    <div class="verdict">
+      <p class="verdict__label" data-slot="verdict_label"></p>
+      <p class="verdict__statement" data-slot="verdict_statement"></p>
+    </div>
+
+    <section class="bucket bucket--a" data-slot="bucket-decided" hidden>
+      <h4 class="bucket__title">Wat wij hebben kunnen toetsen</h4>
+      <div class="bucket__items" data-slot="decided"></div>
+    </section>
+
+    <section class="bucket bucket--b" data-slot="bucket-user" hidden>
+      <h4 class="bucket__title">Nog open — dit kunt u zelf beantwoorden</h4>
+      <p class="bucket__note">
+        Dit zijn geen goedgekeurde punten. Zolang het antwoord ontbreekt, is dit
+        punt niet getoetst.
+      </p>
+      <div class="bucket__items" data-slot="needs_user_input"></div>
+    </section>
+
+    <section class="bucket bucket--c" data-slot="bucket-source" hidden>
+      <h4 class="bucket__title">Nog open — hiervoor ontbreekt ons een bron</h4>
+      <p class="bucket__note">
+        Dit zijn geen goedgekeurde punten. Deze punten kunt u niet zelf
+        oplossen; wij hebben er geen gegeven voor.
+      </p>
+      <div class="bucket__items" data-slot="needs_external_source"></div>
+    </section>
+
+    <!-- The ceiling renders AFTER the buckets, never above them. On an
+         `unlikely` verdict the binding constraint is a real, cited refusal
+         ground in bucket A — putting a ceiling notice above it would present
+         a coverage gap as the reason the answer is negative. -->
+    <aside class="ceiling" data-slot="ceiling-block" hidden>
+      <h4 class="ceiling__title">Waarom een positieve uitkomst nu sowieso niet mogelijk is</h4>
+      <p data-slot="verdict_ceiling_reason"></p>
+    </aside>
+
+    <p class="instrument note">
+      <span data-slot="instrument_title"></span> ·
+      <span data-slot="version_label"></span> ·
+      <span class="instrument__corpus" data-slot="corpus_ref"></span>
+    </p>
+  </section>
+</template>
+
+<!-- ---- One evaluated rule ------------------------------------------------
+     The tone class is written onto the root element by check.js from
+     presentation.tone and from nothing else. -->
+<template id="tpl-entry">
+  <article class="entry">
+    <div class="entry__rail" aria-hidden="true"></div>
+    <div class="entry__body">
+      <p class="entry__label" data-slot="presentation.label"></p>
+      <p class="entry__statement" data-slot="presentation.statement"></p>
+      <p class="entry__description" data-slot="description"></p>
+      <p class="entry__unavailable" data-slot="unavailable_reason" hidden></p>
+      <div class="entry__questions" data-slot="questions" hidden>
+        <p class="entry__questions-title">Wat wij hiervoor van u nodig hebben</p>
+        <ul data-slot="questions-list"></ul>
+      </div>
+      <p class="citation">
+        <span class="entry__rule-id" data-slot="rule_id"></span>
+        <span data-slot="citation"></span>
+      </p>
+    </div>
+  </article>
+</template>
+
+<template id="tpl-question">
+  <li class="question" data-slot="prompt"></li>
+</template>
+
+<!-- ---- Non-`ok` outcomes -------------------------------------------------
+     These are the three statuses that carry no activities. The response has no
+     message field for them, so the heading below is chrome — see the API-gap
+     note in SECTIONS.md. The disclaimer still comes from the response. -->
+<template id="tpl-status">
+  <section class="result result--terminal">
+    <header class="result__head">
+      <p class="eyebrow">Uitkomst voor</p>
+      <h2 class="result__address" data-slot="address"></h2>
+    </header>
+
+    <div class="statusbox">
+      <p class="statusbox__title" data-status="out_of_scope" hidden>
+        Dit adres valt buiten het bereik van deze scan.
+      </p>
+      <p class="statusbox__title" data-status="address_not_found" hidden>
+        Wij konden dit adres niet vaststellen.
+      </p>
+      <p class="statusbox__title" data-status="source_timeout" hidden>
+        Een bron reageerde niet op tijd. Er is niets getoetst.
+      </p>
+
+      <div class="statusbox__covered" data-slot="covered-block" hidden>
+        <p class="statusbox__covered-title">Wel gedekt op dit moment:</p>
+        <ul data-slot="covered_gemeenten"></ul>
+      </div>
+    </div>
+
+    <aside class="disclosure disclosure--disclaimer">
+      <h3 class="disclosure__title">Lees dit eerst</h3>
+      <p data-slot="disclaimer"></p>
+    </aside>
+
+    <section class="disclosure disclosure--presumptions" data-slot="presumptions-block" hidden>
+      <h3 class="disclosure__title">Aannames die wij hebben gedaan</h3>
+      <div class="disclosure__items" data-slot="presumptions"></div>
+    </section>
+
+    <section class="disclosure disclosure--exclusions" data-slot="exclusions-block" hidden>
+      <h3 class="disclosure__title">Buiten toepassing gelaten op uw eigen opgave</h3>
+      <div class="disclosure__items" data-slot="declared_exclusions"></div>
+    </section>
+
+    <section class="disclosure disclosure--caveats" data-slot="caveats-block" hidden>
+      <h3 class="disclosure__title">Kanttekeningen bij de gebruikte gegevens</h3>
+      <ul class="caveats" data-slot="caveats"></ul>
+    </section>
+  </section>
+</template>
+
+<template id="tpl-covered">
+  <li><span data-slot="gemeente"></span> — <span data-slot="activities"></span></li>
+</template>
+
+<!-- ---- HTTP 429 / 503 — the response carries its own Dutch message. -->
+<template id="tpl-service">
+  <section class="result result--message">
+    <div class="statusbox statusbox--service">
+      <p class="statusbox__title" data-slot="message"></p>
+      <p class="statusbox__retry" data-slot="retry-line" hidden>
+        Probeert u het over <span data-slot="retry_after_seconds"></span> seconden opnieuw.
+      </p>
+    </div>
+  </section>
+</template>
+
+<!-- ---- HTTP 422 — a client bug. Each rejection carries its own message. -->
+<template id="tpl-invalid">
+  <section class="result result--message">
+    <div class="statusbox statusbox--invalid">
+      <p class="statusbox__title">
+        Er is niets getoetst: de gegevens in deze aanvraag zijn niet aanvaard.
+      </p>
+      <ul class="rejections" data-slot="rejected"></ul>
+    </div>
+  </section>
+</template>
+
+<template id="tpl-rejection">
+  <li class="rejection">
+    <span class="rejection__fact" data-slot="fact"></span>
+    <span data-slot="message"></span>
+  </li>
+</template>
+
+<!-- ---- No response at all (network down, DNS, CORS, aborted, non-JSON body).
+     The only place on this page where Dutch describes an outcome without the
+     API — because there is no API answer to quote. It deliberately says
+     nothing about the address. -->
+<template id="tpl-transport">
+  <section class="result result--message">
+    <div class="statusbox statusbox--error">
+      <p class="statusbox__title" data-error="network" hidden>
+        Wij konden de server niet bereiken. Er is niets getoetst — dit zegt niets
+        over uw adres. Controleert u uw verbinding en probeert u het opnieuw.
+      </p>
+      <p class="statusbox__title" data-error="unexpected" hidden>
+        Er ging iets mis bij het ophalen van de uitkomst. Er is niets getoetst —
+        dit zegt niets over uw adres.
+      </p>
+      <p class="statusbox__detail" data-slot="detail" hidden></p>
+    </div>
+  </section>
+</template>
+
+<!-- ---- The render guard ---------------------------------------------------
+     Shown INSTEAD of a result when a mandatory disclosure could not be placed.
+     A result rendered without its presumptions or its carve-out disclosure is a
+     false legal statement, so the page shows nothing rather than a partial. -->
+<template id="tpl-render-failure">
+  <section class="result result--message">
+    <div class="statusbox statusbox--error">
+      <p class="statusbox__title">
+        Wij hebben deze uitkomst niet volledig kunnen weergeven en tonen hem
+        daarom niet. Een uitkomst zonder de bijbehorende aannames en
+        kanttekeningen zou een onjuist beeld geven.
+      </p>
+      <p class="statusbox__detail" data-slot="detail"></p>
+    </div>
+  </section>
+</template>

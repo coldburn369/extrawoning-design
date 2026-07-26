@@ -3,6 +3,10 @@
 Read this first. It tells you which two files to open for a given change, so
 you never have to load the whole page to make a local edit.
 
+> This file covers `landing/` only. The **check page** (`/check/`) is a separate
+> page root with its own map: **`check/SECTIONS.md`**. It shares
+> `css/base.css` and `css/components.css` from here and nothing else.
+
 `index.html` is only a shell: `<head>`, the ordered list of stylesheets, and a
 list of includes. Sections live in `sections/`, styles in `css/`.
 

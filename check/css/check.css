@@ -1,0 +1,122 @@
+/* ============================================================================
+   check — page shell, the address form, and the pending state
+   Sections: sections/form.html
+   Built on design-system/tokens.css (Tier 2 + Tier 3 only) and on the shared
+   landing/css/base.css + components.css.
+   ========================================================================== */
+
+/* The `hidden` attribute must beat a component's own display. Several elements
+   here are display:grid/flex by class and would otherwise stay visible. */
+[hidden] { display: none !important; }
+
+.check-page { background: var(--color-page); min-height: 100vh; }
+
+.check-head { padding-block: var(--space-5); }
+.check-head__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.check-head .logo img { height: 1.75rem; width: auto; }
+
+.check-main { padding-block: var(--space-6) var(--space-9); display: flex; flex-direction: column; gap: var(--space-7); }
+.check-intro { max-width: 44rem; }
+
+/* ---- Form ---------------------------------------------------------------
+   .addresscheck / .addressbar / .addressbar__field come from the landing's
+   css/cta.css, which this page does NOT load — the bar is reproduced here at
+   the width this page needs rather than pulled in whole with the closing-CTA
+   block attached. Field widths follow the same reasoning as there: a Dutch
+   postcode sets at ~60px and a house number is at most five digits, so nothing
+   in the bar has to stretch. */
+.check-form { display: flex; flex-direction: column; gap: var(--space-3); max-width: 42rem; }
+
+.addressbar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  padding: var(--space-2);
+  gap: var(--space-2);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard);
+}
+.addressbar:focus-within { border-color: var(--color-accent-ui); box-shadow: 0 0 0 3px var(--color-accent-wash); }
+
+.addressbar__field { display: flex; flex-direction: column; gap: 1px; padding-inline: var(--space-3); min-width: 0; }
+.addressbar__field--postcode   { flex: 0 0 8rem; }
+.addressbar__field--number     { flex: 0 0 6.5rem; }
+.addressbar__field--toevoeging { flex: 0 0 6.5rem; }
+
+.addressbar__field label {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--color-text-muted); cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+.addressbar__field:focus-within label { color: var(--color-text-accent); }
+
+.addressbar__field input {
+  width: 100%; border: 0; background: none; padding: 0;
+  font-family: var(--font-body); font-size: var(--text-base);
+  color: var(--color-text);
+}
+.addressbar__field input::placeholder { color: var(--color-text-muted); opacity: .7; }
+.addressbar__field input:focus { outline: none; }   /* the bar shows focus */
+
+.addressbar__sep { flex: none; width: 1px; align-self: stretch; margin-block: var(--space-1); background: var(--color-border-subtle); }
+
+.check-form__submit { margin-inline-start: auto; }
+.check-form__submit:disabled { opacity: .55; cursor: progress; }
+
+.check-form__hint { max-width: 58ch; }
+.check-kbd {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  padding: .1em .4em; border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken); color: var(--color-text);
+}
+
+.check-form__error {
+  color: var(--color-text-danger);
+  font-size: var(--text-sm);
+}
+
+/* The single mount point. check.js scrolls the mounted result into view, so it
+   needs headroom under the sticky-free header rather than butting the top. */
+.check-result { scroll-margin-block-start: var(--space-5); }
+
+/* ---- Pending ------------------------------------------------------------
+   Names the sources being consulted instead of spinning blankly: a cold check
+   can take seconds, and "wij bevragen de BAG" is a far better wait than a bare
+   spinner. The bar is indeterminate on purpose — we do not know the progress,
+   so we must not draw a percentage. */
+.check-pending {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  max-width: 42rem; padding: var(--space-5) var(--space-6);
+  background: var(--card-bg); border: var(--card-border);
+  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+}
+.check-pending__bar { height: 3px; border-radius: var(--radius-full); background: var(--color-surface-sunken); overflow: hidden; }
+.check-pending__bar span {
+  display: block; height: 100%; width: 35%; border-radius: inherit;
+  background: var(--color-accent);
+  animation: check-sweep var(--duration-slow) var(--ease-standard) infinite alternate;
+}
+@keyframes check-sweep { from { transform: translateX(-30%); } to { transform: translateX(220%); } }
+
+.check-pending__title { font-family: var(--font-display); font-size: var(--text-md); }
+.check-pending__address { color: var(--color-text-accent); }
+.check-pending__list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--space-1);
+  color: var(--color-text-muted); font-size: var(--text-sm);
+}
+
+/* Reduced motion: base.css already flattens the duration, which would leave
+   the bar parked off to one side. Give it a static full-width state instead. */
+@media (prefers-reduced-motion: reduce) {
+  .check-pending__bar span { width: 100%; animation: none; }
+}
+
+@media (max-width: 40rem) {
+  .addressbar { border-radius: var(--radius-lg); }
+  .addressbar__field { flex: 1 1 100%; }
+  .addressbar__sep { display: none; }
+  .check-form__submit { margin-inline-start: 0; width: 100%; }
+}

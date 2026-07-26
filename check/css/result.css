@@ -1,0 +1,238 @@
+/* ============================================================================
+   result — the rendered answer: disclosures, verdict, the three buckets,
+   rule entries and the tone table.
+   Sections: sections/templates.html
+   ========================================================================== */
+
+.result { display: flex; flex-direction: column; gap: var(--space-6); max-width: 62rem; }
+.result__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.result__address { font-size: var(--display-sm); }
+.result__where { margin: 0; }
+.result__activities { display: flex; flex-direction: column; gap: var(--space-7); }
+
+/* ---- Disclosure channels ------------------------------------------------
+   presumptions[], declared_exclusions[], caveats[] and the disclaimer. These
+   are not decoration: a result shown without them is a false legal statement,
+   which is why render.js refuses to mount a fragment whose counts do not match
+   the response. They are styled to be read, not to be skipped — full size copy,
+   an accent edge, never collapsed behind a toggle. */
+.disclosure {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-inline-start: 3px solid var(--color-accent-ui);
+}
+.disclosure__title { font-size: var(--text-md); }
+.disclosure__items { display: flex; flex-direction: column; gap: var(--space-5); }
+.disclosure p { font-size: var(--text-base); line-height: var(--leading-normal); max-width: 78ch; }
+
+/* The disclaimer is a field of the response and rides on the result itself. */
+.disclosure--disclaimer { border-inline-start-color: var(--color-border-strong); background: var(--color-surface-sunken); }
+
+/* Things WE asserted without being told. The accent edge (the default above)
+   is the point: an assumption is an action of ours, not a finding. */
+.disclosure--presumptions { border-inline-start-color: var(--color-accent-ui); }
+
+/* Provenance notes about the data, not statements about the address — the
+   quietest edge on the page, but never hidden. */
+.disclosure--caveats { border-inline-start-color: var(--color-border-subtle); }
+
+/* A carve-out taken on the user's own declaration removes an entire ruleset.
+   It is the most consequential thing on the page when present, so it is the
+   one disclosure that carries the danger edge: nothing below it was tested. */
+.disclosure--exclusions { border-inline-start-color: var(--color-danger); }
+
+.disclosure-item { display: flex; flex-direction: column; gap: var(--space-2); }
+.disclosure-item__statement { font-weight: var(--weight-medium); }
+.disclosure-item__consequence { color: var(--color-text-muted); }
+
+.caveats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.caveat { color: var(--color-text-muted); font-size: var(--text-sm); line-height: var(--leading-normal); max-width: 90ch; }
+
+.citation {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  color: var(--color-text-muted); letter-spacing: var(--tracking-normal);
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+}
+
+/* ---- Activity + verdict -------------------------------------------------
+   NO THREE-STEP METER, deliberately. `likely` is unreachable by construction
+   while the omgevingsplan layer is unencoded, so a three-step scale would draw
+   a step the user cannot reach and read as a failed qualification.
+
+   The verdict card is also deliberately UNCOLOURED. The response gives a tone
+   for each rule entry and none for the aggregate; tinting the aggregate would
+   be this page deciding what the verdict means. Severity is shown where it is
+   grounded — on the cited blocking entry in bucket A. */
+.activity { display: flex; flex-direction: column; gap: var(--space-5); }
+.activity__name {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--color-text-muted); font-weight: var(--weight-medium);
+}
+
+.verdict {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--card-padding);
+  background: var(--card-bg); border: var(--card-border);
+  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+}
+.verdict__label {
+  font-family: var(--font-display); font-size: var(--display-sm);
+  font-weight: var(--weight-semibold); letter-spacing: var(--tracking-display);
+  line-height: var(--leading-tight); text-wrap: balance;
+}
+.verdict__statement { font-size: var(--text-md); color: var(--color-text-muted); max-width: 68ch; }
+
+/* The ceiling sits AFTER the buckets — see the note in templates.html. */
+.ceiling {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-5); border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  border-inline-start: 3px solid var(--color-border-strong);
+}
+.ceiling__title { font-size: var(--text-sm); color: var(--color-text); }
+.ceiling p { color: var(--color-text-muted); font-size: var(--text-sm); max-width: 82ch; }
+
+.instrument { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.instrument__corpus { font-family: var(--font-mono); }
+
+/* ---- Buckets A / B / C --------------------------------------------------
+   Always in this order, each under its own heading. B and C are honest
+   incompleteness rather than failure — so they get no warning colour — but
+   they must not read as cleared either, which is what the explicit
+   .bucket__note is for. */
+.bucket { display: flex; flex-direction: column; gap: var(--space-3); }
+.bucket__title { font-size: var(--text-md); font-family: var(--font-display); }
+.bucket__note { color: var(--color-text-muted); font-size: var(--text-sm); max-width: 78ch; }
+.bucket__items { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* A sits directly under the verdict card and needs the same separation the
+   trays below give themselves. */
+.bucket--a { margin-block-start: var(--space-2); }
+
+/* B and C are set apart from A by surface, not by colour. */
+.bucket--b, .bucket--c {
+  padding: var(--space-5); border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+
+/* ---- Rule entries ------------------------------------------------------- */
+.entry {
+  display: grid; grid-template-columns: 3px minmax(0, 1fr);
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5) var(--space-4) 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.entry__rail { background: var(--color-border-strong); }
+.entry__body { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.entry__label { font-weight: var(--weight-semibold); font-size: var(--text-base); }
+/* Verbatim response text. No line-clamp, no max-height, no ellipsis anywhere
+   in this block: MOOT entries carry the Bbl / goed-verhuurderschap sentence in
+   .entry__statement and clipping it would drop obligations that survive. */
+.entry__statement { font-size: var(--text-base); line-height: var(--leading-normal); max-width: 80ch; }
+.entry__description { color: var(--color-text-muted); font-size: var(--text-sm); line-height: var(--leading-normal); max-width: 86ch; }
+.entry__unavailable { color: var(--color-text-muted); font-size: var(--text-sm); line-height: var(--leading-normal); max-width: 86ch; }
+.entry__rule-id { font-family: var(--font-mono); }
+
+.entry__questions { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-1); }
+.entry__questions-title { font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.entry__questions ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.question {
+  font-size: var(--text-sm); line-height: var(--leading-normal);
+  color: var(--color-text); max-width: 84ch;
+  padding-inline-start: var(--space-4); position: relative;
+}
+.question::before {
+  content: ""; position: absolute; inset-inline-start: 0; top: .6em;
+  width: 5px; height: 5px; border-radius: var(--radius-full);
+  background: var(--color-text-muted);
+}
+
+/* ---- THE TONE TABLE -----------------------------------------------------
+   The only mapping from response data to treatment. Driven by
+   presentation.tone and by nothing else — never by status, kind or semantic.
+
+   Nine tones, five treatments. Tones share a treatment where the law has no
+   distinction to draw; each keeps its own class so a future re-skin is a
+   one-line change here rather than a change in the renderer.
+
+     cleared        green      the ONLY green on this page
+     obligation     accent     a PASS that is not good news: you need a permit
+     blocking       danger     + wash — a refusal ground
+     mitigable      danger     no wash, so it reads lighter than a refusal
+     disclosure     neutral    established, not approved
+     exempt         neutral    the permit duty is lifted, the law is not
+     unknown        neutral    not assessed — never green, never a failure
+     moot           quiet      falls away with the permit duty
+     not_applicable quiet      this rule does not apply to you
+--------------------------------------------------------------------------- */
+
+/* cleared — green, and nothing else on this page may be. */
+.tone--cleared .entry__rail { background: var(--color-success); }
+.tone--cleared .entry__label { color: var(--color-text-success); }
+
+/* obligation — a permit duty. PASSES by existing; colouring it green would
+   state the opposite of the law, so it takes the accent, not the success. */
+.tone--obligation .entry__rail { background: var(--color-accent-ui); }
+.tone--obligation .entry__label { color: var(--color-text-accent); }
+.tone--obligation { background: var(--color-accent-wash); }
+
+/* blocking — a refusal ground. The strongest treatment on the page. */
+.tone--blocking .entry__rail { background: var(--color-danger); }
+.tone--blocking .entry__label { color: var(--color-text-danger); }
+.tone--blocking { background: var(--color-danger-wash); }
+
+/* mitigable — not in order, but there is a mitigation path. Same hue as a
+   refusal, lower weight: no wash. */
+.tone--mitigable .entry__rail { background: var(--color-danger); }
+.tone--mitigable .entry__label { color: var(--color-text-danger); }
+
+/* Neutral: established / exempt / not assessed. */
+.tone--disclosure .entry__rail,
+.tone--exempt .entry__rail,
+.tone--unknown .entry__rail { background: var(--color-border-strong); }
+
+/* Quiet: the rule fell away, or never applied. Muted, but never hidden — a
+   MOOT entry still carries obligations that survive the mooting. */
+.tone--moot .entry__rail,
+.tone--not-applicable .entry__rail { background: var(--color-border-subtle); }
+.tone--moot .entry__label,
+.tone--not-applicable .entry__label { color: var(--color-text-muted); }
+
+/* ---- Terminal statuses, service messages and errors --------------------- */
+.result--terminal, .result--message { max-width: 62rem; }
+
+.statusbox {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--card-padding);
+  background: var(--card-bg); border: var(--card-border);
+  border-radius: var(--card-radius); box-shadow: var(--card-shadow);
+}
+.statusbox__title {
+  font-family: var(--font-display); font-size: var(--text-lg);
+  line-height: var(--leading-snug); text-wrap: balance; max-width: 60ch;
+}
+.statusbox__retry, .statusbox__detail { color: var(--color-text-muted); font-size: var(--text-sm); }
+.statusbox__detail { font-family: var(--font-mono); font-size: var(--text-2xs); }
+.statusbox__covered { display: flex; flex-direction: column; gap: var(--space-2); }
+.statusbox__covered-title { font-size: var(--text-sm); color: var(--color-text-muted); }
+.statusbox__covered ul { margin: 0; padding-inline-start: var(--space-5); font-size: var(--text-sm); }
+
+/* Errors and refused input take the danger edge: nothing was assessed. */
+.statusbox--error, .statusbox--invalid { border-inline-start: 3px solid var(--color-danger); }
+.statusbox--service { border-inline-start: 3px solid var(--color-accent-ui); }
+
+.rejections { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.rejection { font-size: var(--text-sm); line-height: var(--leading-normal); }
+.rejection__fact { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--color-text-danger); margin-inline-end: var(--space-2); }
+
+@media (max-width: 40rem) {
+  .entry { gap: var(--space-4); padding-inline-end: var(--space-4); }
+  .disclosure { padding: var(--space-4) var(--space-5); }
+  .bucket--b, .bucket--c { padding: var(--space-4); }
+}

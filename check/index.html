@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>ExtraWoning — adrescheck</title>
+<meta name="description" content="Controleer per adres wat de gemeentelijke regelset zegt over het toevoegen van een woonruimte." />
+
+<link rel="stylesheet" href="../design-system/tokens.css" />
+
+<!-- Cascade order. base + components are the SHARED cross-cutting sheets and
+     live under landing/ (see landing/SECTIONS.md); this page adds two of its
+     own on top. Do not reorder without checking. -->
+<link rel="stylesheet" href="../landing/css/base.css" />
+<link rel="stylesheet" href="../landing/css/components.css" />
+<link rel="stylesheet" href="./css/check.css" />
+<link rel="stylesheet" href="./css/result.css" />
+</head>
+<body class="check-page">
+
+<!--#include file="sections/form.html" -->
+<!--#include file="sections/templates.html" -->
+
+<!-- External file, never inline: the vhost sends `default-src 'self'` and an
+     inline <script> would need that relaxed. -->
+<script type="module" src="./check.js"></script>
+</body>
+</html>

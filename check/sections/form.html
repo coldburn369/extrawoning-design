@@ -1,0 +1,95 @@
+<!-- Adrescheck — the input, the pending state, and the mount point for results.
+     Styles: css/check.css
+
+     EVERY Dutch word that is not in the API response lives in this file or in
+     sections/templates.html. check.js contains no page copy: it clones a
+     template and fills slots with response text. That split is what makes
+     "the page never composes a sentence" auditable by reading two files. -->
+<header class="check-head">
+  <div class="container check-head__inner">
+    <a class="logo" href="../landing/index.html" aria-label="ExtraWoning">
+      <img src="../extrawoning_logo_web.svg" alt="ExtraWoning" width="168" height="28" />
+    </a>
+    <p class="eyebrow">Adrescheck</p>
+  </div>
+</header>
+
+<main class="container check-main">
+
+  <div class="check-intro stack">
+    <h1>Adrescheck</h1>
+    <p class="lead">
+      Vul postcode en huisnummer in. U krijgt per activiteit te zien wat de
+      gemeentelijke regelset zegt, welke punten open blijven, en waarom.
+    </p>
+  </div>
+
+  <!-- Same segmented bar as the landing hero (css/cta.css owns .addressbar);
+       the extra `toevoeging` segment is this page's own, in css/check.css.
+       The API takes ONE address string, so the three fields are joined
+       client-side — see composeAddress() in check.js. -->
+  <form class="check-form" id="check-form" novalidate>
+    <div class="addressbar">
+      <div class="addressbar__field addressbar__field--postcode">
+        <label for="postcode">Postcode</label>
+        <input id="postcode" name="postcode" type="text" placeholder="1541 KL"
+               inputmode="text" maxlength="7" autocomplete="postal-code"
+               spellcheck="false" autocapitalize="characters" required />
+      </div>
+      <span class="addressbar__sep" aria-hidden="true"></span>
+      <div class="addressbar__field addressbar__field--number">
+        <label for="huisnummer">Huisnummer</label>
+        <input id="huisnummer" name="huisnummer" type="text" placeholder="46"
+               inputmode="numeric" maxlength="5" autocomplete="address-line2" required />
+      </div>
+      <span class="addressbar__sep" aria-hidden="true"></span>
+      <div class="addressbar__field addressbar__field--toevoeging">
+        <label for="toevoeging">Toevoeging</label>
+        <input id="toevoeging" name="toevoeging" type="text" placeholder="A"
+               maxlength="6" spellcheck="false" autocapitalize="characters" />
+      </div>
+      <button class="btn btn--primary check-form__submit" type="submit" id="check-submit">
+        Controleer dit adres
+      </button>
+    </div>
+    <p class="note check-form__hint">
+      Op dit moment beantwoordt de scan alleen adressen in de gemeente Zaanstad.
+      Een toevoeging (bijvoorbeeld <span class="check-kbd">A</span> of
+      <span class="check-kbd">2</span>) laat u leeg als uw adres die niet heeft.
+    </p>
+    <!-- Client-side field validation only. Never a statement about the law:
+         these say a field is malformed, nothing more. check.js unhides one;
+         it does not build the sentence. -->
+    <div class="check-form__error" id="check-form-error" role="alert" hidden>
+      <p data-invalid="postcode" hidden>
+        Vult u een geldige postcode in, bijvoorbeeld 1541 KL.
+      </p>
+      <p data-invalid="huisnummer" hidden>
+        Vult u een huisnummer in — alleen cijfers, bijvoorbeeld 46.
+      </p>
+      <p data-invalid="toevoeging" hidden>
+        Een toevoeging bestaat uit hooguit zes letters of cijfers, bijvoorbeeld A.
+      </p>
+    </div>
+  </form>
+
+  <!-- Pending. Names the sources being consulted rather than spinning blankly;
+       these are facts about our own pipeline, not about the address. -->
+  <div class="check-pending" id="check-pending" hidden>
+    <div class="check-pending__bar" aria-hidden="true"><span></span></div>
+    <p class="check-pending__title">
+      Bezig met <span class="check-pending__address" id="check-pending-address"></span>
+    </p>
+    <ul class="check-pending__list">
+      <li>Adres opzoeken bij de PDOK Locatieserver</li>
+      <li>Pand- en oppervlaktegegevens ophalen uit de BAG</li>
+      <li>Ligging bepalen op de CBS-buurtindeling</li>
+      <li>Regelset van de gemeente toepassen</li>
+    </ul>
+  </div>
+
+  <!-- The one mount point. check.js builds a detached fragment, verifies that
+       every mandatory disclosure is in it, and only then swaps it in here. -->
+  <div class="check-result" id="check-result" aria-live="polite"></div>
+
+</main>
