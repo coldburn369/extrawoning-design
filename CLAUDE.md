@@ -1,18 +1,58 @@
 # ExtraWoning — website & design system
 
-Static site, no framework. Three things live here:
+Static site, no framework. Four things live here:
 1. **`design-system/`** — the token-based design system (source of truth for all styling).
 2. **`landing/`** — the marketing landing page, built on the design system.
-3. **`extrawoning-loader.html`** — the brand logo loader→reveal animation (self-contained).
+3. **`check/`** — the address check page: it renders a `POST /api/check` response
+   and nothing else. Read **`check/SECTIONS.md`** before touching it; the rule
+   that page exists to obey is stricter than anything on the landing page.
+4. **`extrawoning-loader.html`** — the brand logo loader→reveal animation (self-contained).
 
 No build step is needed to *preview* — `serve.py` resolves the page's includes
 on the fly. `build.py` exists only to flatten everything for deploy.
 
 ExtraWoning is a Dutch prop-tech brand: it tells homeowners whether their house is a candidate for a permitted *extra woning* (extra dwelling). Site copy is **Dutch**.
 
+## This repo is served live from the VPS checkout
+
+Since slice 1c (2026-07-26) `https://preview.extrawoning.nl` serves **this
+working tree** — nginx `root` is `/srv/extrawoning/design`, a symlink to
+`/home/ubuntu/extrawoning/design`. There is no build step and no release
+artifact between an edit and the live page.
+
+- **Editing a file here changes what is live on the next refresh.** A
+  half-saved file IS the live page. `dist/` is gitignored and is not served.
+- URLs: `/landing/index.html` · **`/check/`** · `/` redirects to the landing
+  page. The whole host is behind nginx basic auth (user `ben`); `/health` is
+  the one exception and `/api/` proxies to the woningkans service on
+  `127.0.0.1:8001`.
+- **The includes are resolved by nginx, not by a build.** `<!--#include
+  file="..." -->` is nginx's own SSI directive; the vhost sets `ssi on`. Output
+  is byte-identical to `build.py`'s resolver (verified for both pages).
+- ⚠️ **`ssi_silent_errors on` is load-bearing, not cosmetic.** `landing/index.html`
+  marks its stylesheet block with `<!--#css-bundle-start-->`, which nginx tries
+  to parse as an SSI command and fails. With the default `off` it substitutes
+  `[an error occurred while processing the directive]` into the `<head>` — twice,
+  visibly, on the live landing page. Do not remove that line. The cost is that a
+  genuinely broken include renders as a missing section instead of an error
+  string; `check.mjs` catches that first.
+- The vhost is committed at **`deploy/nginx-preview-extrawoning.conf`** and
+  **copied** into `/etc/nginx/sites-available/extrawoning-preview`. The live file
+  must byte-match it: `diff deploy/nginx-preview-extrawoning.conf /etc/nginx/sites-available/extrawoning-preview`.
+  It moved here from `apps/woningkans/deploy/` in slice 1c; the copy over there
+  is stale.
+- ⚠️ **`sudo nginx -t` before every reload.** This box serves seven vhosts
+  (leadhaus, chatbotx, igtracker, apex-dashboard, benedek.studio, denzelchain,
+  extrawoning); a bad config fails the reload for all of them. Never touch the
+  apex vhost, `sshd_config`, `ufw` or the SSH port.
+- The CSP is `default-src 'self'` — **no inline `<script>`, ever**. `check/`
+  uses external ES modules for exactly this reason. `style-src` still carries
+  `'unsafe-inline'` for one attribute in `landing/sections/sprites.html`; move
+  it to a class and the token can go.
+
 ## Run / preview
 
-Use the in-app Browser pane, never Bash, for servers.
+For local work off the VPS. Use the in-app Browser pane, never Bash, for servers.
 
 - `preview_start` with name **`extrawoning-static`** (config in `.claude/launch.json`), then open `/landing/index.html` on the port it reports. `autoPort` is on, so if another session already holds 8124 you get a free port instead — read it from the `preview_start` result, don't assume 8124.
 - Or standalone: `python serve.py 8124`
@@ -29,7 +69,8 @@ The dev server is a background process tied to the session; it gets torn down on
 - **`tokens.css`** — three tiers. **Components may only use Tier 2 (semantic, `--color-*`, `--space-*`, `--text-*`…) and Tier 3 (`--button-*`, `--card-*`…). Never a raw hex, never a Tier-1 `--ew-*` primitive.**
   - Semantic colors are declared **once** via CSS `light-dark()`; the theme toggle flips only `color-scheme` on `:root[data-theme]`. There is no duplicated dark-mode block — don't add one.
   - Baseline-2024 CSS (`light-dark()`): Chrome/Edge 123+, FF 120+, Safari 17.5+.
-- **`check.mjs`** — structural lint for the landing page; exits non-zero on failure. **Run `node design-system/check.mjs` before calling any change done.** It catches undefined tokens, Tier-1 leaks, raw hex, `<use>` with no matching `<symbol>`, missing asset files, broken includes, and icons the stroke list doesn't cover — i.e. the gotchas below, for a fraction of a screenshot's cost. Warnings (dead/unstyled classes) don't fail it.
+- **`check.mjs`** — structural lint for **every page** (its `PAGES` table lists
+  them; add a new page root there or it is not linted); exits non-zero on failure. **Run `node design-system/check.mjs` before calling any change done.** It catches undefined tokens, Tier-1 leaks, raw hex, `<use>` with no matching `<symbol>`, missing asset files, broken includes, and icons the stroke list doesn't cover — i.e. the gotchas below, for a fraction of a screenshot's cost. Warnings (dead/unstyled classes) don't fail it.
 - **`verify-contrast.mjs`** — WCAG contrast budget, exits non-zero on failure. **Run `node design-system/verify-contrast.mjs` after any color change; it must stay green.** Add new color pairs to it when you add tokens.
 - **`preview.html`** — token gallery; itself uses only Tier 2/3 (doubles as a conformance check).
 - **Two faces, split by job.** `--font-display` = **Manrope** (headlines + figures; ties to the wordmark). `--font-body` = **Inter** (body, UI — the open-source SF Pro counterpart, so Windows matches macOS). Both are Latin-subset woff2 in `design-system/fonts/` (129 KB total, SIL OFL 1.1 — the licence files must ship with them); upstream originals sit unshipped in `fonts/src/`. Re-subset with `node design-system/subset-fonts.mjs` after copy changes. **SF Pro cannot be embedded** — Apple's licence covers mocking up Apple-platform UI only; `system-ui` is how macOS gets it legally.
