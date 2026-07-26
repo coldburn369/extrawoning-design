@@ -64,9 +64,8 @@ a { color: inherit; text-decoration: none; }
 .ico,
 .icon-tile svg,
 .btn svg,
-.scenario-control svg,
-.scenario-tab > svg,
-.scenario-card__link svg,
+.opportunity-controls button svg,
+.opportunity-panel__link svg,
 .steplist__ico svg,
 .steplist__chev {
   fill: none;

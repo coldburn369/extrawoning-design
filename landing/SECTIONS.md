@@ -130,8 +130,8 @@ After any colour change also run `node design-system/verify-contrast.mjs`.
   (`is-accent`) — could arguably go green. Open.
 - Mobile burger menu is **stubbed** — nav just hides under 62rem
   (`.nav-toggle` exists in CSS with no markup behind it).
-- `#waar-we-helpen` is now a six-scenario explorer with manual controls,
-  keyboard navigation, visibility-aware autoplay and a reduced-motion mode.
+- `#waar-we-helpen` is an interactive six-zone woningkansenkaart built around
+  one cutaway townhouse, with keyboard navigation and reduced-motion support.
 - Pricing shows **€79** (copy doc); the concept screenshot shows
   Quickscan €395 / Check-up €895 — **unresolved, confirm with the user**.
 - `.verdict .checklist li` in `css/hero.css` is dead — no element carries

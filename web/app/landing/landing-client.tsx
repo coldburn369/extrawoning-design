@@ -212,11 +212,11 @@ export default function LandingClient() {
     const tabs = Array.from(explorer.querySelectorAll<HTMLButtonElement>("[data-example-tab]"));
     const panels = Array.from(explorer.querySelectorAll<HTMLElement>("[data-example-panel]"));
     const stage = explorer.querySelector<HTMLElement>("[data-example-stage]");
+    const canvas = explorer.querySelector<HTMLElement>("[data-opportunity-canvas]");
     const currentLabel = explorer.querySelector<HTMLElement>("[data-example-current]");
     const announcer = explorer.querySelector<HTMLElement>("[data-example-announcer]");
     const previous = explorer.querySelector<HTMLButtonElement>("[data-example-prev]");
     const next = explorer.querySelector<HTMLButtonElement>("[data-example-next]");
-    const toggle = explorer.querySelector<HTMLButtonElement>("[data-example-toggle]");
     const count = Math.min(tabs.length, panels.length);
 
     if (!stage || !count) {
@@ -227,79 +227,34 @@ export default function LandingClient() {
     const explorerRoot = explorer;
     const stageRoot = stage;
     let current = 0;
-    let manualPaused = reduce;
-    let temporaryPaused = false;
-    let inView = false;
-    let autoplayTimer: number | undefined;
-    let leavingTimer: number | undefined;
-    let focusPauseTimer: number | undefined;
 
     const normalise = (index: number) => (index + count) % count;
-    const canPlay = () => inView && !manualPaused && !temporaryPaused && !reduce;
 
-    function schedule() {
-      if (autoplayTimer !== undefined) window.clearTimeout(autoplayTimer);
-      autoplayTimer = undefined;
-      if (!canPlay()) return;
-      autoplayTimer = window.setTimeout(() => activate(current + 1, "next"), 8000);
-    }
-
-    function syncPlayback() {
-      const playing = canPlay();
-      explorerRoot.classList.toggle("is-playing", playing);
-      explorerRoot.classList.toggle("is-temporarily-paused", temporaryPaused);
-      toggle?.setAttribute("aria-pressed", String(manualPaused));
-      toggle?.setAttribute(
-        "aria-label",
-        manualPaused ? "Automatisch afspelen hervatten" : "Automatisch afspelen pauzeren",
-      );
-      schedule();
-    }
-
-    function activate(targetIndex: number, direction: "next" | "prev" = "next", announce = true) {
+    function activate(targetIndex: number, announce = true) {
       const target = normalise(targetIndex);
-      if (target === current) {
-        syncPlayback();
-        return;
-      }
 
-      const outgoing = panels[current];
-      const incoming = panels[target];
-      if (leavingTimer !== undefined) window.clearTimeout(leavingTimer);
-      for (const panel of panels) panel.classList.remove("is-leaving");
+      panels.forEach((panel, index) => {
+        panel.classList.toggle("is-active", index === target);
+        panel.setAttribute("aria-hidden", String(index !== target));
+      });
+      tabs.forEach((tab, index) => {
+        tab.setAttribute("aria-selected", String(index === target));
+        tab.setAttribute("tabindex", index === target ? "0" : "-1");
+      });
 
-      stageRoot.dataset.direction = direction;
-      outgoing.classList.remove("is-active");
-      outgoing.classList.add("is-leaving");
-      outgoing.setAttribute("aria-hidden", "true");
-      incoming.classList.add("is-active");
-      incoming.setAttribute("aria-hidden", "false");
-
-      tabs[current].setAttribute("aria-selected", "false");
-      tabs[current].setAttribute("tabindex", "-1");
-      tabs[target].setAttribute("aria-selected", "true");
-      tabs[target].setAttribute("tabindex", "0");
-
+      stageRoot.dataset.active = String(target);
       current = target;
       if (currentLabel) currentLabel.textContent = String(current + 1).padStart(2, "0");
-      explorerRoot.style.setProperty("--example-progress", String((current + 1) / count));
+      explorerRoot.style.setProperty("--opportunity-progress", String((current + 1) / count));
 
       if (announce && announcer) {
-        const title = incoming.querySelector("h3")?.textContent?.trim() || "Scenario";
-        announcer.textContent = `${title}, scenario ${current + 1} van ${count}`;
+        const title = panels[target].querySelector("h3")?.textContent?.trim() || "Woonkans";
+        announcer.textContent = `${title}, woonkans ${current + 1} van ${count}`;
       }
-
-      leavingTimer = window.setTimeout(() => outgoing.classList.remove("is-leaving"), 760);
-      syncPlayback();
     }
 
-    const selectManually = (target: number, direction: "next" | "prev") => {
-      manualPaused = true;
-      activate(target, direction);
-    };
-
     for (const [index, tab] of tabs.entries()) {
-      const click = () => selectManually(index, index < current ? "prev" : "next");
+      const click = () => activate(index);
       const keydown = (event: KeyboardEvent) => {
         let target: number;
         if (event.key === "ArrowDown" || event.key === "ArrowRight") target = normalise(index + 1);
@@ -309,10 +264,8 @@ export default function LandingClient() {
         else return;
 
         event.preventDefault();
-        manualPaused = true;
-        activate(target, target < current ? "prev" : "next");
+        activate(target);
         tabs[target].focus();
-        tabs[target].scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
       };
       tab.addEventListener("click", click);
       tab.addEventListener("keydown", keydown);
@@ -323,72 +276,71 @@ export default function LandingClient() {
     }
 
     if (previous) {
-      const click = () => selectManually(current - 1, "prev");
+      const click = () => activate(current - 1);
       previous.addEventListener("click", click);
       cleanups.push(() => previous.removeEventListener("click", click));
     }
     if (next) {
-      const click = () => selectManually(current + 1, "next");
+      const click = () => activate(current + 1);
       next.addEventListener("click", click);
       cleanups.push(() => next.removeEventListener("click", click));
     }
-    if (toggle) {
-      const click = () => {
-        manualPaused = !manualPaused;
-        syncPlayback();
-      };
-      toggle.addEventListener("click", click);
-      cleanups.push(() => toggle.removeEventListener("click", click));
-    }
-
-    const setTemporaryPause = (paused: boolean) => {
-      temporaryPaused = paused;
-      syncPlayback();
-    };
-    const pointerEnter = () => setTemporaryPause(true);
-    const pointerLeave = () => setTemporaryPause(false);
-    const focusIn = () => setTemporaryPause(true);
-    const focusOut = () => {
-      if (focusPauseTimer !== undefined) window.clearTimeout(focusPauseTimer);
-      focusPauseTimer = window.setTimeout(
-        () => setTemporaryPause(explorer.contains(document.activeElement)),
-        0,
-      );
-    };
-
-    if (finePointer) {
-      explorer.addEventListener("pointerenter", pointerEnter);
-      explorer.addEventListener("pointerleave", pointerLeave);
-    }
-    explorer.addEventListener("focusin", focusIn);
-    explorer.addEventListener("focusout", focusOut);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        inView = Boolean(entry?.isIntersecting);
-        syncPlayback();
+        if (!entry?.isIntersecting) return;
+        explorerRoot.classList.add("is-map-visible");
+        observer.disconnect();
       },
-      { threshold: 0.2 },
+      { threshold: 0.18 },
     );
     observer.observe(explorer);
-    syncPlayback();
+
+    let mapFrame: number | null = null;
+    let pointerX = 0;
+    let pointerY = 0;
+    const mapPointerMove = (event: PointerEvent) => {
+      if (!canvas) return;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (mapFrame !== null) return;
+      mapFrame = requestAnimationFrame(() => {
+        const bounds = canvas.getBoundingClientRect();
+        const x = Math.max(-1, Math.min(1, ((pointerX - bounds.left) / bounds.width - 0.5) * 2));
+        const y = Math.max(-1, Math.min(1, ((pointerY - bounds.top) / bounds.height - 0.5) * 2));
+        canvas.style.setProperty("--map-x", `${x * 6}px`);
+        canvas.style.setProperty("--map-y", `${y * 4}px`);
+        canvas.style.setProperty("--map-hotspot-x", `${x * 3}px`);
+        canvas.style.setProperty("--map-hotspot-y", `${y * 2}px`);
+        mapFrame = null;
+      });
+    };
+    const mapPointerLeave = () => {
+      if (!canvas) return;
+      if (mapFrame !== null) cancelAnimationFrame(mapFrame);
+      mapFrame = null;
+      canvas.style.removeProperty("--map-x");
+      canvas.style.removeProperty("--map-y");
+      canvas.style.removeProperty("--map-hotspot-x");
+      canvas.style.removeProperty("--map-hotspot-y");
+    };
+
+    if (canvas && finePointer && !reduce) {
+      canvas.addEventListener("pointermove", mapPointerMove);
+      canvas.addEventListener("pointerleave", mapPointerLeave);
+    }
 
     return () => {
       observer.disconnect();
-      if (autoplayTimer !== undefined) window.clearTimeout(autoplayTimer);
-      if (leavingTimer !== undefined) window.clearTimeout(leavingTimer);
-      if (focusPauseTimer !== undefined) window.clearTimeout(focusPauseTimer);
-      if (finePointer) {
-        explorer.removeEventListener("pointerenter", pointerEnter);
-        explorer.removeEventListener("pointerleave", pointerLeave);
+      if (canvas && finePointer && !reduce) {
+        canvas.removeEventListener("pointermove", mapPointerMove);
+        canvas.removeEventListener("pointerleave", mapPointerLeave);
       }
-      explorer.removeEventListener("focusin", focusIn);
-      explorer.removeEventListener("focusout", focusOut);
-      explorer.classList.remove("is-playing", "is-temporarily-paused");
-      explorer.style.removeProperty("--example-progress");
+      mapPointerLeave();
+      explorer.classList.remove("is-map-visible");
+      explorer.style.removeProperty("--opportunity-progress");
       panels.forEach((panel, index) => {
         panel.classList.toggle("is-active", index === 0);
-        panel.classList.remove("is-leaving");
         panel.setAttribute("aria-hidden", String(index !== 0));
       });
       tabs.forEach((tab, index) => {
@@ -396,7 +348,7 @@ export default function LandingClient() {
         tab.setAttribute("tabindex", index === 0 ? "0" : "-1");
       });
       if (currentLabel) currentLabel.textContent = "01";
-      stage.dataset.direction = "next";
+      stage.dataset.active = "0";
       delete explorer.dataset.enhanced;
       cleanups.forEach((cleanup) => cleanup());
     };

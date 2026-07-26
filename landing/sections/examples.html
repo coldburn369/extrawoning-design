@@ -1,205 +1,198 @@
-<!-- Interactive scenario explorer (#waar-we-helpen)
+<!-- Interactive woningkansenkaart (#waar-we-helpen)
      Styles: css/examples.css · behaviour: rail.js / LandingClient -->
 <section class="section container" id="waar-we-helpen">
   <div class="examples reveal-group" data-example-explorer>
-    <header class="examples__intro">
-      <div class="stack">
-        <p class="eyebrow">Ontdek de mogelijkheden</p>
-        <h2>Misschien zit er meer in je woning dan je denkt</h2>
-      </div>
-      <div class="stack examples__intro-copy">
-        <p class="lead">Van zolder tot kelder: ontdek per scenario welke kans er kan liggen en welke regels, technische eisen en aandachtspunten eerst onderzocht moeten worden.</p>
-        <a class="btn btn--ghost self-start" href="#adrescheck">Onderzoek mijn woning <svg class="arrow" width="16" height="16"><use href="#i-arrow"/></svg></a>
-      </div>
+    <header class="examples__intro stack-lg">
+      <p class="eyebrow">Kansen in kaart</p>
+      <h2>Ontdek waar jouw woning ruimte biedt voor iets extra’s</h2>
+      <p class="lead">Selecteer een deel van de woning en ontdek welke extra woonkans daar kan liggen — plus de regels en technische voorwaarden die ExtraWoning eerst onderzoekt.</p>
+      <a class="btn btn--ghost self-start" href="#adrescheck">Onderzoek mijn woning <svg class="arrow" width="16" height="16"><use href="#i-arrow"/></svg></a>
     </header>
 
-    <div class="example-explorer">
-      <aside class="scenario-nav" aria-label="Mogelijke woningontwikkelingen">
-        <div class="scenario-nav__top">
-          <div class="example-progress" aria-hidden="true">
-            <span data-example-current>01</span>
-            <span class="example-progress__track"><span class="example-progress__fill"></span></span>
-            <span>06</span>
+    <div class="opportunity-map" data-example-stage data-active="0">
+      <figure class="opportunity-scene" data-opportunity-canvas>
+        <span class="opportunity-scene__grid" aria-hidden="true"></span>
+        <span class="opportunity-scene__coordinates" aria-hidden="true">52.3676° N&nbsp;&nbsp;·&nbsp;&nbsp;4.9041° E</span>
+
+        <div class="opportunity-house" aria-hidden="true">
+          <span class="opportunity-house__aura"></span>
+          <img class="opportunity-house__base" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+          <img class="opportunity-house__highlight opportunity-house__highlight--attic" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+          <img class="opportunity-house__highlight opportunity-house__highlight--terrace" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+          <img class="opportunity-house__highlight opportunity-house__highlight--basement" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+          <img class="opportunity-house__highlight opportunity-house__highlight--division" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+          <img class="opportunity-house__highlight opportunity-house__highlight--extension" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+          <img class="opportunity-house__highlight opportunity-house__highlight--top" src="../assets/townhouse.webp" alt="" width="1536" height="1024" />
+
+          <span class="opportunity-projection opportunity-projection--terrace">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="opportunity-projection opportunity-projection--extension">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="opportunity-projection opportunity-projection--top">
+            <span></span><span></span><span></span>
+          </span>
+        </div>
+
+        <span class="opportunity-scan" aria-hidden="true"></span>
+
+        <div class="opportunity-hotspots" role="tablist" aria-label="Kansen in deze woning" aria-orientation="vertical">
+          <button class="opportunity-hotspot opportunity-hotspot--attic" id="opportunity-tab-1" type="button" role="tab" aria-selected="true" aria-controls="opportunity-panel-1" tabindex="0" data-example-tab="0">
+            <span class="opportunity-hotspot__pin"><span>01</span></span>
+            <span class="opportunity-hotspot__label"><strong>Zolderopbouw</strong><small>Dak &amp; volume</small></span>
+          </button>
+          <button class="opportunity-hotspot opportunity-hotspot--terrace is-label-left" id="opportunity-tab-2" type="button" role="tab" aria-selected="false" aria-controls="opportunity-panel-2" tabindex="-1" data-example-tab="1">
+            <span class="opportunity-hotspot__pin"><span>02</span></span>
+            <span class="opportunity-hotspot__label"><strong>Dakterras</strong><small>Buitenruimte</small></span>
+          </button>
+          <button class="opportunity-hotspot opportunity-hotspot--basement" id="opportunity-tab-3" type="button" role="tab" aria-selected="false" aria-controls="opportunity-panel-3" tabindex="-1" data-example-tab="2">
+            <span class="opportunity-hotspot__pin"><span>03</span></span>
+            <span class="opportunity-hotspot__label"><strong>Souterrainwoning</strong><small>Ruimte beneden</small></span>
+          </button>
+          <button class="opportunity-hotspot opportunity-hotspot--division is-label-left" id="opportunity-tab-4" type="button" role="tab" aria-selected="false" aria-controls="opportunity-panel-4" tabindex="-1" data-example-tab="3">
+            <span class="opportunity-hotspot__pin"><span>04</span></span>
+            <span class="opportunity-hotspot__label"><strong>Woningsplitsing</strong><small>Meerdere woningen</small></span>
+          </button>
+          <button class="opportunity-hotspot opportunity-hotspot--extension is-label-left" id="opportunity-tab-5" type="button" role="tab" aria-selected="false" aria-controls="opportunity-panel-5" tabindex="-1" data-example-tab="4">
+            <span class="opportunity-hotspot__pin"><span>05</span></span>
+            <span class="opportunity-hotspot__label"><strong>Aanbouw of studio</strong><small>Tuinzijde</small></span>
+          </button>
+          <button class="opportunity-hotspot opportunity-hotspot--top" id="opportunity-tab-6" type="button" role="tab" aria-selected="false" aria-controls="opportunity-panel-6" tabindex="-1" data-example-tab="5">
+            <span class="opportunity-hotspot__pin"><span>06</span></span>
+            <span class="opportunity-hotspot__label"><strong>Optoppen</strong><small>Nieuwe woonlaag</small></span>
+          </button>
+        </div>
+
+        <figcaption class="opportunity-scene__caption">
+          <span><i></i> Interactieve woningscan</span>
+          <small>Selecteer een hotspot</small>
+        </figcaption>
+      </figure>
+
+      <aside class="opportunity-dossier" aria-label="Analyse van de geselecteerde woonkans">
+        <header class="opportunity-dossier__header">
+          <div>
+            <span class="opportunity-dossier__overline">Geselecteerde kans</span>
+            <span class="opportunity-dossier__count"><strong data-example-current>01</strong> / 06</span>
           </div>
-          <div class="scenario-controls">
-            <button class="scenario-control" type="button" data-example-prev aria-label="Vorig scenario">
+          <div class="opportunity-controls">
+            <button type="button" data-example-prev aria-label="Vorige woonkans">
               <svg width="16" height="16"><use href="#i-left"/></svg>
             </button>
-            <button class="scenario-control scenario-control--playback" type="button" data-example-toggle aria-label="Automatisch afspelen pauzeren" aria-pressed="false">
-              <svg class="playback-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                <g class="playback-icon__pause"><path d="M5 3.5v9M11 3.5v9" /></g>
-                <path class="playback-icon__play" d="m5.5 3.5 7 4.5-7 4.5z" />
-              </svg>
-            </button>
-            <button class="scenario-control" type="button" data-example-next aria-label="Volgend scenario">
+            <button type="button" data-example-next aria-label="Volgende woonkans">
               <svg width="16" height="16"><use href="#i-right"/></svg>
             </button>
           </div>
-        </div>
+        </header>
 
-        <div class="scenario-tabs" role="tablist" aria-label="Kies een scenario" aria-orientation="vertical">
-          <button class="scenario-tab" id="scenario-tab-1" type="button" role="tab" aria-selected="true" aria-controls="scenario-panel-1" tabindex="0" data-example-tab="0">
-            <span class="scenario-tab__number">01</span>
-            <span><strong>Zolderopbouw</strong><small>Dak &amp; volume</small></span>
-            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-          <button class="scenario-tab" id="scenario-tab-2" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-2" tabindex="-1" data-example-tab="1">
-            <span class="scenario-tab__number">02</span>
-            <span><strong>Dakterras &amp; uitbreiding</strong><small>Buitenruimte</small></span>
-            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-          <button class="scenario-tab" id="scenario-tab-3" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-3" tabindex="-1" data-example-tab="2">
-            <span class="scenario-tab__number">03</span>
-            <span><strong>Souterrainwoning</strong><small>Ruimte beneden</small></span>
-            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-          <button class="scenario-tab" id="scenario-tab-4" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-4" tabindex="-1" data-example-tab="3">
-            <span class="scenario-tab__number">04</span>
-            <span><strong>Woningsplitsing</strong><small>Meerdere woningen</small></span>
-            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-          <button class="scenario-tab" id="scenario-tab-5" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-5" tabindex="-1" data-example-tab="4">
-            <span class="scenario-tab__number">05</span>
-            <span><strong>Aanbouw of studio</strong><small>Tuinzijde</small></span>
-            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-          <button class="scenario-tab" id="scenario-tab-6" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-6" tabindex="-1" data-example-tab="5">
-            <span class="scenario-tab__number">06</span>
-            <span><strong>Optoppen</strong><small>Nieuwe woonlaag</small></span>
-            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
-          </button>
-        </div>
-      </aside>
+        <div class="opportunity-dossier__progress" aria-hidden="true"><span></span></div>
 
-      <div class="scenario-stage" data-example-stage data-direction="next">
-        <article class="scenario-panel is-active" id="scenario-panel-1" role="tabpanel" aria-labelledby="scenario-tab-1" aria-hidden="false" data-example-panel="0">
-          <div class="scenario-panel__media">
-            <img src="../assets/architectural_concept_with_illuminated_cutaway.webp" alt="Architectonisch concept van een zolderopbouw met verlichte nieuwe woonruimte" width="640" height="640" />
-            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
-            <span class="scenario-panel__scan" aria-hidden="true"></span>
-          </div>
-          <div class="scenario-panel__heading">
-            <span class="scenario-panel__category">Dak &amp; volume</span>
-            <span class="scenario-panel__number">01</span>
-          </div>
-          <div class="scenario-card" data-cursor-glow>
-            <span class="scenario-card__status"><span></span>Vergunning meestal nodig</span>
+        <div class="opportunity-dossier__panels">
+          <article class="opportunity-panel is-active" id="opportunity-panel-1" role="tabpanel" aria-labelledby="opportunity-tab-1" aria-hidden="false" data-example-panel="0">
+            <span class="opportunity-panel__category">Dak &amp; volume</span>
             <h3>Zolderopbouw</h3>
-            <p>Voeg boven de bestaande woning extra woonruimte toe zonder tuinoppervlak te verliezen.</p>
-            <div class="scenario-card__checks" aria-label="Belangrijke controles">
-              <span>Bouwhoogte</span><span>Draagconstructie</span><span>Straatbeeld</span>
+            <p>Voeg boven de bestaande woning extra woonruimte toe zonder kostbare tuinoppervlakte te verliezen.</p>
+            <div class="opportunity-finding">
+              <span>Mogelijke opbrengst</span>
+              <strong>Extra woonruimte binnen de bestaande footprint</strong>
             </div>
-            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
-          </div>
-        </article>
+            <div class="opportunity-check">
+              <span>Wordt onderzocht</span>
+              <ul><li>Bouwhoogte</li><li>Draagconstructie</li><li>Straatbeeld</li></ul>
+            </div>
+            <div class="opportunity-panel__status"><i></i><span><small>Indicatie</small>Vergunning meestal nodig</span></div>
+            <a class="opportunity-panel__link" href="#adrescheck">Check deze kans voor mijn adres <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </article>
 
-        <article class="scenario-panel" id="scenario-panel-2" role="tabpanel" aria-labelledby="scenario-tab-2" aria-hidden="true" data-example-panel="1">
-          <div class="scenario-panel__media">
-            <img src="../assets/modern_townhouse_with_glowing_extension_highlights.webp" alt="Moderne stadswoning met verlichte uitbreiding en dakterras" width="640" height="640" loading="lazy" />
-            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
-            <span class="scenario-panel__scan" aria-hidden="true"></span>
-          </div>
-          <div class="scenario-panel__heading">
-            <span class="scenario-panel__category">Buitenruimte</span>
-            <span class="scenario-panel__number">02</span>
-          </div>
-          <div class="scenario-card" data-cursor-glow>
-            <span class="scenario-card__status"><span></span>Situatieafhankelijk</span>
+          <article class="opportunity-panel" id="opportunity-panel-2" role="tabpanel" aria-labelledby="opportunity-tab-2" aria-hidden="true" data-example-panel="1">
+            <span class="opportunity-panel__category">Buitenruimte</span>
             <h3>Dakterras &amp; uitbreiding</h3>
-            <p>Combineer bruikbare buitenruimte met een gerichte uitbreiding van het bestaande woonvolume.</p>
-            <div class="scenario-card__checks" aria-label="Belangrijke controles">
-              <span>Privacy</span><span>Dakbelasting</span><span>Omgevingsplan</span>
+            <p>Maak van een onbenut dakvlak hoogwaardige buitenruimte en vergroot gericht het bruikbare woonvolume.</p>
+            <div class="opportunity-finding">
+              <span>Mogelijke opbrengst</span>
+              <strong>Meer buitenruimte en dagelijks wooncomfort</strong>
             </div>
-            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
-          </div>
-        </article>
+            <div class="opportunity-check">
+              <span>Wordt onderzocht</span>
+              <ul><li>Privacy</li><li>Dakbelasting</li><li>Omgevingsplan</li></ul>
+            </div>
+            <div class="opportunity-panel__status"><i></i><span><small>Indicatie</small>Sterk afhankelijk van de situatie</span></div>
+            <a class="opportunity-panel__link" href="#adrescheck">Check deze kans voor mijn adres <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </article>
 
-        <article class="scenario-panel" id="scenario-panel-3" role="tabpanel" aria-labelledby="scenario-tab-3" aria-hidden="true" data-example-panel="2">
-          <div class="scenario-panel__media">
-            <img src="../assets/victorian_renovation_concept_with_modern_interior.webp" alt="Renovatieconcept met een moderne woonlaag in het souterrain" width="640" height="640" loading="lazy" />
-            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
-            <span class="scenario-panel__scan" aria-hidden="true"></span>
-          </div>
-          <div class="scenario-panel__heading">
-            <span class="scenario-panel__category">Ruimte beneden</span>
-            <span class="scenario-panel__number">03</span>
-          </div>
-          <div class="scenario-card" data-cursor-glow>
-            <span class="scenario-card__status"><span></span>Technische toets essentieel</span>
+          <article class="opportunity-panel" id="opportunity-panel-3" role="tabpanel" aria-labelledby="opportunity-tab-3" aria-hidden="true" data-example-panel="2">
+            <span class="opportunity-panel__category">Ruimte beneden</span>
             <h3>Souterrainwoning</h3>
-            <p>Benut ruimte onder maaiveld als een volwaardige woonlaag met voldoende comfort en veiligheid.</p>
-            <div class="scenario-card__checks" aria-label="Belangrijke controles">
-              <span>Daglicht</span><span>Plafondhoogte</span><span>Waterdichting</span>
+            <p>Benut ruimte onder maaiveld als een comfortabele en veilige woonlaag in plaats van alleen als opslag.</p>
+            <div class="opportunity-finding">
+              <span>Mogelijke opbrengst</span>
+              <strong>Onbenutte meters als volwaardige woonruimte</strong>
             </div>
-            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
-          </div>
-        </article>
+            <div class="opportunity-check">
+              <span>Wordt onderzocht</span>
+              <ul><li>Daglicht</li><li>Plafondhoogte</li><li>Waterdichting</li></ul>
+            </div>
+            <div class="opportunity-panel__status"><i></i><span><small>Indicatie</small>Technische toets is essentieel</span></div>
+            <a class="opportunity-panel__link" href="#adrescheck">Check deze kans voor mijn adres <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </article>
 
-        <article class="scenario-panel" id="scenario-panel-4" role="tabpanel" aria-labelledby="scenario-tab-4" aria-hidden="true" data-example-panel="3">
-          <div class="scenario-panel__media">
-            <img src="../assets/elegant_townhouse_in_moody_blueprint_setting.webp" alt="Stadswoning in een bouwkundige blauwdruk als concept voor woningsplitsing" width="640" height="640" loading="lazy" />
-            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
-            <span class="scenario-panel__scan" aria-hidden="true"></span>
-          </div>
-          <div class="scenario-panel__heading">
-            <span class="scenario-panel__category">Meerdere woningen</span>
-            <span class="scenario-panel__number">04</span>
-          </div>
-          <div class="scenario-card" data-cursor-glow>
-            <span class="scenario-card__status"><span></span>Gemeentelijk beleid bepalend</span>
+          <article class="opportunity-panel" id="opportunity-panel-4" role="tabpanel" aria-labelledby="opportunity-tab-4" aria-hidden="true" data-example-panel="3">
+            <span class="opportunity-panel__category">Meerdere woningen</span>
             <h3>Woningsplitsing</h3>
-            <p>Maak binnen één pand meerdere zelfstandige woonruimtes met ieder een heldere ontsluiting.</p>
-            <div class="scenario-card__checks" aria-label="Belangrijke controles">
-              <span>Minimumoppervlak</span><span>Eigen toegang</span><span>Brandveiligheid</span>
+            <p>Onderzoek of één pand plaats kan maken voor meerdere zelfstandige woningen met een heldere ontsluiting.</p>
+            <div class="opportunity-finding">
+              <span>Mogelijke opbrengst</span>
+              <strong>Meerdere woonadressen binnen hetzelfde pand</strong>
             </div>
-            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
-          </div>
-        </article>
+            <div class="opportunity-check">
+              <span>Wordt onderzocht</span>
+              <ul><li>Gemeentelijk beleid</li><li>Minimumoppervlak</li><li>Brandveiligheid</li></ul>
+            </div>
+            <div class="opportunity-panel__status"><i></i><span><small>Indicatie</small>Gemeentelijk beleid is bepalend</span></div>
+            <a class="opportunity-panel__link" href="#adrescheck">Check deze kans voor mijn adres <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </article>
 
-        <article class="scenario-panel" id="scenario-panel-5" role="tabpanel" aria-labelledby="scenario-tab-5" aria-hidden="true" data-example-panel="4">
-          <div class="scenario-panel__media">
-            <img src="../assets/miniature_3d_home_model_on_blueprint.webp" alt="Driedimensionaal woningmodel met ruimte voor een aanbouw of studio" width="1200" height="676" loading="lazy" />
-            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
-            <span class="scenario-panel__scan" aria-hidden="true"></span>
-          </div>
-          <div class="scenario-panel__heading">
-            <span class="scenario-panel__category">Tuinzijde</span>
-            <span class="scenario-panel__number">05</span>
-          </div>
-          <div class="scenario-card" data-cursor-glow>
-            <span class="scenario-card__status"><span></span>Soms vergunningsvrij</span>
+          <article class="opportunity-panel" id="opportunity-panel-5" role="tabpanel" aria-labelledby="opportunity-tab-5" aria-hidden="true" data-example-panel="4">
+            <span class="opportunity-panel__category">Tuinzijde</span>
             <h3>Aanbouw of studio</h3>
-            <p>Creëer aan de tuinzijde een extra woonplek die onderdeel of juist zelfstandig kan functioneren.</p>
-            <div class="scenario-card__checks" aria-label="Belangrijke controles">
-              <span>Bebouwingspercentage</span><span>Tuinruimte</span><span>Toegang</span>
+            <p>Creëer aan de tuinzijde een extra woonplek die onderdeel van de woning of juist zelfstandig kan functioneren.</p>
+            <div class="opportunity-finding">
+              <span>Mogelijke opbrengst</span>
+              <strong>Een extra woonfunctie naast het hoofdgebouw</strong>
             </div>
-            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
-          </div>
-        </article>
+            <div class="opportunity-check">
+              <span>Wordt onderzocht</span>
+              <ul><li>Bebouwingsruimte</li><li>Tuinoppervlak</li><li>Eigen toegang</li></ul>
+            </div>
+            <div class="opportunity-panel__status"><i></i><span><small>Indicatie</small>Soms geheel of deels vergunningsvrij</span></div>
+            <a class="opportunity-panel__link" href="#adrescheck">Check deze kans voor mijn adres <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </article>
 
-        <article class="scenario-panel" id="scenario-panel-6" role="tabpanel" aria-labelledby="scenario-tab-6" aria-hidden="true" data-example-panel="5">
-          <div class="scenario-panel__media">
-            <img src="../assets/architectural_blueprint_layers_in_dark_space.webp" alt="Gelaagde architectuurtekening voor een extra woonlaag op een bestaand gebouw" width="640" height="640" loading="lazy" />
-            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
-            <span class="scenario-panel__scan" aria-hidden="true"></span>
-          </div>
-          <div class="scenario-panel__heading">
-            <span class="scenario-panel__category">Nieuwe woonlaag</span>
-            <span class="scenario-panel__number">06</span>
-          </div>
-          <div class="scenario-card" data-cursor-glow>
-            <span class="scenario-card__status"><span></span>Complex maar kansrijk</span>
+          <article class="opportunity-panel" id="opportunity-panel-6" role="tabpanel" aria-labelledby="opportunity-tab-6" aria-hidden="true" data-example-panel="5">
+            <span class="opportunity-panel__category">Nieuwe woonlaag</span>
             <h3>Optoppen</h3>
-            <p>Voeg één of meer woonlagen toe wanneer constructie, omgeving en bouwhoogte daarvoor ruimte bieden.</p>
-            <div class="scenario-card__checks" aria-label="Belangrijke controles">
-              <span>Draagconstructie</span><span>Bouwhoogte</span><span>Beschermd gezicht</span>
+            <p>Voeg boven op het bestaande volume een nieuwe woonlaag toe wanneer gebouw en omgeving daarvoor ruimte bieden.</p>
+            <div class="opportunity-finding">
+              <span>Mogelijke opbrengst</span>
+              <strong>Nieuw woonvolume zonder extra grondgebruik</strong>
             </div>
-            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
-          </div>
-        </article>
-      </div>
+            <div class="opportunity-check">
+              <span>Wordt onderzocht</span>
+              <ul><li>Draagconstructie</li><li>Bouwhoogte</li><li>Beschermd stadsgezicht</li></ul>
+            </div>
+            <div class="opportunity-panel__status"><i></i><span><small>Indicatie</small>Complex, maar mogelijk zeer kansrijk</span></div>
+            <a class="opportunity-panel__link" href="#adrescheck">Check deze kans voor mijn adres <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </article>
+        </div>
+
+        <footer class="opportunity-dossier__footer">
+          <span>ExtraWoning analyseert</span>
+          <strong>Regels <i></i> Gebouw <i></i> Potentieel</strong>
+        </footer>
+      </aside>
     </div>
 
-    <p class="example-announcer" aria-live="polite" data-example-announcer>Zolderopbouw, scenario 1 van 6</p>
+    <p class="example-announcer" aria-live="polite" data-example-announcer>Zolderopbouw, woonkans 1 van 6</p>
   </div>
 </section>

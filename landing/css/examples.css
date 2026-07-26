@@ -1,549 +1,808 @@
 /* ============================================================================
-   interactive scenario explorer (#waar-we-helpen)
+   interactive woningkansenkaart (#waar-we-helpen)
    Section: sections/examples.html · behaviour: rail.js / LandingClient
    ========================================================================== */
 
+#waar-we-helpen {
+  scroll-margin-top: 7rem;
+}
+
 .examples {
-  --example-progress: .1667;
+  --opportunity-progress: .1667;
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
 }
 
+/* The intro is deliberately one reading column. Splitting the heading and copy
+   across the full container made them look like unrelated section fragments. */
 .examples__intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(20rem, .8fr);
-  gap: var(--space-8);
-  align-items: end;
+  width: min(100%, 52rem);
 }
 
-.examples__intro-copy {
-  gap: var(--space-5);
-  max-width: 42rem;
-  justify-self: end;
+.examples__intro h2 {
+  max-width: 23ch;
 }
 
-.example-explorer {
-  display: grid;
-  grid-template-columns: minmax(16.5rem, .3fr) minmax(0, 1fr);
-  gap: var(--space-5);
-  min-height: clamp(38rem, 46vw, 43rem);
+.examples__intro .lead {
+  max-width: 51ch;
 }
 
-/* ---- Scenario navigation --------------------------------------------- */
-.scenario-nav {
+/* ---- Analysis shell --------------------------------------------------- */
+.opportunity-map {
   position: relative;
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: var(--space-5);
-  padding: var(--space-5);
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.42fr) minmax(21rem, .68fr);
+  min-height: clamp(42rem, 49vw, 47rem);
+  overflow: hidden;
   border: var(--card-border);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(circle 18rem at 0 0, var(--color-accent-wash), transparent 64%),
-    color-mix(in srgb, var(--card-bg) 75%, transparent);
-  box-shadow: var(--card-shadow);
-  backdrop-filter: blur(22px) saturate(145%);
-  -webkit-backdrop-filter: blur(22px) saturate(145%);
+    radial-gradient(circle 38rem at 30% 56%, var(--color-bloom), transparent 72%),
+    color-mix(in srgb, var(--color-surface-sunken) 90%, transparent);
+  box-shadow: var(--elevation-3), var(--surface-highlight);
 }
 
-.scenario-nav__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+.opportunity-map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border: 1px solid var(--color-border-strong);
+  border-radius: inherit;
+  pointer-events: none;
 }
 
-.example-progress {
-  display: grid;
-  grid-template-columns: auto minmax(2.5rem, 1fr) auto;
-  gap: var(--space-2);
-  align-items: center;
-  min-width: 8rem;
-  color: var(--color-text-muted);
+/* ---- House analysis canvas ------------------------------------------- */
+.opportunity-scene {
+  --map-x: 0px;
+  --map-y: 0px;
+  --map-hotspot-x: 0px;
+  --map-hotspot-y: 0px;
+  position: relative;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-inline-end: 1px solid var(--color-border-subtle);
+  background:
+    radial-gradient(circle 28rem at 58% 54%, var(--color-accent-wash), transparent 72%),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-text) 4%, transparent), transparent 50%);
+}
+
+.opportunity-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("../../assets/miniatur-map-bg.webp") center / cover no-repeat;
+  mix-blend-mode: screen;
+  opacity: .11;
+  -webkit-mask-image: radial-gradient(circle at 52% 48%, #000 0 32%, transparent 78%);
+          mask-image: radial-gradient(circle at 52% 48%, #000 0 32%, transparent 78%);
+  translate: calc(var(--map-x) * -.35) calc(var(--map-y) * -.35);
+  scale: 1.08;
+  transition: translate var(--duration-base) var(--ease-settle);
+}
+
+.opportunity-scene__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .32;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-text) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-text) 4%, transparent) 1px, transparent 1px);
+  background-size: 3.5rem 3.5rem;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 28%, #000 82%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 28%, #000 82%, transparent);
+  translate: calc(var(--map-x) * -.18) calc(var(--map-y) * -.18);
+  transition: translate var(--duration-base) var(--ease-settle);
+}
+
+.opportunity-scene__coordinates {
+  position: absolute;
+  z-index: 4;
+  top: var(--space-5);
+  left: var(--space-5);
+  color: color-mix(in srgb, var(--color-text-muted) 68%, transparent);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-wide);
 }
 
-.example-progress [data-example-current] {
-  color: var(--color-text-accent);
+.opportunity-house {
+  position: absolute;
+  z-index: 1;
+  inset: 3.25rem -1.5rem 2rem -3.5rem;
+  pointer-events: none;
+  translate: var(--map-x) var(--map-y);
+  transition: translate var(--duration-base) var(--ease-settle);
 }
 
-.example-progress__track {
-  position: relative;
-  height: 2px;
-  overflow: hidden;
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+.opportunity-house__aura {
+  position: absolute;
+  inset: 18% 12% 5% 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-accent-wash), transparent 68%);
+  filter: blur(1.5rem);
+  opacity: .72;
 }
 
-.example-progress__fill {
+.opportunity-house img {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-accent-ui), var(--color-sheen));
-  scale: var(--example-progress) 1;
-  transform-origin: left;
-  transition: scale var(--duration-slow) var(--ease-settle);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
 }
 
-.scenario-controls {
+.opportunity-house__base {
+  z-index: 1;
+  filter: brightness(.76) saturate(.72) contrast(1.04);
+  opacity: .96;
+  transition:
+    filter var(--duration-slow) var(--ease-standard),
+    scale var(--duration-slow) var(--ease-settle);
+}
+
+.opportunity-scene:hover .opportunity-house__base {
+  filter: brightness(.8) saturate(.78) contrast(1.05);
+  scale: 1.008;
+}
+
+.opportunity-house__highlight {
+  z-index: 2;
+  opacity: 0;
+  filter:
+    sepia(1)
+    saturate(4.5)
+    brightness(1.2)
+    drop-shadow(0 0 .5rem var(--color-glow));
+  mix-blend-mode: screen;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.opportunity-house__highlight--attic {
+  clip-path: polygon(40% 20%, 82% 20%, 82% 49%, 42% 49%);
+}
+
+.opportunity-house__highlight--terrace {
+  clip-path: polygon(53% 4%, 82% 5%, 82% 32%, 58% 31%);
+}
+
+.opportunity-house__highlight--basement {
+  clip-path: polygon(17% 70%, 87% 70%, 87% 98%, 17% 98%);
+}
+
+.opportunity-house__highlight--division {
+  clip-path: polygon(39% 28%, 83% 28%, 83% 72%, 39% 72%);
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 17%, transparent 17% 20%);
+          mask-image: repeating-linear-gradient(180deg, #000 0 17%, transparent 17% 20%);
+}
+
+.opportunity-house__highlight--extension {
+  clip-path: polygon(73% 56%, 98% 56%, 98% 91%, 73% 91%);
+}
+
+.opportunity-house__highlight--top {
+  clip-path: polygon(28% 0, 82% 0, 82% 29%, 28% 29%);
+}
+
+.opportunity-map[data-active="0"] .opportunity-house__highlight--attic,
+.opportunity-map[data-active="1"] .opportunity-house__highlight--terrace,
+.opportunity-map[data-active="2"] .opportunity-house__highlight--basement,
+.opportunity-map[data-active="3"] .opportunity-house__highlight--division,
+.opportunity-map[data-active="4"] .opportunity-house__highlight--extension,
+.opportunity-map[data-active="5"] .opportunity-house__highlight--top {
+  animation: opportunity-highlight-in .72s var(--ease-settle) both;
+}
+
+/* Wireframe volumes communicate a possible intervention without pretending
+   that the generated house already contains the proposed construction. */
+.opportunity-projection {
+  position: absolute;
+  z-index: 4;
+  display: block;
+  border: 1px solid var(--color-accent-ui);
+  background:
+    linear-gradient(90deg, transparent 49%, color-mix(in srgb, var(--color-accent-ui) 40%, transparent) 50% 51%, transparent 52%),
+    linear-gradient(transparent 49%, color-mix(in srgb, var(--color-accent-ui) 40%, transparent) 50% 51%, transparent 52%),
+    color-mix(in srgb, var(--color-accent) 4%, transparent);
+  background-size: 2.5rem 2.5rem;
+  box-shadow: 0 0 1.4rem color-mix(in srgb, var(--color-glow) 44%, transparent);
+  opacity: 0;
+  scale: .9;
+  transform-origin: bottom;
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    scale var(--duration-slow) var(--ease-settle);
+}
+
+.opportunity-projection::before,
+.opportunity-projection::after,
+.opportunity-projection > span {
+  content: "";
+  position: absolute;
+  display: block;
+  background: var(--color-accent-ui);
+  box-shadow: 0 0 .55rem var(--color-glow);
+}
+
+.opportunity-projection::before {
+  inset: 0 auto 0 50%;
+  width: 1px;
+}
+
+.opportunity-projection::after {
+  inset: 50% 0 auto;
+  height: 1px;
+}
+
+.opportunity-projection > span:nth-child(1) {
+  top: 0;
+  right: 0;
+  width: 24%;
+  height: 1px;
+  rotate: -38deg;
+  transform-origin: right;
+}
+
+.opportunity-projection > span:nth-child(2) {
+  right: 0;
+  bottom: 0;
+  width: 24%;
+  height: 1px;
+  rotate: 38deg;
+  transform-origin: right;
+}
+
+.opportunity-projection > span:nth-child(3) {
+  top: -16%;
+  right: 17%;
+  width: 1px;
+  height: 116%;
+}
+
+.opportunity-projection--terrace {
+  top: 20%;
+  left: 64%;
+  width: 18%;
+  height: 11%;
+  transform: skewY(-8deg);
+}
+
+.opportunity-projection--extension {
+  top: 58%;
+  left: 76%;
+  width: 20%;
+  height: 25%;
+  transform: skewY(-4deg);
+}
+
+.opportunity-projection--top {
+  top: 5%;
+  left: 43%;
+  width: 29%;
+  height: 17%;
+  transform: perspective(32rem) rotateX(-4deg) skewY(-3deg);
+}
+
+.opportunity-map[data-active="1"] .opportunity-projection--terrace,
+.opportunity-map[data-active="4"] .opportunity-projection--extension,
+.opportunity-map[data-active="5"] .opportunity-projection--top {
+  opacity: .86;
+  scale: 1;
+}
+
+.opportunity-scan {
+  position: absolute;
+  z-index: 3;
+  top: 6%;
+  right: 9%;
+  left: 11%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--color-sheen), transparent);
+  box-shadow:
+    0 0 .8rem var(--color-glow),
+    0 1.8rem 4rem color-mix(in srgb, var(--color-accent) 20%, transparent);
+  opacity: 0;
+}
+
+.examples.is-map-visible .opportunity-scan {
+  animation: opportunity-scan 1.8s var(--ease-trace) .15s both;
+}
+
+/* ---- Hotspots --------------------------------------------------------- */
+.opportunity-hotspots {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.opportunity-hotspot {
+  position: absolute;
   display: flex;
-  gap: var(--space-1);
-}
-
-.scenario-control {
-  display: grid;
-  width: 2.25rem;
-  aspect-ratio: 1;
-  place-items: center;
+  align-items: center;
+  gap: var(--space-2);
   padding: 0;
   border: 0;
-  border-radius: var(--radius-full);
-  color: var(--color-text-muted);
-  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  color: var(--color-text);
+  background: transparent;
+  text-align: left;
   cursor: pointer;
+  pointer-events: auto;
+  translate: var(--map-hotspot-x, 0px) var(--map-hotspot-y, 0px);
+  transition: translate var(--duration-base) var(--ease-settle);
+}
+
+.opportunity-hotspot--attic { top: 31%; left: 58%; }
+.opportunity-hotspot--terrace { top: 20%; left: 78%; }
+.opportunity-hotspot--basement { top: 80%; left: 53%; }
+.opportunity-hotspot--division { top: 52%; left: 73%; }
+.opportunity-hotspot--extension { top: 69%; left: 84%; }
+.opportunity-hotspot--top { top: 10%; left: 48%; }
+
+.opportunity-hotspot__pin {
+  position: relative;
+  display: grid;
+  width: 2.75rem;
+  aspect-ratio: 1;
+  flex: none;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-text) 32%, transparent);
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface-sunken) 78%, transparent);
+  box-shadow:
+    0 0 0 .3rem color-mix(in srgb, var(--color-surface-sunken) 46%, transparent),
+    0 .5rem 1.5rem color-mix(in srgb, var(--color-surface-sunken) 62%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
   transition:
     color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard),
-    translate var(--duration-fast) var(--ease-standard),
-    scale var(--duration-fast) var(--ease-standard);
+    scale var(--duration-base) var(--ease-settle),
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
-.scenario-control:hover {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 14%, transparent);
-  translate: 0 -2px;
-  scale: 1.04;
+.opportunity-hotspot__pin::before,
+.opportunity-hotspot__pin::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
-.scenario-control:active {
-  translate: 0;
-  scale: .95;
+.opportunity-hotspot__pin::before {
+  inset: -.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+  transition: border-color var(--duration-fast) var(--ease-standard), scale var(--duration-base) var(--ease-settle);
 }
 
-.scenario-control:focus-visible {
+.opportunity-hotspot__pin::after {
+  inset: -.75rem;
+  border: 1px solid var(--color-accent-ui);
+  opacity: 0;
+}
+
+.opportunity-hotspot:hover .opportunity-hotspot__pin {
+  border-color: var(--color-accent-ui);
+  scale: 1.08;
+}
+
+.opportunity-hotspot[aria-selected="true"] .opportunity-hotspot__pin {
+  color: var(--color-text-on-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  box-shadow:
+    0 0 0 .35rem var(--color-accent-wash),
+    0 0 1.8rem var(--color-glow);
+  scale: 1.08;
+}
+
+.opportunity-hotspot[aria-selected="true"] .opportunity-hotspot__pin::before {
+  border-color: color-mix(in srgb, var(--color-accent-ui) 55%, transparent);
+  scale: 1.12;
+}
+
+.opportunity-hotspot[aria-selected="true"] .opportunity-hotspot__pin::after {
+  animation: opportunity-pulse 2.2s var(--ease-standard) infinite;
+}
+
+.opportunity-hotspot:focus-visible {
+  outline: none;
+}
+
+.opportunity-hotspot:focus-visible .opportunity-hotspot__pin {
   outline: var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
 
-.playback-icon {
-  overflow: visible;
-  fill: currentColor;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  transition: rotate var(--duration-base) var(--ease-settle);
-}
-
-.playback-icon__pause,
-.playback-icon__play {
-  transform-origin: center;
-  transition: opacity var(--duration-fast) var(--ease-standard), scale var(--duration-fast) var(--ease-settle);
-}
-
-.playback-icon__play {
+.opportunity-hotspot__label {
+  position: absolute;
+  left: calc(100% + var(--space-2));
+  top: 50%;
+  min-width: max-content;
+  padding: .55rem .75rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface-sunken) 82%, transparent);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   opacity: 0;
-  scale: .6;
-  stroke: none;
+  translate: -.4rem -50%;
+  scale: .96;
+  pointer-events: none;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    translate var(--duration-base) var(--ease-settle),
+    scale var(--duration-base) var(--ease-settle);
 }
 
-.scenario-control--playback[aria-pressed="true"] .playback-icon {
-  rotate: -90deg;
+.opportunity-hotspot.is-label-left .opportunity-hotspot__label {
+  right: calc(100% + var(--space-2));
+  left: auto;
+  translate: .4rem -50%;
+  text-align: right;
 }
 
-.scenario-control--playback[aria-pressed="true"] .playback-icon__pause {
-  opacity: 0;
-  scale: .6;
+.opportunity-hotspot__label strong,
+.opportunity-hotspot__label small {
+  display: block;
 }
 
-.scenario-control--playback[aria-pressed="true"] .playback-icon__play {
+.opportunity-hotspot__label strong {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.opportunity-hotspot__label small {
+  margin-top: 1px;
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+}
+
+.opportunity-hotspot:hover .opportunity-hotspot__label,
+.opportunity-hotspot:focus-visible .opportunity-hotspot__label,
+.opportunity-hotspot[aria-selected="true"] .opportunity-hotspot__label {
   opacity: 1;
+  translate: 0 -50%;
   scale: 1;
 }
 
-.scenario-control--playback[aria-pressed="true"] {
-  color: var(--color-text-accent);
-  background: var(--color-accent-wash);
+.examples.is-map-visible .opportunity-hotspot {
+  animation: opportunity-discover .6s var(--ease-settle) both;
 }
 
-.scenario-tabs {
+.examples.is-map-visible .opportunity-hotspot:nth-child(2) { animation-delay: .1s; }
+.examples.is-map-visible .opportunity-hotspot:nth-child(3) { animation-delay: .2s; }
+.examples.is-map-visible .opportunity-hotspot:nth-child(4) { animation-delay: .3s; }
+.examples.is-map-visible .opportunity-hotspot:nth-child(5) { animation-delay: .4s; }
+.examples.is-map-visible .opportunity-hotspot:nth-child(6) { animation-delay: .5s; }
+
+.opportunity-scene__caption {
+  position: absolute;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  left: var(--space-5);
+  z-index: 5;
   display: flex;
-  min-height: 0;
-  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.opportunity-scene__caption > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+}
+
+.opportunity-scene__caption i {
+  width: .45rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+  box-shadow: 0 0 .8rem color-mix(in srgb, var(--color-success) 60%, transparent);
+}
+
+/* ---- Opportunity dossier --------------------------------------------- */
+.opportunity-dossier {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: clamp(var(--space-5), 2.7vw, var(--space-7));
+  background:
+    radial-gradient(circle 24rem at 100% 0, var(--color-accent-wash), transparent 70%),
+    color-mix(in srgb, var(--card-bg) 78%, transparent);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+}
+
+.opportunity-dossier__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.opportunity-dossier__header > div:first-child {
+  display: flex;
   flex-direction: column;
   gap: var(--space-1);
 }
 
-.scenario-tab {
-  position: relative;
-  display: grid;
-  min-width: 0;
-  grid-template-columns: 2rem minmax(0, 1fr) auto;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-3);
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    color var(--duration-fast) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard),
-    translate var(--duration-fast) var(--ease-standard);
-}
-
-.scenario-tab::before {
-  content: "";
-  position: absolute;
-  inset-block: 18%;
-  left: 0;
-  width: 2px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  scale: 1 0;
-  transform-origin: center;
-  transition: scale var(--duration-base) var(--ease-settle);
-}
-
-.scenario-tab::after {
-  content: "";
-  position: absolute;
-  inset: auto var(--space-3) 0;
-  height: 1px;
-  background: linear-gradient(90deg, var(--color-accent), transparent);
-  scale: 0 1;
-  transform-origin: left;
-}
-
-.examples.is-playing .scenario-tab[aria-selected="true"]::after {
-  animation: scenario-timer 8s linear both;
-}
-
-.examples.is-temporarily-paused .scenario-tab[aria-selected="true"]::after {
-  animation-play-state: paused;
-}
-
-.scenario-tab:hover {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 5%, transparent);
-  translate: var(--space-1) 0;
-}
-
-.scenario-tab[aria-selected="true"] {
-  color: var(--color-text);
-  background:
-    linear-gradient(90deg, var(--color-accent-wash), transparent 88%),
-    color-mix(in srgb, var(--color-text) 6%, transparent);
-}
-
-.scenario-tab[aria-selected="true"]::before {
-  scale: 1;
-}
-
-.scenario-tab__number {
+.opportunity-dossier__overline,
+.opportunity-panel__category,
+.opportunity-finding > span,
+.opportunity-check > span,
+.opportunity-dossier__footer > span {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-wide);
-  transition: color var(--duration-fast) var(--ease-standard);
+  text-transform: uppercase;
 }
 
-.scenario-tab[aria-selected="true"] .scenario-tab__number {
-  color: var(--color-text-accent);
-}
-
-.scenario-tab strong,
-.scenario-tab small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.scenario-tab strong {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-}
-
-.scenario-tab small {
-  margin-top: 2px;
+.opportunity-dossier__count {
   color: var(--color-text-muted);
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
 
-.scenario-tab > svg {
-  opacity: 0;
-  translate: -.4rem 0;
-  transition: opacity var(--duration-fast) var(--ease-standard), translate var(--duration-base) var(--ease-settle);
+.opportunity-dossier__count strong {
+  color: var(--color-text-accent);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
 }
 
-.scenario-tab[aria-selected="true"] > svg {
-  opacity: 1;
+.opportunity-controls {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.opportunity-controls button {
+  display: grid;
+  width: 2.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    translate var(--duration-fast) var(--ease-standard);
+}
+
+.opportunity-controls button:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  translate: 0 -2px;
+}
+
+.opportunity-controls button:active {
   translate: 0;
 }
 
-.scenario-tab:focus-visible {
+.opportunity-controls button:focus-visible {
   outline: var(--focus-ring);
-  outline-offset: -2px;
+  outline-offset: var(--focus-ring-offset);
 }
 
-/* ---- Architectural stage --------------------------------------------- */
-.scenario-stage {
+.opportunity-dossier__progress {
   position: relative;
-  isolation: isolate;
-  min-width: 0;
-  min-height: clamp(38rem, 46vw, 43rem);
+  height: 1px;
+  margin-block: var(--space-5) var(--space-6);
   overflow: hidden;
-  border-radius: var(--radius-xl);
-  background: var(--color-surface-sunken);
-  box-shadow: var(--elevation-3), var(--surface-highlight);
+  background: var(--color-border-subtle);
 }
 
-.scenario-stage::after {
-  content: "";
+.opportunity-dossier__progress span {
   position: absolute;
   inset: 0;
-  z-index: 8;
-  border: 1px solid var(--color-border-strong);
-  border-radius: inherit;
-  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-accent-ui), var(--color-sheen));
+  scale: var(--opportunity-progress) 1;
+  transform-origin: left;
+  transition: scale var(--duration-slow) var(--ease-settle);
 }
 
-.scenario-panel {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+.opportunity-dossier__panels {
+  position: relative;
+  min-height: 0;
+  flex: 1;
 }
 
-.scenario-panel.is-active {
-  z-index: 2;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+.opportunity-panel {
+  display: none;
 }
 
-.scenario-panel.is-leaving {
-  z-index: 1;
-  opacity: 1;
-  visibility: visible;
-}
-
-.scenario-panel__media,
-.scenario-panel__media::after,
-.scenario-panel__blueprint {
-  position: absolute;
-  inset: 0;
-}
-
-.scenario-panel__media {
-  overflow: hidden;
-  background: var(--color-surface-sunken);
-  will-change: clip-path, opacity, scale;
-}
-
-.scenario-stage[data-direction="next"] .scenario-panel.is-active .scenario-panel__media {
-  animation: scenario-reveal-next var(--duration-slow) var(--ease-settle) both;
-}
-
-.scenario-stage[data-direction="prev"] .scenario-panel.is-active .scenario-panel__media {
-  animation: scenario-reveal-prev var(--duration-slow) var(--ease-settle) both;
-}
-
-.scenario-panel__media img {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-  filter: brightness(.74) saturate(.92);
-  scale: 1.025;
-  transition:
-    scale 1.2s var(--ease-settle),
-    filter var(--duration-slow) var(--ease-standard);
-}
-
-.scenario-stage:hover .scenario-panel.is-active .scenario-panel__media img {
-  scale: 1.055;
-  filter: brightness(.79) saturate(1.02);
-}
-
-.scenario-panel__media::after {
-  content: "";
-  z-index: 2;
-  background:
-    linear-gradient(180deg, rgb(16 15 14 / .08) 0%, rgb(16 15 14 / .2) 42%, rgb(16 15 14 / .88) 100%),
-    linear-gradient(90deg, rgb(16 15 14 / .24), transparent 55%, rgb(16 15 14 / .16));
-}
-
-.scenario-panel__blueprint {
-  z-index: 1;
-  pointer-events: none;
-  background: url("../../assets/miniatur-map-bg.webp") center / cover no-repeat;
-  mix-blend-mode: screen;
-  opacity: .35;
-  -webkit-mask-image: linear-gradient(180deg, #000, transparent 78%);
-          mask-image: linear-gradient(180deg, #000, transparent 78%);
-}
-
-.scenario-panel__scan {
-  position: absolute;
-  z-index: 3;
-  top: 0;
-  bottom: 0;
-  left: -12%;
-  width: 1px;
-  pointer-events: none;
-  background: var(--color-sheen);
-  box-shadow:
-    0 0 1rem var(--color-glow),
-    -2rem 0 4rem color-mix(in srgb, var(--color-accent) 20%, transparent);
-  opacity: 0;
-}
-
-.scenario-panel.is-active .scenario-panel__scan {
-  animation: scenario-scan 1.2s var(--ease-trace) .12s both;
-}
-
-.scenario-panel__heading {
-  position: absolute;
-  inset: var(--space-5) var(--space-6) auto;
-  z-index: 4;
+.opportunity-panel.is-active {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  opacity: 0;
+  min-height: 100%;
+  flex-direction: column;
+  animation: opportunity-panel-in .58s var(--ease-settle) both;
 }
 
-.scenario-panel.is-active .scenario-panel__heading {
-  animation: scenario-content-in var(--duration-slow) var(--ease-settle) .16s both;
-}
-
-.scenario-panel__category {
-  display: inline-flex;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-full);
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-}
-
-.scenario-panel__number {
-  color: color-mix(in srgb, var(--color-text) 46%, transparent);
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 6vw, 5.75rem);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-tight);
-  line-height: .8;
-}
-
-.scenario-card {
-  position: absolute;
-  z-index: 5;
-  right: var(--space-6);
-  bottom: var(--space-6);
-  width: min(31rem, calc(100% - var(--space-8)));
-  padding: var(--space-5);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle 19rem at 0 0, var(--color-accent-wash), transparent 68%),
-    color-mix(in srgb, var(--color-surface) 78%, transparent);
-  box-shadow: var(--elevation-float), inset 0 1px color-mix(in srgb, var(--color-text) 6%, transparent);
-  backdrop-filter: blur(22px) saturate(145%);
-  -webkit-backdrop-filter: blur(22px) saturate(145%);
-  opacity: 0;
-}
-
-.scenario-panel.is-active .scenario-card {
-  animation: scenario-card-in var(--duration-slow) var(--ease-settle) .24s both;
-}
-
-.scenario-card__status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+.opportunity-panel__category {
   color: var(--color-text-accent);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
 }
 
-.scenario-card__status > span {
-  width: .45rem;
-  aspect-ratio: 1;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  box-shadow: 0 0 .8rem var(--color-glow);
-}
-
-.scenario-card h3 {
+.opportunity-panel h3 {
   margin-top: var(--space-3);
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
 }
 
-.scenario-card p {
-  margin: var(--space-2) 0 0;
+.opportunity-panel > p {
+  margin-top: var(--space-3);
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
 }
 
-.scenario-card__checks {
+.opportunity-finding {
+  position: relative;
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, var(--color-accent-wash), transparent 68%),
+    color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+.opportunity-finding::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--space-3);
+  left: 0;
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: 0 0 .8rem var(--color-glow);
+}
+
+.opportunity-finding strong {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+.opportunity-check {
+  margin-top: var(--space-5);
+}
+
+.opportunity-check ul {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.scenario-card__checks span {
-  padding: .4rem .65rem;
+.opportunity-check li {
+  padding: .42rem .68rem;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-full);
   color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
   font-size: var(--text-xs);
 }
 
-.scenario-card__link {
+.opportunity-panel__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+}
+
+.opportunity-panel__status i {
+  width: .55rem;
+  aspect-ratio: 1;
+  flex: none;
+  border: 1px solid var(--color-accent-ui);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: 0 0 1rem var(--color-glow);
+}
+
+.opportunity-panel__status span,
+.opportunity-panel__status small {
+  display: block;
+}
+
+.opportunity-panel__status small {
+  margin-bottom: 2px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.opportunity-panel__link {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
   color: var(--color-text);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
 }
 
-.scenario-card__link svg {
+.opportunity-panel__link svg {
   transition: translate var(--duration-fast) var(--ease-standard);
 }
 
-.scenario-card__link:hover svg {
+.opportunity-panel__link:hover svg {
   translate: var(--space-1) 0;
 }
 
-.scenario-card__link:focus-visible {
+.opportunity-panel__link:focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
   border-radius: var(--radius-xs);
+}
+
+.opportunity-dossier__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.opportunity-dossier__footer strong {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.opportunity-dossier__footer i {
+  width: 3px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
 }
 
 .example-announcer {
@@ -558,80 +817,71 @@
 }
 
 /* ---- Motion ----------------------------------------------------------- */
-@keyframes scenario-timer {
-  from { scale: 0 1; }
-  to { scale: 1; }
+@keyframes opportunity-scan {
+  0% { top: 7%; opacity: 0; }
+  12% { opacity: .9; }
+  82% { opacity: .75; }
+  100% { top: 90%; opacity: 0; }
 }
 
-@keyframes scenario-reveal-next {
-  from { clip-path: inset(0 0 0 100%); opacity: .45; scale: 1.06; }
-  to { clip-path: inset(0); opacity: 1; scale: 1; }
+@keyframes opportunity-highlight-in {
+  0% { opacity: 0; filter: sepia(1) saturate(4) brightness(1.8) drop-shadow(0 0 1.5rem var(--color-glow)); }
+  52% { opacity: .92; }
+  100% { opacity: .62; filter: sepia(1) saturate(4.5) brightness(1.2) drop-shadow(0 0 .5rem var(--color-glow)); }
 }
 
-@keyframes scenario-reveal-prev {
-  from { clip-path: inset(0 100% 0 0); opacity: .45; scale: 1.06; }
-  to { clip-path: inset(0); opacity: 1; scale: 1; }
+@keyframes opportunity-pulse {
+  0% { opacity: .75; scale: .7; }
+  75%, 100% { opacity: 0; scale: 1.55; }
 }
 
-@keyframes scenario-scan {
-  0% { left: -12%; opacity: 0; }
-  16% { opacity: .95; }
-  84% { opacity: .75; }
-  100% { left: 112%; opacity: 0; }
+@keyframes opportunity-discover {
+  from { opacity: 0; translate: var(--map-hotspot-x, 0px) .9rem; scale: .72; }
+  to { opacity: 1; translate: var(--map-hotspot-x, 0px) var(--map-hotspot-y, 0px); scale: 1; }
 }
 
-@keyframes scenario-content-in {
-  from { opacity: 0; translate: 0 -1rem; }
+@keyframes opportunity-panel-in {
+  from { opacity: 0; translate: 1rem 0; }
   to { opacity: 1; translate: 0; }
 }
 
-@keyframes scenario-card-in {
-  from { opacity: 0; translate: 2rem 1.5rem; scale: .96; }
-  to { opacity: 1; translate: 0; scale: 1; }
+/* ---- Responsive ------------------------------------------------------- */
+@media (max-width: 72rem) {
+  .opportunity-map {
+    grid-template-columns: minmax(0, 1.2fr) minmax(20rem, .8fr);
+  }
+
+  .opportunity-house {
+    inset-inline: -5rem -2.5rem;
+  }
+
+  .opportunity-hotspot__label {
+    display: none;
+  }
 }
 
-/* ---- Responsive ------------------------------------------------------- */
 @media (max-width: 62rem) {
-  .examples__intro {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-5);
-  }
-
-  .examples__intro-copy {
-    max-width: 48rem;
-    justify-self: start;
-  }
-
-  .example-explorer {
+  .opportunity-map {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }
 
-  .scenario-nav {
-    gap: var(--space-4);
-    padding: var(--space-4);
-    border-radius: var(--radius-lg);
+  .opportunity-scene {
+    min-height: clamp(34rem, 72vw, 42rem);
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
-  .scenario-tabs {
-    display: grid;
-    grid-auto-columns: minmax(13rem, 1fr);
-    grid-auto-flow: column;
-    overflow-x: auto;
-    padding-bottom: var(--space-2);
-    scrollbar-width: none;
+  .opportunity-house {
+    inset: 2.75rem -2rem 2rem -2rem;
   }
 
-  .scenario-tabs::-webkit-scrollbar {
-    display: none;
+  .opportunity-hotspot__label {
+    display: block;
   }
 
-  .scenario-tab {
-    min-height: 4.25rem;
-  }
-
-  .scenario-stage {
-    min-height: clamp(35rem, 76vw, 40rem);
+  .opportunity-dossier {
+    min-height: 36rem;
   }
 }
 
@@ -644,93 +894,94 @@
     gap: var(--space-4);
   }
 
-  .scenario-nav {
+  .opportunity-map {
     margin-inline: calc(var(--space-4) * -1);
     border-inline: 0;
     border-radius: 0;
   }
 
-  .scenario-nav__top {
-    padding-inline: var(--space-1);
+  .opportunity-scene {
+    min-height: 31rem;
   }
 
-  .scenario-tabs {
-    grid-auto-columns: minmax(11.5rem, 78vw);
+  .opportunity-scene__coordinates {
+    top: var(--space-4);
+    left: var(--space-4);
   }
 
-  .scenario-tab {
-    grid-template-columns: 1.75rem minmax(0, 1fr);
-    gap: var(--space-2);
+  .opportunity-house {
+    inset: 3rem -4.75rem 3.5rem -4rem;
   }
 
-  .scenario-tab > svg {
+  .opportunity-hotspot__label {
     display: none;
   }
 
-  .scenario-stage {
-    min-height: 39rem;
-    margin-inline: calc(var(--space-4) * -1);
-    border-radius: 0;
-  }
+  .opportunity-hotspot--attic { top: 31%; left: 57%; }
+  .opportunity-hotspot--terrace { top: 21%; left: 80%; }
+  .opportunity-hotspot--basement { top: 77%; left: 49%; }
+  .opportunity-hotspot--division { top: 51%; left: 73%; }
+  .opportunity-hotspot--extension { top: 68%; left: 84%; }
+  .opportunity-hotspot--top { top: 12%; left: 45%; }
 
-  .scenario-panel__heading {
-    inset: var(--space-4) var(--space-4) auto;
-  }
-
-  .scenario-panel__number {
-    font-size: 3.5rem;
-  }
-
-  .scenario-panel__media img {
-    object-position: center top;
-  }
-
-  .scenario-panel__media::after {
-    background:
-      linear-gradient(180deg, rgb(16 15 14 / .04) 0%, rgb(16 15 14 / .32) 42%, rgb(16 15 14 / .96) 78%),
-      linear-gradient(90deg, rgb(16 15 14 / .16), transparent);
-  }
-
-  .scenario-card {
+  .opportunity-scene__caption {
     right: var(--space-4);
     bottom: var(--space-4);
-    width: calc(100% - var(--space-6));
-    padding: var(--space-4);
+    left: var(--space-4);
   }
 
-  .scenario-card h3 {
-    font-size: var(--text-lg);
+  .opportunity-scene__caption small {
+    display: none;
   }
 
-  .scenario-card__checks {
+  .opportunity-dossier {
+    min-height: 37rem;
+    padding: var(--space-5) var(--space-4) var(--space-6);
+  }
+
+  .opportunity-panel h3 {
+    font-size: var(--text-xl);
+  }
+
+  .opportunity-finding {
+    margin-top: var(--space-5);
+  }
+
+  .opportunity-check ul {
     gap: var(--space-1);
   }
 
-  .scenario-card__checks span {
-    padding: .35rem .55rem;
+  .opportunity-check li {
+    padding: .38rem .58rem;
     font-size: var(--text-2xs);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scenario-control--playback {
+  .opportunity-scan {
     display: none;
   }
 
-  .examples.is-playing .scenario-tab[aria-selected="true"]::after,
-  .scenario-panel.is-active .scenario-panel__media,
-  .scenario-panel.is-active .scenario-panel__scan,
-  .scenario-panel.is-active .scenario-panel__heading,
-  .scenario-panel.is-active .scenario-card {
+  .opportunity-hotspot,
+  .opportunity-panel.is-active,
+  .opportunity-map[data-active] .opportunity-house__highlight,
+  .opportunity-hotspot[aria-selected="true"] .opportunity-hotspot__pin::after {
     animation: none !important;
   }
 
-  .scenario-panel.is-active .scenario-panel__heading,
-  .scenario-panel.is-active .scenario-card {
-    opacity: 1;
+  .opportunity-map[data-active="0"] .opportunity-house__highlight--attic,
+  .opportunity-map[data-active="1"] .opportunity-house__highlight--terrace,
+  .opportunity-map[data-active="2"] .opportunity-house__highlight--basement,
+  .opportunity-map[data-active="3"] .opportunity-house__highlight--division,
+  .opportunity-map[data-active="4"] .opportunity-house__highlight--extension,
+  .opportunity-map[data-active="5"] .opportunity-house__highlight--top {
+    opacity: .62;
   }
 
-  .scenario-stage:hover .scenario-panel.is-active .scenario-panel__media img {
-    scale: 1.025;
+  .opportunity-house,
+  .opportunity-hotspot,
+  .opportunity-scene::before,
+  .opportunity-scene__grid {
+    translate: 0;
   }
 }

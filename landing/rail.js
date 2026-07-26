@@ -1,7 +1,5 @@
-/* Examples — an accessible scenario explorer rather than a passive marquee.
-   The active case advances every eight seconds while visible. Pointer/focus
-   pauses it, and any direct selection pauses it until the play control is
-   explicitly resumed. */
+/* Examples — an interactive opportunity map. One house remains in place while
+   the selected architectural zone, hotspot and analysis dossier change. */
 const exampleExplorer = document.querySelector('[data-example-explorer]');
 if (exampleExplorer && exampleExplorer.dataset.enhanced !== 'true') {
   exampleExplorer.dataset.enhanced = 'true';
@@ -9,87 +7,44 @@ if (exampleExplorer && exampleExplorer.dataset.enhanced !== 'true') {
   const tabs = [...exampleExplorer.querySelectorAll('[data-example-tab]')];
   const panels = [...exampleExplorer.querySelectorAll('[data-example-panel]')];
   const stage = exampleExplorer.querySelector('[data-example-stage]');
+  const canvas = exampleExplorer.querySelector('[data-opportunity-canvas]');
   const currentLabel = exampleExplorer.querySelector('[data-example-current]');
   const announcer = exampleExplorer.querySelector('[data-example-announcer]');
   const previous = exampleExplorer.querySelector('[data-example-prev]');
   const next = exampleExplorer.querySelector('[data-example-next]');
-  const toggle = exampleExplorer.querySelector('[data-example-toggle]');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const count = Math.min(tabs.length, panels.length);
   let current = 0;
-  let manualPaused = reduce;
-  let temporaryPaused = false;
-  let inView = false;
-  let autoplayTimer;
-  let leavingTimer;
 
   const normalise = (index) => (index + count) % count;
-  const canPlay = () => inView && !manualPaused && !temporaryPaused && !reduce;
 
-  const schedule = () => {
-    clearTimeout(autoplayTimer);
-    if (!canPlay()) return;
-    autoplayTimer = setTimeout(() => activate(current + 1, 'next'), 8000);
-  };
-
-  const syncPlayback = () => {
-    const playing = canPlay();
-    exampleExplorer.classList.toggle('is-playing', playing);
-    exampleExplorer.classList.toggle('is-temporarily-paused', temporaryPaused);
-    toggle?.setAttribute('aria-pressed', String(manualPaused));
-    toggle?.setAttribute(
-      'aria-label',
-      manualPaused ? 'Automatisch afspelen hervatten' : 'Automatisch afspelen pauzeren'
-    );
-    schedule();
-  };
-
-  const activate = (targetIndex, direction = 'next', announce = true) => {
+  const activate = (targetIndex, announce = true) => {
     if (!count || !stage) return;
     const target = normalise(targetIndex);
-    if (target === current) {
-      syncPlayback();
-      return;
-    }
 
-    const outgoing = panels[current];
-    const incoming = panels[target];
-    clearTimeout(leavingTimer);
-    panels.forEach((panel) => panel.classList.remove('is-leaving'));
+    panels.forEach((panel, index) => {
+      panel.classList.toggle('is-active', index === target);
+      panel.setAttribute('aria-hidden', String(index !== target));
+    });
+    tabs.forEach((tab, index) => {
+      tab.setAttribute('aria-selected', String(index === target));
+      tab.setAttribute('tabindex', index === target ? '0' : '-1');
+    });
 
-    stage.dataset.direction = direction;
-    outgoing.classList.remove('is-active');
-    outgoing.classList.add('is-leaving');
-    outgoing.setAttribute('aria-hidden', 'true');
-    incoming.classList.add('is-active');
-    incoming.setAttribute('aria-hidden', 'false');
-
-    tabs[current].setAttribute('aria-selected', 'false');
-    tabs[current].setAttribute('tabindex', '-1');
-    tabs[target].setAttribute('aria-selected', 'true');
-    tabs[target].setAttribute('tabindex', '0');
-
+    stage.dataset.active = String(target);
     current = target;
-    currentLabel.textContent = String(current + 1).padStart(2, '0');
-    exampleExplorer.style.setProperty('--example-progress', String((current + 1) / count));
+    if (currentLabel) currentLabel.textContent = String(current + 1).padStart(2, '0');
+    exampleExplorer.style.setProperty('--opportunity-progress', String((current + 1) / count));
 
     if (announce && announcer) {
-      const title = incoming.querySelector('h3')?.textContent?.trim() || 'Scenario';
-      announcer.textContent = `${title}, scenario ${current + 1} van ${count}`;
+      const title = panels[target].querySelector('h3')?.textContent?.trim() || 'Woonkans';
+      announcer.textContent = `${title}, woonkans ${current + 1} van ${count}`;
     }
-
-    leavingTimer = setTimeout(() => outgoing.classList.remove('is-leaving'), 760);
-    syncPlayback();
-  };
-
-  const selectManually = (target, direction) => {
-    manualPaused = true;
-    activate(target, direction);
   };
 
   tabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => selectManually(index, index < current ? 'prev' : 'next'));
+    tab.addEventListener('click', () => activate(index));
     tab.addEventListener('keydown', (event) => {
       let target;
       if (event.key === 'ArrowDown' || event.key === 'ArrowRight') target = normalise(index + 1);
@@ -99,43 +54,54 @@ if (exampleExplorer && exampleExplorer.dataset.enhanced !== 'true') {
       else return;
 
       event.preventDefault();
-      manualPaused = true;
-      activate(target, target < current ? 'prev' : 'next');
+      activate(target);
       tabs[target].focus();
-      tabs[target].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
     });
   });
 
-  previous?.addEventListener('click', () => selectManually(current - 1, 'prev'));
-  next?.addEventListener('click', () => selectManually(current + 1, 'next'));
-  toggle?.addEventListener('click', () => {
-    manualPaused = !manualPaused;
-    syncPlayback();
-  });
+  previous?.addEventListener('click', () => activate(current - 1));
+  next?.addEventListener('click', () => activate(current + 1));
 
-  const setTemporaryPause = (paused) => {
-    temporaryPaused = paused;
-    syncPlayback();
-  };
-
-  if (finePointer) {
-    exampleExplorer.addEventListener('pointerenter', () => setTemporaryPause(true));
-    exampleExplorer.addEventListener('pointerleave', () => setTemporaryPause(false));
-  }
-  exampleExplorer.addEventListener('focusin', () => setTemporaryPause(true));
-  exampleExplorer.addEventListener('focusout', () => {
-    setTimeout(() => setTemporaryPause(exampleExplorer.contains(document.activeElement)), 0);
-  });
-
-  new IntersectionObserver(
+  const revealObserver = new IntersectionObserver(
     ([entry]) => {
-      inView = Boolean(entry?.isIntersecting);
-      syncPlayback();
+      if (!entry?.isIntersecting) return;
+      exampleExplorer.classList.add('is-map-visible');
+      revealObserver.disconnect();
     },
-    { threshold: .2 }
-  ).observe(exampleExplorer);
+    { threshold: .18 }
+  );
+  revealObserver.observe(exampleExplorer);
 
-  syncPlayback();
+  if (canvas && finePointer && !reduce) {
+    let frame = null;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const renderMapParallax = () => {
+      const bounds = canvas.getBoundingClientRect();
+      const x = Math.max(-1, Math.min(1, ((pointerX - bounds.left) / bounds.width - .5) * 2));
+      const y = Math.max(-1, Math.min(1, ((pointerY - bounds.top) / bounds.height - .5) * 2));
+      canvas.style.setProperty('--map-x', `${x * 6}px`);
+      canvas.style.setProperty('--map-y', `${y * 4}px`);
+      canvas.style.setProperty('--map-hotspot-x', `${x * 3}px`);
+      canvas.style.setProperty('--map-hotspot-y', `${y * 2}px`);
+      frame = null;
+    };
+
+    canvas.addEventListener('pointermove', (event) => {
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (frame === null) frame = requestAnimationFrame(renderMapParallax);
+    });
+    canvas.addEventListener('pointerleave', () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+      canvas.style.removeProperty('--map-x');
+      canvas.style.removeProperty('--map-y');
+      canvas.style.removeProperty('--map-hotspot-x');
+      canvas.style.removeProperty('--map-hotspot-y');
+    });
+  }
 }
 
 /* Fine-pointer enhancement for the selected glass cards. The Next route has
