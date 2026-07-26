@@ -30,11 +30,6 @@
 }
 .research-list li > span:last-child { font-size: var(--text-base); line-height: 1.35; color: var(--color-text); }
 
-/* Intro heading a step smaller than the site h2, to match the concept.
-   With four columns the intro column is ~245px, so the default h2 would wrap
-   hard here. */
-#hoe-het-werkt .split--4 > .stack h2 { font-size: var(--text-lg); }
-
 /* ---- Layered report stack ----------------------------------------------
    Every source is a matching transparent square with its own perspective and
    cast shadow. The transforms only recreate the vertical stack; they do not

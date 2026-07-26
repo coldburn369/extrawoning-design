@@ -157,15 +157,6 @@
   isolation: isolate;
   aspect-ratio: 4 / 3;
 }
-.final-cta__visual::before {
-  content: "";
-  position: absolute;
-  inset: -35%;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(58% 62% at 50% 55%, transparent 38%, var(--color-bloom) 70%, transparent 82%);
-}
 .final-cta__map {
   position: absolute;
   inset: -20% -12% -16% -30%;
