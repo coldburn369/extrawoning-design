@@ -98,10 +98,60 @@ if (rail) {
 /* Fine-pointer enhancement for the selected glass cards. The Next route has
    the same behavior in LandingClient; this keeps the legacy comparison server
    visually equivalent without introducing an inline script. */
+const initialPostcode = document.getElementById('pc1');
+if (initialPostcode && document.activeElement === document.body) {
+  initialPostcode.focus({ preventScroll: true });
+}
+
 if (
   matchMedia('(hover: hover) and (pointer: fine)').matches &&
   !matchMedia('(prefers-reduced-motion: reduce)').matches
 ) {
+  const hero = document.querySelector('.hero');
+  if (hero) {
+    const parallaxProperties = [
+      '--hero-back-x', '--hero-back-y',
+      '--hero-copy-x', '--hero-copy-y',
+      '--hero-house-x', '--hero-house-y',
+      '--hero-card-a-x', '--hero-card-a-y',
+      '--hero-card-b-x', '--hero-card-b-y',
+      '--hero-proof-x', '--hero-proof-y',
+    ];
+    let frame = null;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const render = () => {
+      const bounds = hero.getBoundingClientRect();
+      const x = Math.max(-1, Math.min(1, ((pointerX - bounds.left) / bounds.width - 0.5) * 2));
+      const y = Math.max(-1, Math.min(1, ((pointerY - bounds.top) / bounds.height - 0.5) * 2));
+
+      hero.style.setProperty('--hero-back-x', `${x * -10}px`);
+      hero.style.setProperty('--hero-back-y', `${y * -7}px`);
+      hero.style.setProperty('--hero-copy-x', `${x * -3}px`);
+      hero.style.setProperty('--hero-copy-y', `${y * -2}px`);
+      hero.style.setProperty('--hero-house-x', `${x * 8}px`);
+      hero.style.setProperty('--hero-house-y', `${y * 5}px`);
+      hero.style.setProperty('--hero-card-a-x', `${x * 12}px`);
+      hero.style.setProperty('--hero-card-a-y', `${y * 8}px`);
+      hero.style.setProperty('--hero-card-b-x', `${x * 10}px`);
+      hero.style.setProperty('--hero-card-b-y', `${y * 7}px`);
+      hero.style.setProperty('--hero-proof-x', `${x * 3}px`);
+      hero.style.setProperty('--hero-proof-y', `${y * 2}px`);
+      frame = null;
+    };
+    hero.addEventListener('pointermove', (event) => {
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (frame === null) frame = requestAnimationFrame(render);
+    });
+    hero.addEventListener('pointerleave', () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+      parallaxProperties.forEach((property) => hero.style.removeProperty(property));
+    });
+  }
+
   document.querySelectorAll('[data-cursor-glow]').forEach((card) => {
     let frame = null;
     let pointerX = 0;

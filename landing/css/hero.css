@@ -5,7 +5,24 @@
             assets/hero_map_bg.jpg  (Amsterdam map, masked to fade left)
    ========================================================================== */
 
-.hero { position: relative; overflow: hidden; background: var(--color-page); padding-block: var(--space-8) var(--space-10); }
+.hero {
+  --hero-back-x: 0px;
+  --hero-back-y: 0px;
+  --hero-copy-x: 0px;
+  --hero-copy-y: 0px;
+  --hero-house-x: 0px;
+  --hero-house-y: 0px;
+  --hero-card-a-x: 0px;
+  --hero-card-a-y: 0px;
+  --hero-card-b-x: 0px;
+  --hero-card-b-y: 0px;
+  --hero-proof-x: 0px;
+  --hero-proof-y: 0px;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-page);
+  padding-block: var(--space-8) var(--space-10);
+}
 
 /* Atmosphere: a wide, very low-contrast accent bloom behind the artwork.
    On a near-black page this is what creates depth — shadows can't, because
@@ -25,22 +42,31 @@
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: url("../../assets/hero_map_bg.jpg") no-repeat center right / cover;
   opacity: .9;
+  transform: translate3d(var(--hero-back-x, 0), var(--hero-back-y, 0), 0) scale(1.035);
+  transition: transform var(--duration-base) var(--ease-settle);
   -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.35) 34%, #000 66%);
           mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.35) 34%, #000 66%);
 }
-/* Columns stretch (not centre) so the two proof rows at the bottom of each
-   column — .trust-row and .hero__proof — can share one baseline. See the
-   margin-top:auto pair further down. */
 /* Copy column deliberately narrower than the visual. Two reasons: the address
    form reads better at a contained width (a narrow field row above a
    full-bleed button looked broken), and the house + its flanking cards were
-   cramped at the old near-even split. */
-.hero__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: var(--space-7); align-items: stretch; }
+   cramped at the old near-even split. The five proof items occupy their own
+   full-width grid row below both columns, so spacing never depends on the
+   unequal copy/artwork column widths. */
+.hero__grid {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  column-gap: var(--space-7);
+  row-gap: var(--space-4);
+  align-items: stretch;
+}
 .hero__copy {
   /* The artwork grows much faster than the copy column. Use that extra height
-     to settle the headline/form nearer the house's visual centre while the
-     trust row remains pinned to the shared baseline below. */
+     to settle the headline/form nearer the house's visual centre. */
   padding-top: clamp(0rem, calc((100vw - 62rem) * .22), var(--space-8));
+  transform: translate3d(var(--hero-copy-x, 0), var(--hero-copy-y, 0), 0);
+  transition: transform var(--duration-base) var(--ease-settle);
 }
 
 /* Title — the page's one loud typographic moment. Inherits the fluid
@@ -76,12 +102,16 @@
 .hero__intro { font-size: var(--text-md); line-height: var(--leading-normal); color: var(--color-text-muted); max-width: 44ch; }
 
 /* -- Hero visual: house on the map, cards flanking it -- */
-.hero__visual { display: flex; flex-direction: column; gap: var(--space-4); }
+.hero__visual { display: flex; flex-direction: column; justify-content: center; }
 .hero__stage { position: relative; }
 .hero__house {
   width: 100%; height: auto;
   filter: drop-shadow(0 24px 50px rgb(0 0 0 / .55));
-  transition: translate var(--duration-slow) var(--ease-settle), scale var(--duration-slow) var(--ease-settle);
+  transform: translate3d(var(--hero-house-x, 0), var(--hero-house-y, 0), 0);
+  transition:
+    transform var(--duration-base) var(--ease-settle),
+    translate var(--duration-slow) var(--ease-settle),
+    scale var(--duration-slow) var(--ease-settle);
 }
 .hero__stage:hover .hero__house { translate: 0 -4px; scale: 1.012; }
 /* Floating glass cards. These keep a real cast shadow (--elevation-float):
@@ -95,12 +125,22 @@
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-radius: var(--radius-lg); padding: var(--space-4);
   box-shadow: var(--elevation-float), inset 0 1px 0 rgb(255 255 255 / .10);
+  transition:
+    transform var(--duration-base) var(--ease-settle),
+    translate var(--duration-base) var(--ease-settle),
+    box-shadow var(--duration-base) var(--ease-settle);
 }
 /* Thin house: the left card tucks into the empty sky at the top-left,
    clearing the facade entirely; the verdict card sits lower-right over the
    bushes. The central facade + beam + glowing bay stay fully clear. */
-.hero-card--steps   { left: -5%;  top: 2%; }
-.hero-card--verdict { right: -2%; top: 26%; }
+.hero-card--steps {
+  left: -5%; top: 2%;
+  transform: translate3d(var(--hero-card-a-x, 0), var(--hero-card-a-y, 0), 0);
+}
+.hero-card--verdict {
+  right: -2%; top: 26%;
+  transform: translate3d(var(--hero-card-b-x, 0), var(--hero-card-b-y, 0), 0);
+}
 
 /* Step list inside the left card */
 .steplist { list-style: none; margin: 0; padding: 0; }
@@ -160,35 +200,36 @@
 .medallion .bezel { stroke-width: 1; stroke-dasharray: .5 3.1; opacity: .55; }
 .medallion .ring  { stroke-width: 1; opacity: .3; }
 
-.trust-row, .hero__proof { display: grid; list-style: none; padding: 0; }
-.trust-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin: auto 0 0; }
-.hero__proof { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin: var(--space-4) 0 0; }
-/* Pin the right-hand proof row to the bottom of its column so it lines up with
-   .trust-row on the left. The house takes the matching auto margin, so the
-   column's spare height splits evenly above each — keeping the house optically
-   centred exactly where it was while the two rows land on one line. */
-.hero__visual > .hero__stage, .hero__proof { margin-top: auto; }
-.trust-row li, .hero__proof li { display: flex; align-items: center; gap: var(--space-3); }
+.hero__proof {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-5);
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  transform: translate3d(var(--hero-proof-x, 0), var(--hero-proof-y, 0), 0);
+  transition: transform var(--duration-base) var(--ease-settle);
+}
+.hero__proof li { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 /* Concept treatment: a single label beside the medallion, wrapping to 2 lines. */
-.trust-row h4, .hero__proof h4 {
+.hero__proof h4 {
   font-size: var(--text-sm); font-weight: var(--weight-medium);
   color: var(--color-text); line-height: 1.3; letter-spacing: normal;
 }
 @keyframes medallion-trace {
   to { stroke-dashoffset: -18; }
 }
-.trust-row li:hover .medallion,
 .hero__proof li:hover .medallion {
   translate: 0 -3px;
   scale: 1.08;
   filter: drop-shadow(0 0 12px var(--color-bloom));
 }
-.trust-row li:hover .medallion svg,
 .hero__proof li:hover .medallion svg {
   color: var(--color-text-accent);
   rotate: -4deg;
 }
-.trust-row li:hover .medallion .bezel,
 .hero__proof li:hover .medallion .bezel {
   opacity: 1;
   animation: medallion-trace var(--duration-trace) linear infinite;
@@ -204,17 +245,16 @@
   .hero__stage { display: flex; flex-direction: column; gap: var(--space-3); }
   .hero-card { position: static; width: auto; }
   .hero-card--steps, .hero-card--verdict { left: auto; right: auto; top: auto; }
-}
-@media (max-width: 40rem) {
-  .trust-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
-  .hero__proof { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-  .trust-row li {
+  .hero__proof li {
     flex-direction: column;
     justify-content: flex-start;
     gap: var(--space-2);
     text-align: center;
   }
-  .trust-row h4, .hero__proof h4 { font-size: var(--text-xs); }
+  .hero__proof h4 { font-size: var(--text-xs); }
+}
+@media (max-width: 40rem) {
+  .hero__proof { gap: var(--space-1); }
 }
 /* Wide screens: give a little more to the visual. The copy column is already
    bounded by .hero__title (14ch), .hero__intro (44ch) and .addresscheck

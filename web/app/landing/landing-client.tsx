@@ -17,7 +17,66 @@ export default function LandingClient() {
       cleanups.push(() => form.removeEventListener("submit", preventPlaceholderSubmit));
     }
 
+    const postcode = document.getElementById("pc1") as HTMLInputElement | null;
+    if (postcode && document.activeElement === document.body) {
+      postcode.focus({ preventScroll: true });
+    }
+
     if (!reduce && finePointer) {
+      const hero = document.querySelector<HTMLElement>(".hero");
+      if (hero) {
+        const parallaxProperties = [
+          "--hero-back-x", "--hero-back-y",
+          "--hero-copy-x", "--hero-copy-y",
+          "--hero-house-x", "--hero-house-y",
+          "--hero-card-a-x", "--hero-card-a-y",
+          "--hero-card-b-x", "--hero-card-b-y",
+          "--hero-proof-x", "--hero-proof-y",
+        ];
+        let frame: number | null = null;
+        let pointerX = 0;
+        let pointerY = 0;
+
+        const renderParallax = () => {
+          const bounds = hero.getBoundingClientRect();
+          const x = Math.max(-1, Math.min(1, ((pointerX - bounds.left) / bounds.width - 0.5) * 2));
+          const y = Math.max(-1, Math.min(1, ((pointerY - bounds.top) / bounds.height - 0.5) * 2));
+
+          hero.style.setProperty("--hero-back-x", `${x * -10}px`);
+          hero.style.setProperty("--hero-back-y", `${y * -7}px`);
+          hero.style.setProperty("--hero-copy-x", `${x * -3}px`);
+          hero.style.setProperty("--hero-copy-y", `${y * -2}px`);
+          hero.style.setProperty("--hero-house-x", `${x * 8}px`);
+          hero.style.setProperty("--hero-house-y", `${y * 5}px`);
+          hero.style.setProperty("--hero-card-a-x", `${x * 12}px`);
+          hero.style.setProperty("--hero-card-a-y", `${y * 8}px`);
+          hero.style.setProperty("--hero-card-b-x", `${x * 10}px`);
+          hero.style.setProperty("--hero-card-b-y", `${y * 7}px`);
+          hero.style.setProperty("--hero-proof-x", `${x * 3}px`);
+          hero.style.setProperty("--hero-proof-y", `${y * 2}px`);
+          frame = null;
+        };
+        const pointerMove = (event: PointerEvent) => {
+          pointerX = event.clientX;
+          pointerY = event.clientY;
+          if (frame === null) frame = requestAnimationFrame(renderParallax);
+        };
+        const pointerLeave = () => {
+          if (frame !== null) cancelAnimationFrame(frame);
+          frame = null;
+          for (const property of parallaxProperties) hero.style.removeProperty(property);
+        };
+
+        hero.addEventListener("pointermove", pointerMove);
+        hero.addEventListener("pointerleave", pointerLeave);
+        cleanups.push(() => {
+          hero.removeEventListener("pointermove", pointerMove);
+          hero.removeEventListener("pointerleave", pointerLeave);
+          if (frame !== null) cancelAnimationFrame(frame);
+          for (const property of parallaxProperties) hero.style.removeProperty(property);
+        });
+      }
+
       for (const card of document.querySelectorAll<HTMLElement>("[data-cursor-glow]")) {
         let frame: number | null = null;
         let pointerX = 0;
