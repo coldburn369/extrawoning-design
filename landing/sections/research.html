@@ -24,10 +24,31 @@
       </ul>
     </div>
 
-    <!-- Third column: decorative. Sized by row height in components.css, so its
-         transparent side-margins bleed into the grid gaps. Hidden below 62rem. -->
-    <img class="is-artwork" src="../assets/architectural_report_and_maps_stack.webp"
-         alt="Gestapelde rapportpagina's en kaartlagen" width="640" height="640" loading="lazy" />
+    <!-- Third column: five independently animated sheets, bottom to top.
+         Decorative as individual layers; the stack carries the description. -->
+    <div class="sheet-stack is-artwork" role="img"
+         aria-label="Gestapelde rapportpagina's en kaartlagen">
+      <span class="sheet-stack__layer sheet-stack__layer--1">
+        <img src="../assets/sheets/1.webp" alt="" width="1024" height="1024"
+             loading="lazy" decoding="async" aria-hidden="true" />
+      </span>
+      <span class="sheet-stack__layer sheet-stack__layer--2">
+        <img src="../assets/sheets/2.webp" alt="" width="1024" height="1024"
+             loading="lazy" decoding="async" aria-hidden="true" />
+      </span>
+      <span class="sheet-stack__layer sheet-stack__layer--3">
+        <img src="../assets/sheets/3.webp" alt="" width="1024" height="1024"
+             loading="lazy" decoding="async" aria-hidden="true" />
+      </span>
+      <span class="sheet-stack__layer sheet-stack__layer--4">
+        <img src="../assets/sheets/4.webp" alt="" width="1024" height="1024"
+             loading="lazy" decoding="async" aria-hidden="true" />
+      </span>
+      <span class="sheet-stack__layer sheet-stack__layer--5">
+        <img src="../assets/sheets/5.webp" alt="" width="1024" height="1024"
+             loading="lazy" decoding="async" aria-hidden="true" />
+      </span>
+    </div>
 
     <div class="panel stack">
       <span class="logo"><svg role="img" aria-label="ExtraWoning" viewBox="0 0 129.53934 21.930241"><use href="#ew-logo"/></svg></span>

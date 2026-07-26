@@ -89,9 +89,11 @@ for (const match of generatedCss.join("\n").matchAll(/url\("\/assets\/([^"]+)"\)
 const publicAssets = path.join(webRoot, "public", "assets");
 fs.mkdirSync(publicAssets, { recursive: true });
 for (const name of assetNames) {
+  const destination = path.join(publicAssets, name);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.copyFileSync(
     path.join(repositoryRoot, "assets", name),
-    path.join(publicAssets, name),
+    destination,
   );
 }
 
