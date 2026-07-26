@@ -1,0 +1,11 @@
+@import "./legacy.css";
+
+/*
+ * The first migration slice renders the reviewed static section partials
+ * verbatim at build time. display:contents keeps that compatibility boundary
+ * from introducing a layout box. Each section can now move to TSX separately
+ * without a big-bang visual rewrite.
+ */
+.landing-compat {
+  display: contents;
+}

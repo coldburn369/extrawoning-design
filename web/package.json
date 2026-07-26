@@ -1,0 +1,29 @@
+{
+  "name": "extrawoning-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "prepare:legacy": "node scripts/prepare-legacy.mjs",
+    "predev": "npm run prepare:legacy",
+    "dev": "next dev",
+    "prebuild": "npm run prepare:legacy",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.0"
+  },
+  "overrides": {
+    "postcss": "8.5.18",
+    "sharp": "0.35.0"
+  }
+}

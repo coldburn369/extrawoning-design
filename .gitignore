@@ -1,6 +1,13 @@
 __pycache__/
 *.pyc
+*.tsbuildinfo
 dist/
+web/.next/
+web/app/legacy.css
+web/out/
+web/node_modules/
+web/public/assets/
+web/public/fonts/
 _backup/
 old/
 .DS_Store
