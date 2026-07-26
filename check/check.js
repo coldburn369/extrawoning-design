@@ -12,6 +12,7 @@
  * below. Verified against real Zaanstad addresses including huisletter and
  * toevoeging cases — see check/SECTIONS.md.
  */
+import { SCHEMA_VERSION, contractMatches } from './contract.js';
 import {
   RenderError,
   renderInvalid,
@@ -20,6 +21,7 @@ import {
   renderService,
   renderTerminal,
   renderTransportError,
+  renderVersionMismatch,
 } from './render.js';
 
 const ENDPOINT = '/api/check';
@@ -138,6 +140,12 @@ async function postCheck(address, signal) {
  * from wire outcome to template is readable in one screen.
  */
 function fragmentFor({ status, body }) {
+  // BEFORE any other field is read. Once the contract version is wrong, every
+  // subsequent branch here is reading fields whose meaning this page is only
+  // guessing at — including `status`, which is what selects the template.
+  if (!contractMatches(body)) {
+    return renderVersionMismatch(SCHEMA_VERSION, body?.schema_version);
+  }
   if (status === 422) return renderInvalid(body);
   if (status === 429 || status === 503) return renderService(body);
   if (status !== 200) return renderTransportError('unexpected', `http-${status}`);

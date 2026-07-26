@@ -267,6 +267,32 @@
   </section>
 </template>
 
+<!-- ---- The version guard --------------------------------------------------
+     This page renders one specific version of the /api/check contract. When the
+     service answers with a different `schema_version`, the page cannot know what
+     its own slots now mean, so it shows this INSTEAD of the answer.
+
+     The Dutch here is chrome, and it belongs to the same class as tpl-transport:
+     a failure where we have no answer we are entitled to quote. A response we
+     cannot interpret is not an answer — reading Dutch sentences out of a
+     contract this page no longer understands is exactly the failure the guard
+     exists to prevent, so it deliberately says nothing about the address.
+
+     The two versions are shown because they are the only thing that makes the
+     fault diagnosable from a screenshot. -->
+<template id="tpl-version-mismatch">
+  <section class="result result--message">
+    <div class="statusbox statusbox--error">
+      <p class="statusbox__title">
+        Deze pagina en de dienst zijn niet meer op elkaar afgestemd. Er is niets
+        getoetst — dit zegt niets over uw adres. Wij tonen liever niets dan een
+        uitkomst die wij mogelijk verkeerd weergeven. Probeert u het later opnieuw.
+      </p>
+      <p class="statusbox__detail" data-slot="detail"></p>
+    </div>
+  </section>
+</template>
+
 <!-- ---- The render guard ---------------------------------------------------
      Shown INSTEAD of a result when a mandatory disclosure could not be placed.
      A result rendered without its presumptions or its carve-out disclosure is a

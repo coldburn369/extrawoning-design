@@ -317,6 +317,20 @@ export function renderTransportError(kind, code) {
   return fragment;
 }
 
+/**
+ * Shown INSTEAD of anything else when the service answers with a
+ * `schema_version` this page was not built against.
+ *
+ * Takes the raw value rather than a message: an absent, null or unparsable
+ * version is as much a mismatch as a numerically different one, and all of them
+ * mean the same thing — we do not know what the fields in this body mean.
+ */
+export function renderVersionMismatch(expected, found) {
+  const fragment = clone('tpl-version-mismatch');
+  setText(fragment, 'detail', `contract: pagina v${expected} · dienst v${found ?? '?'}`);
+  return fragment;
+}
+
 /** Shown INSTEAD of a result whose mandatory disclosures did not render. */
 export function renderRenderFailure(code) {
   const fragment = clone('tpl-render-failure');
