@@ -10,6 +10,9 @@ const T = {
   'green-700': '#2f6f45',
   'green-600': '#3f8f5c',
   'green-400': '#63c98a',
+  'red-700': '#a32318',
+  'red-600': '#c8351f',
+  'red-400': '#f0705f',
   'clay-950': '#100f0e',
   'clay-900': '#1a1917',
   'clay-850': '#24221f',
@@ -46,11 +49,18 @@ const CHECKS = [
   ['success-txt light', 'green-700', 'clay-50', 4.5],
   ['success-txt dark ', 'green-400', 'clay-900', 4.5],
   ['success-ui  light', 'green-600', 'clay-50', 3.0],
+  // Danger — the check page's refusal colour. Carries real sentences ("Dit is
+  // een weigeringsgrond"), so it is held to the 4.5 text floor, not 3.0.
+  ['danger-txt  light', 'red-700', 'clay-50', 4.5],
+  ['danger-txt  dark ', 'red-400', 'clay-900', 4.5],
+  ['danger-ui   light', 'red-600', 'clay-50', 3.0],
+  ['danger-ui   dark ', 'red-400', 'clay-900', 3.0],
   // nested panels: text must still hold on the raised dark surface
   ['text        panel', 'clay-100', 'clay-850', 4.5],
   ['text-muted  panel', 'clay-500', 'clay-850', 4.5],
   ['success-txt panel', 'green-400', 'clay-850', 4.5],
   ['text-accent panel', 'orange-400', 'clay-850', 4.5],
+  ['danger-txt  panel', 'red-400', 'clay-850', 4.5],
 ];
 
 // Regression guards: the prototype values that failed. These SHOULD fail.

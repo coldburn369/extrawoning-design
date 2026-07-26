@@ -85,6 +85,18 @@
   --ew-green-600: #3f8f5c;    /* success BORDER/ICON on light               */
   --ew-green-400: #63c98a;    /* success on dark — text-safe                */
 
+  /* Red — REFUSAL ONLY. Added for the check page, which renders legal
+     outcomes: a refusal ground (tone `blocking`) and a permit duty (tone
+     `obligation`) are different things and must not share the accent. Orange
+     was carrying both, which made "u heeft een vergunning nodig" and "de
+     vergunning wordt geweigerd" look identical.
+
+     Never decorative, and never for a merely-unknown result — an UNKNOWN is
+     not a refusal. Same contrast-driven stepping as the orange and green.   */
+  --ew-red-700: #a32318;      /* danger TEXT on light  — 7.0:1 vs clay-50   */
+  --ew-red-600: #c8351f;      /* danger BORDER/ICON on light — 5.0:1        */
+  --ew-red-400: #f0705f;      /* danger on dark — 6.0:1 vs clay-900, text-safe */
+
   /* Clay — warm neutral ramp, hue-biased toward the accent so the greys
      read as chosen rather than inherited.                                   */
   --ew-white:    #ffffff;
@@ -148,6 +160,12 @@
   --color-success:         light-dark(var(--ew-green-600), var(--ew-green-400));
   --color-text-success:    light-dark(var(--ew-green-700), var(--ew-green-400));
   --color-success-wash:    color-mix(in srgb, var(--color-success) 12%, transparent);
+
+  /* Danger — the refusal counterpart to success. Split text/UI identically.
+     Reserved for an outcome the law actually refuses; see the Tier-1 note. */
+  --color-danger:          light-dark(var(--ew-red-600), var(--ew-red-400));
+  --color-text-danger:     light-dark(var(--ew-red-700), var(--ew-red-400));
+  --color-danger-wash:     color-mix(in srgb, var(--color-danger) 12%, transparent);
 
   /* -- Lines --
      Used far more sparingly than before. A hairline is now reserved for

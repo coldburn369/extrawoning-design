@@ -45,6 +45,15 @@ Colours are declared once with `light-dark()`; the theme toggle flips only
 `--color-success` (green-600/400) · `--color-text-success` (green-700/400) ·
 `--color-success-wash` (success @ 12%)
 
+`--color-danger` (red-600/400) · `--color-text-danger` (red-700/400) ·
+`--color-danger-wash` (danger @ 12%)
+
+> **Danger is for refusal, never for emphasis.** Added for `check/`, which
+> renders legal outcomes: a refusal ground and a permit duty are different
+> things and orange was carrying both. Never use it for a merely-unknown
+> result — an UNKNOWN is not a refusal. See the tone table in
+> `check/SECTIONS.md`.
+
 ### Lines & effects
 `--color-border-subtle` (ink-a12 / white-a09) · `--color-border-strong`
 (clay-300 / white-a14) · `--color-glow` · `--color-sheen`
