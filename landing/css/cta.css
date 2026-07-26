@@ -106,7 +106,32 @@
   background: radial-gradient(55% 60% at 50% 100%, var(--color-bloom) 0%, transparent 72%);
 }
 .final-cta { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
-.final-cta img { border-radius: var(--radius-xl); }
+
+/* Matching 4:3 layers: the map supplies the setting while the transparent
+   miniature stays independently positionable above it, just like the hero's
+   map and house. Keeping the layers separate also avoids baking atmosphere
+   into content imagery. */
+.final-cta__visual {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 4 / 3;
+}
+.final-cta__map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: var(--radius-xl);
+  background: url("../../assets/miniatur-map-bg.webp") no-repeat center / cover;
+}
+.final-cta__miniature {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 24px 50px rgb(0 0 0 / .45));
+}
 
 /* ---- Responsive -------------------------------------------------------- */
 @media (max-width: 62rem) {
