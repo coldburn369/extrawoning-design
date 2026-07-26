@@ -69,7 +69,7 @@
   background:
     radial-gradient(
       5.5rem circle at var(--btn-x) var(--btn-y),
-      color-mix(in srgb, var(--color-page) 18%, transparent),
+      color-mix(in srgb, var(--color-text-on-accent) 14%, transparent),
       transparent 72%
     );
 }
