@@ -1,0 +1,141 @@
+/* Privacyverklaring — a document, not an interface.
+   Tier 2/3 tokens only (check.mjs enforces it).
+
+   Deliberately plain. The only styling decisions here are the ones that make a
+   long legal page readable: one narrow measure, generous leading, and enough
+   space between sections that they read as separate claims rather than as a
+   wall. `--doc-measure` is the single knob.
+
+   Prose is capped in `ch`, not in px, so the measure tracks the font size —
+   the same reason `.lead` is capped at 56ch (see TOKENS.md "Layout").
+*/
+
+.privacy-page {
+  --doc-measure: 68ch;
+}
+
+/* ---- shell ------------------------------------------------------------- */
+
+.doc-head { padding-block: var(--space-5); }
+
+.doc-head__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.doc-head .logo img { height: 1.75rem; width: auto; }
+
+.doc-main {
+  padding-block: var(--space-6) var(--space-9);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.doc-intro { max-width: 44rem; }
+
+/* ---- a section = one claim --------------------------------------------- */
+
+.doc-section {
+  max-width: var(--doc-measure);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.doc-section h2 {
+  /* Space above, not below: the heading belongs to the block under it. */
+  margin-block-start: var(--space-3);
+}
+
+.doc-section h3 {
+  margin-block-start: var(--space-3);
+  color: var(--color-text);
+}
+
+.doc-section p {
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+/* Reading copy is never set at --text-sm or below (TOKENS.md). `strong` is the
+   only emphasis on this page, and it is used for the facts a reader is most
+   likely to be checking — what we store, and what we do not. */
+.doc-section strong { color: var(--color-text); font-weight: var(--weight-semibold); }
+
+.doc-section em { font-style: italic; }
+
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+.doc-list li::marker { color: var(--color-text-accent); }
+
+/* ---- the section that carries the uncomfortable fact -------------------- */
+
+/* The cache section gets an accent rule down its edge. Not a warning colour —
+   nothing here is a failure — but it is the section a reader came for, and the
+   one where a reassuring summary would have been a lie. Marking it is how it
+   survives being skimmed. */
+.doc-section--flag {
+  border-inline-start: 2px solid var(--color-accent-ui);
+  padding-inline-start: var(--space-5);
+}
+
+/* ---- small parts -------------------------------------------------------- */
+
+.doc-note {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  border-block-start: 1px solid var(--color-border-subtle);
+  padding-block-start: var(--space-3);
+}
+
+/* An inline literal: a gemeentecode, a header value, a path. Same treatment as
+   `.check-kbd` on the check page, kept local rather than shared — two call
+   sites is the threshold for extracting one, and this is the second only if the
+   check page's version ever moves out of check.css. */
+.doc-code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+}
+
+.doc-link {
+  color: var(--color-text-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.doc-link:hover { color: var(--color-accent-hover); }
+
+.doc-link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-xs);
+}
+
+.doc-back {
+  margin-block-start: var(--space-5);
+  padding-block-start: var(--space-5);
+  border-block-start: 1px solid var(--color-border-subtle);
+  font-size: var(--text-base);
+}
+
+@media (max-width: 40rem) {
+  .doc-section--flag { padding-inline-start: var(--space-4); }
+}

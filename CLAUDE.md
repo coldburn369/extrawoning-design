@@ -1,12 +1,18 @@
 # ExtraWoning — website & design system
 
-Static site, no framework. Four things live here:
+Static site, no framework. Five things live here:
 1. **`design-system/`** — the token-based design system (source of truth for all styling).
 2. **`landing/`** — the marketing landing page, built on the design system.
 3. **`check/`** — the address check page: it renders a `POST /api/check` response
    and nothing else. Read **`check/SECTIONS.md`** before touching it; the rule
    that page exists to obey is stricter than anything on the landing page.
-4. **`extrawoning-loader.html`** — the brand logo loader→reveal animation (self-contained).
+4. **`privacy/`** — the privacy statement at `/privacy/`. **The one page whose
+   copy is its own**, because it is a document rather than a rendering: it makes
+   claims about what we store, and those claims must be readable in one file.
+   Every claim cites the file in `apps/woningkans` that makes it true, in a
+   comment beside it — ⚠️ **change one of those files and this page changes in
+   the same session.** The TTL number is copied from `config.cache_ttl_hours`.
+5. **`extrawoning-loader.html`** — the brand logo loader→reveal animation (self-contained).
 
 No build step is needed to *preview* — `serve.py` resolves the page's includes
 on the fly. `build.py` exists only to flatten everything for deploy.
@@ -22,10 +28,15 @@ artifact between an edit and the live page.
 
 - **Editing a file here changes what is live on the next refresh.** A
   half-saved file IS the live page. `dist/` is gitignored and is not served.
-- URLs: `/landing/index.html` · **`/check/`** · `/` redirects to the landing
-  page. The whole host is behind nginx basic auth (user `ben`); `/health` is
-  the one exception and `/api/` proxies to the woningkans service on
-  `127.0.0.1:8001`.
+- URLs: `/landing/index.html` · **`/check/`** · **`/privacy/`** · `/` redirects
+  to the landing page. The whole host is behind nginx basic auth (user `ben`);
+  `/health` is the one exception and `/api/` proxies to the woningkans service
+  on `127.0.0.1:8001`.
+- ⚠️ **`serve.py` only resolves includes for a path ending in `.html`.** Open
+  `/privacy/index.html`, not `/privacy/` — the bare directory serves the shell
+  with its `<!--#include -->` unresolved and looks like a blank page. nginx has
+  no such problem (`index index.html` + `ssi on` resolve it), so this is a dev-
+  server quirk, not a broken page.
 - **The includes are resolved by nginx, not by a build.** `<!--#include
   file="..." -->` is nginx's own SSI directive; the vhost sets `ssi on`. Output
   is byte-identical to `build.py`'s resolver (verified for both pages).

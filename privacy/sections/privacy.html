@@ -1,0 +1,247 @@
+<!-- Privacyverklaring. Styles: css/privacy.css
+     ==========================================================================
+     THE ONE EXCEPTION TO THE PAGE-COPY RULE.
+
+     Everywhere else in this repo, a user-visible sentence about a result comes
+     from the API. This page is the exception, and deliberately so: it is a
+     DOCUMENT, not a rendering. It makes claims about what we do with data, and
+     those claims must be readable in one file by a human who wants to check
+     them against the code — not assembled at runtime from a response.
+
+     THE RULE THIS FILE OBEYS INSTEAD: every claim below is checkable against a
+     named file in apps/woningkans, and the file is cited in a comment beside
+     it. If you change one of those files, change this page in the same session.
+     An inaccurate privacy statement is a worse failure than a blunt one.
+
+     ⚠️ NUMBERS THAT ARE COPIED FROM CODE, AND WHERE THEY LIVE:
+       · 168 uur / 7 dagen   -> config.cache_ttl_hours (Settings, config.py)
+       · 30 dagen (verwijdering) -> a promise, not a setting. Nothing enforces
+         it; honouring it is manual (scripts/export_leads.py reads, deletion is
+         a DELETE run by hand). Do not soften this into "automatisch".
+     ========================================================================== -->
+<header class="doc-head">
+  <div class="container doc-head__inner">
+    <a class="logo" href="../landing/index.html" aria-label="ExtraWoning">
+      <img src="../extrawoning_logo_web.svg" alt="ExtraWoning" width="168" height="28" />
+    </a>
+    <p class="eyebrow">Privacy</p>
+  </div>
+</header>
+
+<main class="container doc-main">
+
+  <div class="doc-intro stack">
+    <h1>Privacyverklaring</h1>
+    <p class="lead">
+      Deze pagina beschrijft precies welke gegevens ExtraWoning verwerkt, waarom,
+      en hoe lang. Waar wij iets wél bewaren, staat dat er ook — ook als een
+      geruststellender formulering mogelijk was.
+    </p>
+    <p class="note">Laatst gewijzigd: 26 juli 2026.</p>
+  </div>
+
+  <!-- Controller. Trade name + KvK, per art. 13 lid 1 sub a AVG. -->
+  <section class="doc-section">
+    <h2>Wie is verantwoordelijk</h2>
+    <p>
+      ExtraWoning, ingeschreven bij de Kamer van Koophandel onder nummer
+      <strong>42040119</strong>, is de verwerkingsverantwoordelijke voor de
+      verwerkingen op deze pagina.
+    </p>
+    <p>
+      Contact:
+      <a class="doc-link" href="mailto:privacy@extrawoning.nl">privacy@extrawoning.nl</a>.
+    </p>
+  </section>
+
+  <!-- Checkable against: api/leads.py (LeadRequest has no address field; the
+       table has exactly four columns) and tests/test_api_leads.py, which greps
+       the database file for the address text after a full round trip. -->
+  <section class="doc-section">
+    <h2>Als u uw e-mailadres achterlaat</h2>
+    <p>Op dat moment slaan wij vier dingen op, en niet meer:</p>
+    <ul class="doc-list">
+      <li>uw <strong>e-mailadres</strong>;</li>
+      <li>het <strong>tijdstip</strong> van verzenden;</li>
+      <li>de <strong>gemeentecode</strong> van het adres dat u bekeek (bijvoorbeeld
+        <span class="doc-code">0479</span> voor Zaanstad);</li>
+      <li>de <strong>activiteit</strong> die u bekeek (bijvoorbeeld
+        <span class="doc-code">woningvorming</span>).</li>
+    </ul>
+    <p>
+      <strong>Het adres zelf slaan wij hierbij niet op.</strong> Niet versleuteld,
+      niet afgekort, niet als code — het staat niet in het formulier dat naar ons
+      wordt verstuurd en er is geen kolom voor in onze database. Een gemeentecode
+      dekt een hele gemeente en wijst niet naar een woning.
+    </p>
+    <p>
+      Verstuurt u hetzelfde e-mailadres nogmaals, dan verandert er niets: wij
+      bewaren één regel per e-mailadres, met het eerste tijdstip.
+    </p>
+    <h3>Waarom</h3>
+    <p>
+      Om u één keer te kunnen benaderen zodra wij de open punten voor uw adres
+      kunnen beantwoorden — de vragen die u nu zelf moet aanvullen, en de bronnen
+      die ons ontbreken, te beginnen met het omgevingsplan. Wij gebruiken uw
+      adres niet voor een nieuwsbrief, niet voor productaankondigingen en niet om
+      u iets te verkopen dat nog niet bestaat.
+    </p>
+    <p class="doc-note">
+      Grondslag: toestemming (art. 6 lid 1 sub a AVG). U geeft die door het
+      formulier te verzenden en u kunt haar op elk moment intrekken.
+    </p>
+    <h3>Hoe lang</h3>
+    <p>
+      Tot u vraagt om verwijdering, of tot wij u benaderd hebben en u niet
+      reageert — in dat laatste geval verwijderen wij het adres binnen twaalf
+      maanden.
+    </p>
+  </section>
+
+  <!-- The section the brief is strictest about. Checkable against:
+       facts/cache.py (`_key` normalises the address string and uses it as the
+       PRIMARY KEY; the TTL comes from config.cache_ttl_hours) and
+       facts/orchestrator.py + facts/profiles.py (which adapters the CHECK
+       profile actually calls). "Wij slaan uw adres niet op" would be false. -->
+  <section class="doc-section doc-section--flag">
+    <h2>Wat er gebeurt met het adres dat u controleert</h2>
+    <p>
+      Om uw vraag te kunnen beantwoorden sturen wij het adres naar
+      <strong>PDOK/Kadaster</strong>: de Locatieserver, om vast te stellen welke
+      woning u bedoelt, en de <strong>BAG</strong> (Basisregistratie Adressen en
+      Gebouwen), voor gegevens over het pand en het gebruiksoppervlak. Dat zijn
+      openbare overheidsbronnen. Zonder die stap is er geen antwoord.
+    </p>
+    <p>
+      <strong>Het resultaat van die bevraging bewaren wij op onze eigen server,
+      met het adres als sleutel, maximaal 168 uur (7 dagen).</strong> Daarna
+      vervalt het en wordt het bij een volgende controle opnieuw opgehaald. Dat
+      is een cache: hij bestaat om dezelfde vraag niet twee keer aan het Kadaster
+      te stellen en om het antwoord snel te houden.
+    </p>
+    <p>
+      Wij schrijven hier bewust <em>niet</em> dat wij uw adres niet opslaan. Die
+      zin zou prettiger lezen en zou niet kloppen.
+    </p>
+    <p>
+      <strong>Wat wél geldt: dit is nooit gekoppeld aan een e-mailadres.</strong>
+      De cache kent alleen adressen en de opgehaalde brongegevens. De
+      e-maillijst kent alleen e-mailadressen, tijdstippen, gemeentecodes en
+      activiteiten. Er is geen veld, geen sleutel en geen bestand waarin die twee
+      bij elkaar komen — ook niet bij ons intern.
+    </p>
+    <p>
+      Controleert u een adres zonder uw e-mailadres achter te laten, dan blijft
+      er van u niets over behalve die cache-regel, en die vervalt vanzelf.
+    </p>
+    <h3>Uw antwoorden op de vragen</h3>
+    <p>
+      Beantwoordt u de vragen op de uitkomstpagina — over uw huishouden,
+      mantelzorg of een eerdere vergunning — dan gaan die antwoorden mee in de
+      controle en worden zij <strong>nergens bewaard</strong>: niet in onze
+      database, niet in uw browser, niet in een cookie en niet in de link. Ververst
+      u de pagina, dan zijn ze weg.
+    </p>
+  </section>
+
+  <!-- Checkable against: api/main.py `access_log` middleware, which formats
+       exactly these four fields, and api/check.py's docstring on why the check
+       is a POST (a GET would put the address in the query string and therefore
+       in this log). -->
+  <section class="doc-section">
+    <h2>Wat er in ons serverlogboek staat</h2>
+    <p>Van elk verzoek noteert onze server vier dingen:</p>
+    <ul class="doc-list">
+      <li>het <strong>pad</strong> dat is opgevraagd (bijvoorbeeld
+        <span class="doc-code">/api/check</span>);</li>
+      <li>de <strong>statuscode</strong> van het antwoord;</li>
+      <li>de <strong>gemeentecode</strong>;</li>
+      <li>de <strong>duur</strong> van het verzoek in milliseconden.</li>
+    </ul>
+    <p>
+      <strong>Nooit het adres, en nooit een e-mailadres.</strong> De adrescontrole
+      verloopt daarom via een POST-verzoek en niet via de adresbalk: bij het
+      tweede zou het adres in elke logregel terechtkomen.
+    </p>
+    <p>
+      De webserver houdt daarnaast een gebruikelijk toegangslogboek bij met onder
+      meer uw IP-adres, om misbruik te kunnen herkennen en om te beperken hoeveel
+      opvragingen één bezoeker doet. Wij bewaren die logboeken maximaal 30 dagen.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Cookies en trackers</h2>
+    <p>
+      <strong>Geen.</strong> Deze site plaatst geen cookies, gebruikt geen
+      analytics, laadt geen lettertypen, scripts of afbeeldingen van andere
+      partijen en heeft geen deelknoppen. Alles wat de pagina nodig heeft, staat
+      op onze eigen server.
+    </p>
+    <p class="doc-note">
+      Technisch afgedwongen: de site verstuurt een Content-Security-Policy die op
+      <span class="doc-code">default-src 'self'</span> staat. Een script van
+      buiten zou door uw browser worden geweigerd, ook als iemand het per ongeluk
+      zou toevoegen.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Derde partijen</h2>
+    <p>
+      Wij verkopen, verhuren en delen uw gegevens niet. Er is geen
+      advertentiepartij, geen datamakelaar en geen CRM van een ander bij
+      betrokken.
+    </p>
+    <p>Twee partijen zijn wel technisch betrokken, en het is eerlijker die te noemen:</p>
+    <ul class="doc-list">
+      <li>
+        <strong>PDOK/Kadaster</strong> ontvangt het adres dat u controleert. Dat
+        is de bevraging zelf, en zonder haar is er geen antwoord. Zij ontvangen
+        geen e-mailadres.
+      </li>
+      <li>
+        <strong>Cloudflare</strong> zit als beveiligingslaag voor onze server en
+        verwerkt daarbij uw IP-adres, zoals iedere partij die verkeer doorgeeft.
+        Zij ontvangen geen e-mailadres en geen adres uit een formulier.
+      </li>
+    </ul>
+    <p>
+      Onze eigen server staat in de Europese Unie. De e-maillijst staat op die
+      server en nergens anders.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Uw rechten</h2>
+    <p>
+      U heeft recht op inzage, correctie, verwijdering, beperking en bezwaar, en
+      op een kopie van uw gegevens. U kunt een gegeven toestemming altijd
+      intrekken.
+    </p>
+    <p>
+      Stuur daarvoor een bericht aan
+      <a class="doc-link" href="mailto:privacy@extrawoning.nl">privacy@extrawoning.nl</a>.
+      <strong>Wij verwerken een verzoek tot verwijdering binnen 30 dagen</strong>
+      en bevestigen dat per e-mail.
+    </p>
+    <p>
+      Bent u het oneens met hoe wij hiermee omgaan, dan kunt u een klacht
+      indienen bij de Autoriteit Persoonsgegevens.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Wijzigingen</h2>
+    <p>
+      Verandert er iets aan wat wij bewaren of hoe lang, dan passen wij deze
+      pagina aan en wijzigen wij de datum bovenaan. Er staat geen versiegeschiedenis
+      op deze pagina; de wijzigingen staan in de openbare broncode van dit project.
+    </p>
+  </section>
+
+  <p class="doc-back">
+    <a class="doc-link" href="../check/index.html">Terug naar de adrescheck</a>
+  </p>
+
+</main>

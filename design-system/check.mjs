@@ -43,6 +43,7 @@ const SHARED = ["base.css", "components.css"].map((f) => join(ROOT, "landing", "
 const PAGES = [
   { name: "landing", dir: join(ROOT, "landing"), shared: [] },
   { name: "check", dir: join(ROOT, "check"), shared: SHARED },
+  { name: "privacy", dir: join(ROOT, "privacy"), shared: SHARED },
 ];
 
 const errors = [];
