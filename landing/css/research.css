@@ -33,6 +33,14 @@
   max-width: none;
   transform: translateX(-0.5rem);
 }
+/* motion.css animates every direct child of a reveal-group. The stack owns a
+   richer per-sheet entrance, so the generic wrapper fade must not flatten it
+   back into one boring image reveal. */
+.split--4.reveal-group > .sheet-stack {
+  animation: none !important;
+  opacity: 1;
+  transform: translateX(-0.5rem);
+}
 
 .sheet-stack__layer {
   position: absolute;
@@ -54,11 +62,26 @@
   transition: transform var(--duration-slow) var(--ease-settle);
 }
 
-.sheet-stack__layer--1 { --sheet-x: -1%; --sheet-y: 13%; --sheet-scale: .78; }
-.sheet-stack__layer--2 { --sheet-x:  1%; --sheet-y:  7%; --sheet-scale: .78; }
-.sheet-stack__layer--3 { --sheet-x: -1%; --sheet-y:  1%; --sheet-scale: .78; }
-.sheet-stack__layer--4 { --sheet-x:  1%; --sheet-y: -5%; --sheet-scale: .78; }
-.sheet-stack__layer--5 { --sheet-x: -1%; --sheet-y: -12%; --sheet-scale: .78; }
+.sheet-stack__layer--1 {
+  --sheet-x:  2%; --sheet-y:  22%; --sheet-scale: .72;
+  --entry-x: -42%; --entry-y:  38%; --entry-rotate: -10deg;
+}
+.sheet-stack__layer--2 {
+  --sheet-x:  1%; --sheet-y:  12%; --sheet-scale: .74;
+  --entry-x:  34%; --entry-y:  30%; --entry-rotate:   8deg;
+}
+.sheet-stack__layer--3 {
+  --sheet-x:  0%; --sheet-y:   2%; --sheet-scale: .76;
+  --entry-x: -32%; --entry-y:  14%; --entry-rotate:  -6deg;
+}
+.sheet-stack__layer--4 {
+  --sheet-x: -1%; --sheet-y:  -7%; --sheet-scale: .78;
+  --entry-x:  28%; --entry-y:  -4%; --entry-rotate:   5deg;
+}
+.sheet-stack__layer--5 {
+  --sheet-x: -2%; --sheet-y: -18%; --sheet-scale: .78;
+  --entry-x:   0%; --entry-y: -34%; --entry-rotate:  -4deg;
+}
 
 /* Assemble from one compressed pile as the section enters the viewport.
    The bottom sheet settles first and the report cover lands last. */
@@ -66,13 +89,15 @@
   @media (prefers-reduced-motion: no-preference) {
     @keyframes sheet-stack-in {
       from {
-        opacity: 0;
-        transform: translate3d(0, 0, 0) scale(.72);
+        transform:
+          translate3d(var(--entry-x), var(--entry-y), 0)
+          rotate(var(--entry-rotate))
+          scale(.68);
       }
       to {
-        opacity: 1;
         transform:
           translate3d(var(--sheet-x), var(--sheet-y), 0)
+          rotate(0)
           scale(var(--sheet-scale));
       }
     }
@@ -81,22 +106,22 @@
       animation: sheet-stack-in linear both;
       animation-timeline: view();
     }
-    .sheet-stack__layer--1 { animation-range: entry 8% cover 30%; }
-    .sheet-stack__layer--2 { animation-range: entry 10% cover 34%; }
-    .sheet-stack__layer--3 { animation-range: entry 12% cover 38%; }
-    .sheet-stack__layer--4 { animation-range: entry 14% cover 42%; }
-    .sheet-stack__layer--5 { animation-range: entry 16% cover 46%; }
+    .sheet-stack__layer--1 { animation-range: entry 0% cover 32%; }
+    .sheet-stack__layer--2 { animation-range: entry 4% cover 36%; }
+    .sheet-stack__layer--3 { animation-range: entry 8% cover 40%; }
+    .sheet-stack__layer--4 { animation-range: entry 12% cover 44%; }
+    .sheet-stack__layer--5 { animation-range: entry 16% cover 48%; }
   }
 }
 
 /* A small fan on pointer hover makes the separate layers legible without
    turning a report illustration into a draggable-looking control. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .sheet-stack:hover .sheet-stack__layer--1 img { transform: translate(-4%,  4%) rotate(-2deg); }
-  .sheet-stack:hover .sheet-stack__layer--2 img { transform: translate(-2%,  2%) rotate(-1deg); }
+  .sheet-stack:hover .sheet-stack__layer--1 img { transform: translate(-6%,  5%) rotate(-3deg); }
+  .sheet-stack:hover .sheet-stack__layer--2 img { transform: translate(-3%,  2%) rotate(-1deg); }
   .sheet-stack:hover .sheet-stack__layer--3 img { transform: translate( 0,    0); }
-  .sheet-stack:hover .sheet-stack__layer--4 img { transform: translate( 2%, -2%) rotate( 1deg); }
-  .sheet-stack:hover .sheet-stack__layer--5 img { transform: translate( 4%, -4%) rotate( 2deg); }
+  .sheet-stack:hover .sheet-stack__layer--4 img { transform: translate( 3%, -2%) rotate( 1deg); }
+  .sheet-stack:hover .sheet-stack__layer--5 img { transform: translate( 6%, -5%) rotate( 3deg); }
 }
 
 @media (min-width: 96rem) {
