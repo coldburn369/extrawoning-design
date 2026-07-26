@@ -61,13 +61,9 @@ export default function LandingClient() {
           const bounds = button.getBoundingClientRect();
           const localX = pointerX - bounds.left;
           const localY = pointerY - bounds.top;
-          const shiftX = ((localX / bounds.width) - 0.5) * 7;
-          const shiftY = ((localY / bounds.height) - 0.5) * 4;
 
           button.style.setProperty("--btn-x", `${localX}px`);
           button.style.setProperty("--btn-y", `${localY}px`);
-          button.style.setProperty("--btn-shift-x", `${shiftX}px`);
-          button.style.setProperty("--btn-shift-y", `${shiftY}px`);
           frame = null;
         };
         const pointerMove = (event: PointerEvent) => {
@@ -80,8 +76,6 @@ export default function LandingClient() {
           frame = null;
           button.style.removeProperty("--btn-x");
           button.style.removeProperty("--btn-y");
-          button.style.removeProperty("--btn-shift-x");
-          button.style.removeProperty("--btn-shift-y");
         };
 
         button.addEventListener("pointermove", pointerMove);
@@ -92,8 +86,6 @@ export default function LandingClient() {
           if (frame !== null) cancelAnimationFrame(frame);
           button.style.removeProperty("--btn-x");
           button.style.removeProperty("--btn-y");
-          button.style.removeProperty("--btn-shift-x");
-          button.style.removeProperty("--btn-shift-y");
         });
       }
     }

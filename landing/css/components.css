@@ -30,8 +30,6 @@
 .btn {
   --btn-x: 50%;
   --btn-y: 50%;
-  --btn-shift-x: 0px;
-  --btn-shift-y: 0px;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -62,16 +60,23 @@
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
-.btn:hover {
-  translate:
-    var(--btn-shift-x)
-    calc(var(--btn-shift-y) - 2px);
-}
+.btn:hover { translate: 0 -2px; }
 .btn:hover::before { opacity: 1; }
 .btn:active { translate: 0; transform: scale(.97); }
 .btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
 .btn--primary { background: var(--color-accent); color: var(--color-text-on-accent); font-weight: var(--weight-semibold); }
-.btn--primary:hover { background: var(--color-accent-hover); box-shadow: 0 10px 28px var(--color-bloom); }
+.btn--primary::before {
+  background:
+    radial-gradient(
+      5.5rem circle at var(--btn-x) var(--btn-y),
+      color-mix(in srgb, var(--color-page) 18%, transparent),
+      transparent 72%
+    );
+}
+.btn--primary:hover {
+  background: var(--color-accent);
+  box-shadow: 0 8px 22px var(--color-bloom);
+}
 /* Secondary action reads as a filled, tinted surface rather than an outline —
    outlines everywhere were part of the boxed-in feel. */
 .btn--ghost { background: color-mix(in srgb, var(--color-text) 8%, transparent); color: var(--color-text); }
