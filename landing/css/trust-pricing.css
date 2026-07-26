@@ -45,12 +45,6 @@
 .price .btn { margin-top: auto; min-height: 3.5rem; }
 /* Highlighted plan. The only panel on the page that keeps an outline — it has
    to win against its neighbour, and a raised surface alone won't do that. */
-@property --price-border-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
 .price--featured {
   position: relative;
   isolation: isolate;
@@ -71,7 +65,7 @@
   pointer-events: none;
   background:
     conic-gradient(
-      from var(--price-border-angle),
+      from var(--border-orbit-angle),
       transparent 0 58%,
       color-mix(in srgb, var(--color-accent-ui) 24%, transparent) 66%,
       var(--color-accent-ui) 75%,
@@ -86,17 +80,13 @@
     linear-gradient(var(--color-text) 0 0) content-box,
     linear-gradient(var(--color-text) 0 0);
           mask-composite: exclude;
-  animation: price-border-orbit calc(var(--duration-trace) * 3) linear infinite;
+  animation: border-orbit calc(var(--duration-trace) * 3) linear infinite;
 }
 .price--featured > * { position: relative; z-index: 1; }
 .price--featured .badge {
   transition: scale var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 .price--featured:hover .badge { scale: 1.06; box-shadow: 0 0 20px var(--color-bloom); }
-
-@keyframes price-border-orbit {
-  to { --price-border-angle: 1turn; }
-}
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

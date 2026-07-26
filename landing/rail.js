@@ -125,4 +125,37 @@ if (
       card.style.removeProperty('--glow-y');
     });
   });
+
+  document.querySelectorAll('.btn').forEach((button) => {
+    let frame = null;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const render = () => {
+      const bounds = button.getBoundingClientRect();
+      const localX = pointerX - bounds.left;
+      const localY = pointerY - bounds.top;
+      const shiftX = ((localX / bounds.width) - 0.5) * 7;
+      const shiftY = ((localY / bounds.height) - 0.5) * 4;
+
+      button.style.setProperty('--btn-x', `${localX}px`);
+      button.style.setProperty('--btn-y', `${localY}px`);
+      button.style.setProperty('--btn-shift-x', `${shiftX}px`);
+      button.style.setProperty('--btn-shift-y', `${shiftY}px`);
+      frame = null;
+    };
+    button.addEventListener('pointermove', (event) => {
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (frame === null) frame = requestAnimationFrame(render);
+    });
+    button.addEventListener('pointerleave', () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+      button.style.removeProperty('--btn-x');
+      button.style.removeProperty('--btn-y');
+      button.style.removeProperty('--btn-shift-x');
+      button.style.removeProperty('--btn-shift-y');
+    });
+  });
 }

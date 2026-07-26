@@ -32,6 +32,8 @@
 }
 
 .addressbar {
+  position: relative;
+  isolation: isolate;
   display: flex; align-items: center;
   background: var(--color-surface-sunken);
   border: 1px solid var(--color-border-subtle);
@@ -40,11 +42,43 @@
   transition: border-color var(--duration-fast) var(--ease-standard),
               box-shadow var(--duration-fast) var(--ease-standard);
 }
+.addressbar::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    conic-gradient(
+      from var(--border-orbit-angle),
+      transparent 0 58%,
+      color-mix(in srgb, var(--color-accent-ui) 24%, transparent) 66%,
+      var(--color-accent-ui) 75%,
+      color-mix(in srgb, var(--color-accent-ui) 32%, transparent) 84%,
+      transparent 92%
+    );
+  -webkit-mask:
+    linear-gradient(var(--color-text) 0 0) content-box,
+    linear-gradient(var(--color-text) 0 0);
+  -webkit-mask-composite: xor;
+          mask:
+    linear-gradient(var(--color-text) 0 0) content-box,
+    linear-gradient(var(--color-text) 0 0);
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
 /* One focus ring for the whole control. Focusing a segment should not make the
    bar look like two separate widgets. */
 .addressbar:focus-within {
-  border-color: var(--color-accent-ui);
+  border-color: transparent;
   box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+.addressbar:focus-within::before {
+  opacity: 1;
+  animation: border-orbit calc(var(--duration-trace) * 3) linear infinite;
 }
 
 .addressbar__field {
@@ -95,6 +129,13 @@
   .addressbar__field { flex: 1 1 8rem; padding-inline: 0; }
   .addressbar__sep { display: none; }
   .addressbar .btn { flex: 1 1 100%; margin-inline-start: 0; border-radius: var(--radius-md); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .addressbar:focus-within::before {
+    animation: none;
+    background: var(--color-accent-ui);
+  }
 }
 
 /* ---- Final CTA ---------------------------------------------------------
