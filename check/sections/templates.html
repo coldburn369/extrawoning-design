@@ -160,6 +160,88 @@
       <h3 class="disclosure__title">Kanttekeningen bij de gebruikte gegevens</h3>
       <ul class="caveats" data-slot="caveats"></ul>
     </section>
+
+    <!-- ---- Email capture -------------------------------------------------
+         Last on the result, because it is the closing action and because it
+         only makes sense once someone has seen what is still open.
+
+         WHAT THE COPY MAY PROMISE, AND WHAT IT MAY NOT. One thing: that we will
+         make contact once the points that are open here can be answered. No
+         newsletter, no product announcements, and no paid report — there is no
+         report. Every one of those would be a promise this project cannot
+         currently keep.
+
+         ⚠️ THE PRECISION THAT MATTERS. `POST /api/leads` stores the email, the
+         timestamp, the gemeentecode and the activity — and deliberately NOT the
+         address (`api/leads.py`; a test greps the database file to prove it).
+         So we cannot promise to write "when this house can be answered": we do
+         not know which house it was. What we CAN promise is what the missing
+         sources actually are — gemeente-level, the omgevingsplan first — so the
+         copy says that, and says why. The limitation and the privacy property
+         are the same fact seen from two sides, and stating it that way is the
+         only version that is both honest and reassuring.
+
+         The two states below are not optional. A silent failure on the one
+         action that captures demand is worse than an error message. -->
+    <section class="leadform" data-slot="lead-block">
+      <h3 class="leadform__title">Zal ik u laten weten wanneer hier meer over te zeggen is?</h3>
+      <p class="leadform__body">
+        Een deel van de punten hierboven kunnen wij nu niet beoordelen omdat ons
+        een bron ontbreekt — om te beginnen het omgevingsplan van deze gemeente.
+        Laat u uw e-mailadres achter, dan nemen wij eenmalig contact op zodra wij
+        die punten wél kunnen beoordelen.
+      </p>
+      <p class="leadform__body">
+        Wij bewaren daarbij <strong>niet welk adres u heeft gecontroleerd</strong>
+        — alleen uw e-mailadres, het tijdstip, de gemeente en de activiteit. Dat
+        betekent ook iets voor wat wij kunnen beloven: wij melden ons wanneer het
+        voor <em>deze gemeente</em> kan, niet voor dit ene huis.
+      </p>
+      <p class="leadform__body">
+        Geen nieuwsbrief, geen productaankondigingen, en er is geen rapport te koop.
+      </p>
+
+      <form class="leadform__form" data-slot="lead-form" novalidate>
+        <!-- The honeypot. Hidden in CSS rather than with `hidden`, so a script
+             walking the DOM still sees a field worth filling in; `tabindex="-1"`
+             and `aria-hidden` keep it away from keyboards and screen readers.
+             The label deliberately does not say "leave this empty" — that is an
+             instruction to the only reader who would act on it. -->
+        <div class="leadform__trap" aria-hidden="true">
+          <label for="lead-website">Website</label>
+          <input id="lead-website" name="website" type="text"
+                 tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="leadform__field">
+          <label for="lead-email">Uw e-mailadres</label>
+          <input id="lead-email" name="email" type="email" inputmode="email"
+                 placeholder="naam@voorbeeld.nl" autocomplete="email"
+                 spellcheck="false" maxlength="254" required />
+        </div>
+        <button type="submit" class="btn btn--primary leadform__submit"
+                data-slot="lead-submit">
+          Houd mij op de hoogte
+        </button>
+      </form>
+
+      <!-- Success, and the service's own refusal of a malformed address. Both
+           sentences are the API's (`LeadResponse.message`); this page picks
+           neither of them. -->
+      <p class="leadform__state" data-slot="lead-message" role="status" hidden></p>
+      <!-- No usable response at all. Same class as tpl-transport's copy: a
+           failure where we have no sentence of theirs to show. It says the one
+           thing the user needs — that it did not go through — because a form
+           that quietly does nothing is the worst outcome available here. -->
+      <p class="leadform__state leadform__state--error" data-slot="lead-error" role="alert" hidden>
+        Het is niet gelukt om uw e-mailadres te versturen. Er is niets opgeslagen —
+        probeert u het zo nog eens.
+      </p>
+
+      <p class="note leadform__privacy">
+        <a class="leadform__link" href="../privacy/index.html">Zo gaan wij met uw gegevens om</a>
+      </p>
+    </section>
   </section>
 </template>
 

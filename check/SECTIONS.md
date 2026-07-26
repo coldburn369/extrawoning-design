@@ -13,7 +13,7 @@ behaviour in two ES modules at the page root.
 | `css/check.css` | page shell, the address bar, the pending panel |
 | `css/result.css` | disclosures, verdict, buckets, entries, **the tone table** |
 | `css/answers.css` | the answer form, and the "what your answers resolved" panel |
-| `check.js` | form → POST → mount. Transport, page state, **the answers** |
+| `check.js` | form → POST → mount. Transport, page state, **the answers**, **email capture** |
 | `render.js` | response → detached DOM fragment, the form, the completeness guard |
 | `test-dom.mjs` | the tiny DOM shim both test files use. Not shipped to the page. |
 
@@ -213,6 +213,45 @@ now in `decided`. Both responses are in memory, the membership is the response's
 own, and the panel claims nothing about what the test then FOUND — the entry
 below it says that.
 
+## Email capture
+
+Last on the result, because it only makes sense once someone has seen what is
+still open. `POST /api/leads`.
+
+**What it may promise.** One thing: that we will make contact once the points
+open here can be answered. No newsletter, no product announcements, no paid
+report — there is no report.
+
+⚠️ **The precision that matters.** The endpoint stores the email, the timestamp,
+the gemeentecode and the activity — and deliberately **not the address**. So the
+copy cannot say "we will write when this house can be answered": we do not know
+which house it was. What it says instead is what is actually true — the missing
+sources are gemeente-level, the omgevingsplan first — and *why*. The limitation
+and the privacy property are one fact seen from two sides.
+
+- **`activity` is every activity on the result, joined** (`omzetting+woningvorming`).
+  A result covers all of them; picking the one whose block the user had scrolled
+  to is a fact this page does not have. `stampLeadContext` puts it and the
+  gemeentecode on the form as data attributes — the values are the response's,
+  not the user's, and a hidden input invites treating them as editable.
+- **Both outcomes get a state.** Success and `invalid_email` are the API's own
+  `message`. The only sentence this page owns is for "no usable response
+  arrived", because then there is nothing of theirs to quote. A 2xx with no
+  message is treated as a **failure**, never as success — the user would
+  otherwise walk away believing they are on the list.
+- **Only `status: "ok"` retires the form.** `invalid_email` leaves it up with the
+  address still in it; the next step is to correct it.
+- **Anti-abuse, and neither half is a control.** A honeypot (`website`) hidden in
+  CSS — not with `hidden`, and not `display:none` on the input, because the point
+  is that a script still finds a field worth filling in — plus `form_elapsed_ms`,
+  measured from mount in a closure. Both are client-supplied and forgeable; they
+  raise the cost of a naive script. The load-bearing limit is the server's per-IP
+  rate limiter. No CAPTCHA and no third-party script: the CSP is
+  `default-src 'self'` and it stays that way.
+- **The email never touches storage.** Same sweep as the answers
+  (`answers.test.mjs`), and for a stronger reason: an address left in
+  localStorage outlives the session, the tab and the intention to give it to us.
+
 ## The contract version
 
 `check/contract.js` holds `SCHEMA_VERSION` and the predicate. `check.js` checks
@@ -292,6 +331,10 @@ place on a re-check**, in its own view otherwise) · 429 (API message +
 **contract-version mismatch** · network failure · a client-side validation error
 per field. The pending state names the sources being consulted rather than
 spinning blankly, and a re-check keeps the previous result on screen while it runs.
+
+Email capture adds three of its own: **accepted** (the API's thanks, form
+retired) · **`invalid_email`** (the API's correction, form kept with the address
+in it) · **no usable response** (this page's only owned sentence here).
 
 ## Checks
 

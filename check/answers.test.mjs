@@ -595,6 +595,10 @@ test('a terminal status without its sentence refuses rather than showing a blank
 test('nothing is written to storage, a cookie or the URL', () => {
   // The household facts describe who lives where and `mantelzorg_noodzakelijk` is
   // a statement about someone's health needs. A reload legitimately loses them.
+  //
+  // The EMAIL is covered by the same sweep, and for a stronger reason: an address
+  // left in localStorage outlives the session, the tab, and the user's intention
+  // to give it to us.
   for (const name of ['render.js', 'check.js']) {
     // Comments stripped: check.js's header NAMES these sinks in order to promise
     // it does not use them, and that promise should not fail its own test.
@@ -621,4 +625,97 @@ test('the request body carries the answers and nothing else', () => {
   const text = source('check.js');
   assert.ok(text.includes('Object.keys(facts).length'), 'the empty case must be omitted');
   assert.ok(!/method:\s*'GET'/.test(text), 'answers must never reach a query string');
+});
+
+/* ---- email capture --------------------------------------------------------
+   The transport lives in check.js, which cannot be imported outside a browser.
+   What IS testable here is everything that decides whether the submission is
+   honest: which context is attached, that the address is not, and that the trap
+   is a trap. */
+
+test('the lead form carries the result context, and no address', () => {
+  const fragment = renderResult(OK);
+  const leadForm = fragment.querySelector('[data-slot="lead-form"]');
+  assert.ok(leadForm, 'the result must offer email capture');
+
+  assert.equal(leadForm.dataset.gemeentecode, OK.gemeentecode);
+  assert.equal(
+    leadForm.dataset.activity,
+    OK.activities.map((a) => a.activity).join('+'),
+    'every activity on the result, not a guess at which one was on screen',
+  );
+
+  // The claim the privacy page makes, checked at its source. `POST /api/leads`
+  // has no address field; this makes sure the page never grows one either.
+  const resolved = OK.address_resolved;
+  const attached = JSON.stringify(leadForm.dataset);
+  for (const part of [resolved.weergavenaam, resolved.straatnaam, OK.address_query]) {
+    assert.ok(!attached.includes(part), `the lead form carries the address: ${part}`);
+  }
+  assert.equal(leadForm.querySelectorAll('input[name="address"], input[name="postcode"]').length, 0);
+});
+
+test('the lead form asks for exactly one thing, plus the trap', () => {
+  const fragment = renderResult(OK);
+  const named = fragment
+    .querySelector('[data-slot="lead-form"]')
+    .querySelectorAll('input')
+    .map((i) => i.getAttribute('name'));
+  assert.deepEqual(named.sort(), ['email', 'website']);
+});
+
+test('the honeypot is reachable by a script and by nothing else', () => {
+  // Hidden in CSS, not with `hidden` or `display:none` on the input: the point is
+  // that a script walking the DOM still finds a field worth filling in.
+  const fragment = renderResult(OK);
+  const trap = fragment.querySelector('input[name="website"]');
+  assert.ok(trap);
+  assert.equal(trap.getAttribute('tabindex'), '-1');
+  assert.equal(trap.getAttribute('autocomplete'), 'off');
+  assert.equal(trap.hidden, false);
+  const wrapper = fragment.querySelector('.leadform__trap');
+  assert.equal(wrapper.getAttribute('aria-hidden'), 'true');
+  // And it must not tell the only reader who would act on it what to do.
+  assert.ok(!/leeg|empty|niet invullen|bot/i.test(wrapper.textContent));
+});
+
+test('both outcomes have somewhere to render, and both start hidden', () => {
+  // A silent failure on the one action that captures demand is worse than an
+  // error message. `lead-message` takes the service's own sentence; `lead-error`
+  // is the only one this page owns, for when no usable response arrived.
+  const fragment = renderResult(OK);
+  for (const slot of ['lead-message', 'lead-error']) {
+    const el = fragment.querySelector(`[data-slot="${slot}"]`);
+    assert.ok(el, `no ${slot}`);
+    assert.equal(el.hidden, true, `${slot} must start hidden`);
+  }
+});
+
+test('the lead form links to the privacy page', () => {
+  // Email cannot be collected publicly without one, and a statement nobody can
+  // reach from the form is not one.
+  const href = renderResult(OK)
+    .querySelector('.leadform__privacy a')
+    .getAttribute('href');
+  assert.match(href, /privacy/);
+});
+
+test('the lead copy promises only what the endpoint can deliver', () => {
+  // Read from the TEMPLATE SOURCE, not from the rendered fragment: this is
+  // static chrome, so the file is where it lives and where a reviewer checks it.
+  // (The shim builds an element tree and does not retain parsed text nodes.)
+  //
+  // No newsletter, no product announcements, no paid report -- there is no
+  // report. And it must not claim we will write when THIS ADDRESS can be
+  // answered: we deliberately do not store which address it was, so the copy
+  // says what is true (gemeente-level) and says why.
+  const html = source('sections/templates.html');
+  const block = html.slice(html.indexOf('<section class="leadform"'), html.indexOf('</section>', html.indexOf('leadform__privacy')));
+  assert.match(block, /eenmalig contact op/);
+  assert.match(block, /Geen nieuwsbrief/);
+  assert.match(block, /geen rapport te koop/);
+  assert.match(block, /niet welk adres u heeft gecontroleerd/);
+  assert.match(block, /deze gemeente<\/em> kan, niet voor dit ene huis/);
+  // The failure state must actually say something.
+  assert.match(block, /Er is niets opgeslagen/);
 });

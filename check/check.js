@@ -45,6 +45,7 @@ import {
 } from './render.js';
 
 const ENDPOINT = '/api/check';
+const LEADS_ENDPOINT = '/api/leads';
 
 // Comfortably past the app's own per-request budget (8 s) and nginx's
 // proxy_read_timeout (15 s), so a slow-but-alive backend gets to answer with
@@ -188,7 +189,91 @@ function resubmit(resolved) {
 function mount(fragment) {
   result.replaceChildren(fragment);
   wireAnswerForm();
+  wireLeadForm();
   result.querySelector('.result')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+/* ---- email capture ------------------------------------------------------- */
+
+/**
+ * The lead form on a result.
+ *
+ * WHAT LEAVES THE BROWSER: the email, the gemeentecode and the activities, and
+ * the two anti-abuse fields. NOT the address — `POST /api/leads` has no field
+ * for one, and that absence is what lets the privacy page say the email list and
+ * the address cache never meet.
+ *
+ * WHAT IS STORED IN THE BROWSER: nothing. Same rule as the answers, and for a
+ * stronger reason — an email address left in localStorage outlives the session,
+ * the tab and the user's intention to give it to us. A reload legitimately
+ * empties the field.
+ *
+ * BOTH OUTCOMES GET A STATE. This is the one action on the page that captures
+ * demand; a submit that quietly does nothing is worse than an error message. The
+ * success and refusal sentences are the API's own (`LeadResponse.message`); the
+ * only sentence this page owns is the one for "no usable response arrived",
+ * because then there is nothing of theirs to quote.
+ */
+function wireLeadForm() {
+  const leadForm = result.querySelector('[data-slot="lead-form"]');
+  if (!leadForm) return;
+
+  const button = leadForm.querySelector('[data-slot="lead-submit"]');
+  const email = leadForm.querySelector('input[name="email"]');
+  const trap = leadForm.querySelector('input[name="website"]');
+  const message = result.querySelector('[data-slot="lead-message"]');
+  const failure = result.querySelector('[data-slot="lead-error"]');
+
+  // When the form appeared, for the server's fill-time check. A timestamp, not a
+  // stored value: it lives in this closure and dies with the mount.
+  const shownAt = Date.now();
+
+  const say = (text) => {
+    message.textContent = text ?? '';
+    message.hidden = !text;
+    failure.hidden = Boolean(text);
+  };
+  const fail = () => {
+    message.hidden = true;
+    failure.hidden = false;
+  };
+
+  leadForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (button.disabled) return;
+    button.disabled = true;
+    say(null);
+    failure.hidden = true;
+
+    try {
+      const response = await fetch(LEADS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          email: email.value.trim(),
+          gemeentecode: leadForm.dataset.gemeentecode || null,
+          activity: leadForm.dataset.activity || null,
+          website: trap.value,
+          form_elapsed_ms: Date.now() - shownAt,
+        }),
+      });
+      const body = await response.json();
+      if (!body?.message) {
+        // A 2xx with nothing to show is as unusable as a 500. Never treat it as
+        // success: the user would walk away believing they are on the list.
+        fail();
+        return;
+      }
+      say(body.message);
+      // Only a real acceptance retires the form. `invalid_email` leaves it up
+      // with the address still in it, because the next step is to correct it.
+      if (body.status === 'ok') leadForm.hidden = true;
+    } catch {
+      fail();
+    } finally {
+      button.disabled = leadForm.hidden;
+    }
+  });
 }
 
 /* ---- the answer form ----------------------------------------------------- */

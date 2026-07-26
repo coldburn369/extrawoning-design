@@ -77,6 +77,20 @@ export class El {
     };
   }
 
+  /* Attribute reads. Neither shipped file uses these — the templates set the
+     attributes and the renderer reads them through `dataset` and the reflected
+     properties. The TESTS need them, though: `tabindex`, `aria-hidden` and
+     `autocomplete` are exactly the sort of attribute that is load-bearing
+     precisely because nothing in the JS touches it, and a honeypot whose
+     `tabindex="-1"` silently disappeared would still pass every other check. */
+  getAttribute(name) {
+    return name in this.attrs ? this.attrs[name] : null;
+  }
+
+  hasAttribute(name) {
+    return name in this.attrs;
+  }
+
   set textContent(v) {
     this._text = String(v);
     this.children = [];

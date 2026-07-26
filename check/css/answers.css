@@ -162,3 +162,89 @@
   .changed { padding: var(--space-4) var(--space-5); }
   .answer__input { min-width: 0; width: 100%; }
 }
+
+/* ---- Email capture -------------------------------------------------------
+   The closing action on a result. Styled as a panel like `.answers`, not as a
+   hero CTA: it sits after a legal outcome the user is still absorbing, and a
+   louder treatment would read as the point of the page. It is not — the verdict
+   is. Sections: sections/templates.html (tpl-result, the .leadform block). */
+.leadform {
+  display: flex; flex-direction: column; gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+}
+.leadform__title { font-size: var(--text-md); font-family: var(--font-display); }
+.leadform__body {
+  color: var(--color-text-muted); font-size: var(--text-base);
+  line-height: var(--leading-normal); max-width: 78ch;
+}
+.leadform__body strong { color: var(--color-text); font-weight: var(--weight-semibold); }
+.leadform__body em { font-style: italic; }
+
+.leadform__form {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: var(--space-3) var(--space-4);
+}
+.leadform__field { display: flex; flex-direction: column; gap: var(--space-2); }
+.leadform__field label {
+  font-size: var(--text-sm); font-weight: var(--weight-medium);
+  color: var(--color-text);
+}
+.leadform__field input {
+  font: inherit; font-size: var(--text-base);
+  padding: var(--space-2) var(--space-3);
+  min-width: 18rem; max-width: 26rem;
+  color: var(--color-text); background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+.leadform__field input:focus-visible {
+  outline: 2px solid var(--color-accent-ui); outline-offset: 2px;
+}
+.leadform__submit:disabled { opacity: 0.6; cursor: progress; }
+
+/* The honeypot. Removed from the visual and accessibility trees without using
+   `display:none` on the input itself — some scripts skip a field whose own
+   computed style is none, and the whole point is that a script fills it in.
+   A human never reaches it: it is off-canvas, aria-hidden and tabindex="-1". */
+.leadform__trap {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Success and failure BOTH get a state. A silent failure on the one action that
+   captures demand is worse than an error message. Accent for the service's own
+   reply (including its "that is not an email address" — the user's next step is
+   to fix it, not to worry), danger only when nothing was sent at all. */
+.leadform__state {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border-inline-start: 3px solid var(--color-accent-ui);
+  background: var(--color-accent-wash);
+  font-size: var(--text-base); line-height: var(--leading-normal); max-width: 78ch;
+}
+.leadform__state--error {
+  border-inline-start-color: var(--color-danger);
+  background: var(--color-danger-wash);
+}
+
+.leadform__privacy { color: var(--color-text-muted); }
+.leadform__link {
+  color: var(--color-text-accent);
+  text-decoration: underline; text-underline-offset: 0.2em;
+}
+.leadform__link:hover { color: var(--color-accent-hover); }
+.leadform__link:focus-visible {
+  outline: var(--focus-ring); outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-xs);
+}
+
+@media (max-width: 40rem) {
+  .leadform__form { flex-direction: column; align-items: stretch; }
+  .leadform__field input { min-width: 0; max-width: none; }
+}

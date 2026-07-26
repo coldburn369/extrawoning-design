@@ -804,9 +804,28 @@ export function renderResult(data, { previouslyOpen } = {}) {
 
   renderChanged(fragment, data, previouslyOpen);
   renderAnswerForm(fragment, data);
+  stampLeadContext(fragment, data);
 
   assertComplete(fragment, data);
   return fragment;
+}
+
+/**
+ * Put the result's own context on the lead form, for `check.js` to submit.
+ *
+ * Data attributes rather than hidden inputs: the values are the response's, not
+ * the user's, and a hidden input invites a page to start treating them as
+ * editable. Neither is the address — `POST /api/leads` has no field for one.
+ *
+ * `activity` is EVERY activity on the result, joined. A result covers all of
+ * them, and picking the one whose block the user had scrolled to is a fact this
+ * page does not have.
+ */
+function stampLeadContext(fragment, data) {
+  const form = fragment.querySelector('[data-slot="lead-form"]');
+  if (!form) return;
+  form.dataset.gemeentecode = data.gemeentecode ?? '';
+  form.dataset.activity = (data.activities ?? []).map((a) => a.activity).join('+');
 }
 
 /**
