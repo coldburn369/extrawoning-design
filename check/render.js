@@ -153,15 +153,15 @@ function buildControl(host, name, kind, choices) {
  * woningvorming itself, and a date field that could be reached without the gate
  * in front of it would be the guard removed.
  */
-function buildAnswer(question) {
-  const node = clone('tpl-answer');
+function buildAnswer(question, { templateId = 'tpl-answer', promise } = {}) {
+  const node = clone(templateId);
   const field = slot(node, 'answer');
   field.dataset.question = question.id;
   field.dataset.kind = question.kind;
   if (question.ask_if) field.dataset.askIfFact = question.ask_if.fact;
 
   setText(node, 'text', question.text);
-  setText(node, 'promise', question.promise);
+  setText(node, 'promise', promise === undefined ? question.promise : promise);
   buildControl(slot(node, 'control'), `q-${question.id}`, question.kind, question.choices);
 
   const subs = question.sub_questions ?? [];
@@ -189,27 +189,69 @@ function buildAnswer(question) {
  * in its catalog's declared asking order so a conditional field never precedes
  * the answer that decides whether to show it.
  */
-export function openQuestionsOf(data) {
+const dedupeById = (lists) => {
   const seen = new Map();
-  for (const activity of data.activities ?? []) {
-    for (const question of activity.open_questions ?? []) {
-      if (!seen.has(question.id)) seen.set(question.id, question);
-    }
+  for (const list of lists) {
+    for (const item of list ?? []) if (!seen.has(item.id)) seen.set(item.id, item);
   }
   return [...seen.values()];
+};
+
+export function openQuestionsOf(data) {
+  return dedupeById((data.activities ?? []).map((a) => a.open_questions));
+}
+
+/**
+ * Vrijstellingen the user could still claim, deduped across activities.
+ *
+ * A SEPARATE list from `openQuestionsOf`, and it must stay separate: bucket B
+ * means "we could not test this" and an offer means "we tested it, the answer
+ * stands, here is a door". The server asserts the two are disjoint; this page
+ * relies on that only for the dedupe, and renders whichever it is given.
+ */
+export function claimableExemptionsOf(data) {
+  return dedupeById((data.activities ?? []).map((a) => a.claimable_exemptions));
+}
+
+/**
+ * Everything the one form can send. The order is questions first, then offers —
+ * the same order they render in, which is what keeps `readAnswers`' single
+ * DOM-order walk able to resolve an `ask_if` against an answer given above it.
+ */
+export function answerableOf(data) {
+  return [...openQuestionsOf(data), ...claimableExemptionsOf(data)];
+}
+
+/** The two data attributes `readAnswers` and `showRejections` look the field up by. */
+function tagField(node, question) {
+  const field = node.querySelector('.answer');
+  field.dataset.facts = (question.facts ?? []).join(' ');
+  if (question.ask_if) field.dataset.askIfEquals = JSON.stringify(question.ask_if.equals);
+  return node;
 }
 
 function renderAnswerForm(root, data) {
   const questions = openQuestionsOf(data);
-  fillList(root, 'questions', questions, (question) => {
-    const node = buildAnswer(question);
-    const field = node.querySelector('.answer');
-    field.dataset.facts = (question.facts ?? []).join(' ');
-    if (question.ask_if) field.dataset.askIfEquals = JSON.stringify(question.ask_if.equals);
-    return node;
+  fillList(root, 'questions', questions, (q) => tagField(buildAnswer(q), q));
+  show(root, 'questions-block', questions.length > 0);
+
+  const offers = claimableExemptionsOf(data);
+  fillList(root, 'exemptions', offers, (offer) => {
+    // `offer.offer` takes the promise slot: same job (what will and will not
+    // happen if you answer), so the template shape stays one shape.
+    const node = buildAnswer(offer, { templateId: 'tpl-exemption', promise: offer.offer });
+    setText(node, 'statement', offer.statement);
+    setText(node, 'rule_id', offer.rule_id);
+    setText(node, 'citation', offer.citation);
+    return tagField(node, offer);
   });
-  show(root, 'answers-block', questions.length > 0);
-  return questions;
+  show(root, 'exemptions-block', offers.length > 0);
+
+  // EITHER group is enough. The answered state — every open question resolved,
+  // both vrijstellingen still open — is a real response, and gating the form on
+  // `questions.length` alone is what would make the offers unreachable there.
+  show(root, 'answers-block', questions.length > 0 || offers.length > 0);
+  return [...questions, ...offers];
 }
 
 /* -------------------------------------------------------------------------
@@ -394,12 +436,34 @@ export function nextFacts(root, questions, accumulated = {}) {
   return { ...carried, ...readAnswers(root, questions) };
 }
 
-/** 429 / 503 on a re-check: the service's own sentence, beside the form. */
-export function showServiceMessage(root, message) {
-  const line = root.querySelector('[data-slot="answers-service"]');
-  if (!line) return;
-  line.textContent = message ?? '';
-  line.hidden = !message;
+/**
+ * 429 / 503 on a re-check: the service's own sentence, beside the form.
+ *
+ * Carries `retry_after_seconds` too. "Probeer het later opnieuw" without the
+ * countdown is the half of a 429 the user can actually act on, missing — and the
+ * dedicated `tpl-service` view has always shown it, so omitting it here made the
+ * in-place path the *worse* of the two for no reason.
+ *
+ * `body` null clears both lines. A body with no `message` shows the fallback
+ * instead of nothing: the caller keeps the form mounted either way, so a silent
+ * clear would leave a user staring at a form that just did nothing.
+ */
+export function showServiceMessage(root, body) {
+  const block = root.querySelector('[data-slot="answers-service"]');
+  const fallback = root.querySelector('[data-slot="answers-service-fallback"]');
+  if (!block || !fallback) return;
+
+  const message = body?.message;
+  const retry = body?.retry_after_seconds;
+
+  block.querySelector('[data-slot="answers-service-message"]').textContent = message ?? '';
+  const retryLine = block.querySelector('[data-slot="answers-retry-line"]');
+  retryLine.querySelector('[data-slot="answers-retry-seconds"]').textContent =
+    Number.isFinite(retry) ? String(retry) : '';
+  retryLine.hidden = !Number.isFinite(retry);
+
+  block.hidden = !message;
+  fallback.hidden = !body || Boolean(message);
 }
 
 /**
@@ -659,10 +723,20 @@ function assertComplete(fragment, data) {
   const disclaimer = fragment.querySelector('.disclosure--disclaimer [data-slot="disclaimer"]');
   if (!disclaimer?.textContent.trim()) throw new RenderError('disclaimer');
 
-  // Every open question must have a control. A question that renders as prose
+  // Every answerable thing must have a control. A question that renders as prose
   // but not as a field is one the user is told about and cannot answer — the
-  // read-only state this slice exists to end, reintroduced by a template slip.
-  expect('open_questions', countIn(fragment, '.answer[data-question]'), openQuestionsOf(data).length);
+  // read-only state slice 1e existed to end, reintroduced by a template slip.
+  //
+  // Counted over BOTH channels since schema_version 4. An offer that silently
+  // fails to render is the exemption gap coming back: the verdict is still
+  // correct, and the favourable path is again never put to the user — which is
+  // precisely the failure that is invisible unless something counts it.
+  expect('answerable', countIn(fragment, '.answer[data-question]'), answerableOf(data).length);
+  expect(
+    'claimable_exemptions',
+    countIn(fragment, '.answer--exemption[data-question]'),
+    claimableExemptionsOf(data).length,
+  );
 
   const activities = data.activities ?? [];
   expect('activities', countIn(fragment, '.activity'), activities.length);

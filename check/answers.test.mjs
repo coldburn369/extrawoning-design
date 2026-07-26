@@ -3,7 +3,7 @@
  *
  * Run: `node --test check/answers.test.mjs`
  *
- * Driven by REAL captured API bodies (`fixtures/api-v3-*.json`) and the REAL
+ * Driven by REAL captured API bodies (`fixtures/api-v4-*.json`) and the REAL
  * templates, through the same tiny shim `render.test.mjs` uses. A form tested
  * against a hand-written question object would prove nothing about the shape the
  * service actually emits — and the shape is the whole point of this slice.
@@ -30,7 +30,9 @@ const source = (name) => readFileSync(here(`./${name}`), 'utf8');
 installDom(here('./sections/templates.html'));
 const {
   RenderError,
+  answerableOf,
   applyAnswers,
+  claimableExemptionsOf,
   nextFacts,
   openQuestionsOf,
   readAnswers,
@@ -41,9 +43,9 @@ const {
   showServiceMessage,
 } = await import('./render.js');
 
-const OK = load('api-v3-ok.json');
-const ANSWERED = load('api-v3-answered.json');
-const SCOPE = load('api-v3-scope.json');
+const OK = load('api-v4-ok.json');
+const ANSWERED = load('api-v4-answered.json');
+const SCOPE = load('api-v4-scope.json');
 
 const form = (data = OK) => ({ fragment: renderResult(data), questions: openQuestionsOf(data) });
 const fieldFor = (fragment, id) =>
@@ -80,7 +82,10 @@ test('every open question gets a control, and it is the one its kind implies', (
 });
 
 test('the questions appear once each, in the order the API sent them', () => {
-  const { fragment, questions } = form();
+  // Over BOTH channels since schema_version 4: they share one form, so "once
+  // each" is a property of the union, not of either list alone.
+  const { fragment } = form();
+  const questions = answerableOf(OK);
   const rendered = fragment
     .querySelectorAll('.answer[data-question]')
     .map((f) => f.dataset.question);
@@ -284,12 +289,16 @@ test('the dossier sub-question never becomes a fact', () => {
 test('answers for questions the form no longer shows are carried, not dropped', () => {
   // A question leaves bucket B *because* it was answered. Dropping the answer on
   // the next re-check would silently undo the thing the user just did.
-  const { fragment, questions } = form();
+  const { fragment } = form();
   const carried = { bbl_conformity_plausible: true, min_new_unit_gbo_m2: 62.0 };
-  const after = form(ANSWERED); // bucket B is empty here
-  const facts = nextFacts(after.fragment, after.questions, carried);
+  // Bucket B is empty here, but the two vrijstellingen are still offered — so
+  // `answerableOf`, not `openQuestionsOf`, is what the page carries in state.
+  const facts = nextFacts(renderResult(ANSWERED), answerableOf(ANSWERED), carried);
   assert.deepEqual(facts, carried);
-  assert.equal(fragment.querySelectorAll('.answer[data-question]').length, questions.length);
+  assert.equal(
+    fragment.querySelectorAll('.answer[data-question]').length,
+    answerableOf(OK).length,
+  );
 });
 
 test('a question still on the form is authoritative, even when emptied', () => {
@@ -315,7 +324,7 @@ test('the answers are restored into the form after a re-check', () => {
 
 test("a 422 lands on the field that caused it, with the API's own message", () => {
   const { fragment } = form();
-  const invalid = load('api-v3-invalid.json');
+  const invalid = load('api-v4-invalid.json');
   const rejected = invalid.declared_facts.rejected;
   assert.ok(rejected.length > 0);
 
@@ -343,12 +352,173 @@ test('a service message sits beside the form instead of replacing it', () => {
   // Replacing the result on a 429 would take the answers with it — being locked
   // out of your own form for ten minutes is what batching exists to avoid.
   const { fragment } = form();
-  showServiceMessage(fragment, 'Te veel aanvragen.');
-  const line = fragment.querySelector('[data-slot="answers-service"]');
-  assert.equal(line.hidden, false);
-  assert.equal(line.textContent, 'Te veel aanvragen.');
+  showServiceMessage(fragment, { message: 'Te veel aanvragen.' });
+  const block = fragment.querySelector('[data-slot="answers-service"]');
+  assert.equal(block.hidden, false);
+  assert.equal(
+    block.querySelector('[data-slot="answers-service-message"]').textContent,
+    'Te veel aanvragen.',
+  );
   showServiceMessage(fragment, null);
-  assert.equal(line.hidden, true);
+  assert.equal(block.hidden, true);
+});
+
+test('a 429 beside the form keeps its countdown', () => {
+  // "Probeer het later opnieuw" without the number is the half of a 429 a user
+  // can act on, missing. tpl-service has always shown it; the in-place path was
+  // the worse of the two for no reason.
+  const { fragment } = form();
+  showServiceMessage(fragment, { message: 'Te veel aanvragen.', retry_after_seconds: 421 });
+  const retry = fragment.querySelector('[data-slot="answers-retry-line"]');
+  assert.equal(retry.hidden, false);
+  assert.equal(retry.querySelector('[data-slot="answers-retry-seconds"]').textContent, '421');
+});
+
+test('a service message without a countdown hides the countdown line', () => {
+  const { fragment } = form();
+  showServiceMessage(fragment, { message: 'Het is nu te druk.' });
+  assert.equal(fragment.querySelector('[data-slot="answers-retry-line"]').hidden, true);
+});
+
+test('a service body with no message shows the fallback, never nothing', () => {
+  // The failure this closes: handleInPlace returned Boolean(body.message), so a
+  // 429 carrying no sentence fell through to a view that REPLACES the result —
+  // taking the half-filled form with it, on the one path where the service had
+  // already told us it was overloaded.
+  const { fragment } = form();
+  showServiceMessage(fragment, {});
+  assert.equal(fragment.querySelector('[data-slot="answers-service"]').hidden, true);
+  assert.equal(fragment.querySelector('[data-slot="answers-service-fallback"]').hidden, false);
+});
+
+test('the fallback clears once a real message arrives, and on reset', () => {
+  const { fragment } = form();
+  showServiceMessage(fragment, {});
+  showServiceMessage(fragment, { message: 'Te veel aanvragen.' });
+  assert.equal(fragment.querySelector('[data-slot="answers-service-fallback"]').hidden, true);
+  showServiceMessage(fragment, null);
+  assert.equal(fragment.querySelector('[data-slot="answers-service-fallback"]').hidden, true);
+  assert.equal(fragment.querySelector('[data-slot="answers-service"]').hidden, true);
+});
+
+/* ---- claimable exemptions (schema_version 4, ADR-0017) --------------------
+   The offer channel. What these pin is the distinction between "we could not
+   test this" and "we did, and here is a door" — a distinction that is invisible
+   in a screenshot and easy to lose in a refactor. */
+
+test('every claimable exemption gets a control', () => {
+  const { fragment } = form();
+  const offers = claimableExemptionsOf(OK);
+  assert.ok(offers.length > 0, 'the fixture must actually carry offers');
+  for (const offer of offers) {
+    const field = fieldFor(fragment, offer.id);
+    assert.ok(field, `no control for ${offer.id}`);
+    assert.ok(field.classList.contains('answer--exemption'), `${offer.id} is not marked as an offer`);
+  }
+});
+
+test('an offer is rendered in its own group, never among the open questions', () => {
+  // Filing a vrijstelling under "beantwoord wat u zelf kunt beantwoorden" would
+  // tell a user their verdict is uncertain when it is not.
+  const { fragment } = form();
+  const questionsList = fragment.querySelector('[data-slot="questions"]');
+  const exemptionsList = fragment.querySelector('[data-slot="exemptions"]');
+  assert.equal(questionsList.querySelectorAll('.answer--exemption').length, 0);
+  assert.equal(
+    exemptionsList.querySelectorAll('.answer[data-question]').length,
+    claimableExemptionsOf(OK).length,
+  );
+});
+
+test('an offer carries the API sentence saying that silence changes nothing', () => {
+  const { fragment } = form();
+  for (const offer of claimableExemptionsOf(OK)) {
+    const field = fieldFor(fragment, offer.id);
+    assert.equal(field.querySelector('[data-slot="promise"]').textContent, offer.offer);
+    assert.equal(field.querySelector('[data-slot="statement"]').textContent, offer.statement);
+    assert.equal(field.querySelector('[data-slot="citation"]').textContent, offer.citation);
+    assert.equal(field.querySelector('[data-slot="rule_id"]').textContent, offer.rule_id);
+  }
+});
+
+test('the offers survive a result with NO open questions left', () => {
+  // The regression this exists for. ANSWERED has bucket B empty on both
+  // activities and both vrijstellingen still open. Gating the form on
+  // `open_questions.length` — which is what the single-block form did — makes
+  // the favourable path unreachable exactly when the user has done everything
+  // else asked of them.
+  assert.equal(openQuestionsOf(ANSWERED).length, 0);
+  assert.ok(claimableExemptionsOf(ANSWERED).length > 0);
+
+  const fragment = renderResult(ANSWERED);
+  assert.equal(fragment.querySelector('[data-slot="answers-block"]').hidden, false);
+  assert.equal(fragment.querySelector('[data-slot="questions-block"]').hidden, true);
+  assert.equal(fragment.querySelector('[data-slot="exemptions-block"]').hidden, false);
+});
+
+test('offers and open questions share ONE form and ONE submit', () => {
+  const fragment = renderResult(OK);
+  assert.equal(fragment.querySelectorAll('[data-slot="answers-form"]').length, 1);
+  assert.equal(fragment.querySelectorAll('[data-slot="answers-submit"]').length, 1);
+  const formEl = fragment.querySelector('[data-slot="answers-form"]');
+  const inForm = new Set(
+    formEl.querySelectorAll('.answer[data-question]').map((f) => f.dataset.question),
+  );
+  for (const offer of claimableExemptionsOf(OK)) {
+    assert.ok(inForm.has(offer.id), `${offer.id} is outside the one form`);
+  }
+});
+
+test('an offer is read back like any other answer', () => {
+  // Otherwise it is a control whose value is never sent: a button that does
+  // nothing, on the one question that could improve the answer.
+  const { fragment } = form();
+  const questions = answerableOf(OK);
+  pick(fragment, 'mantelzorg', 'ja');
+  assert.equal(readAnswers(fragment, questions).mantelzorg_noodzakelijk, true);
+});
+
+test('an offer left untouched contributes nothing to the payload', () => {
+  // ADR-0007's shape, at the page layer: not answering must leave the request
+  // exactly as it would have been.
+  const { fragment } = form();
+  const questions = answerableOf(OK);
+  const facts = readAnswers(fragment, questions);
+  assert.equal('mantelzorg_noodzakelijk' in facts, false);
+  assert.equal('omgevingsvergunning_verleend_op' in facts, false);
+});
+
+test('an answered offer is restored after a re-check', () => {
+  const { fragment } = form();
+  const questions = answerableOf(OK);
+  applyAnswers(fragment, questions, { mantelzorg_noodzakelijk: true });
+  const input = fieldFor(fragment, 'mantelzorg').querySelector(
+    'input[name="q-mantelzorg"][value="ja"]',
+  );
+  assert.equal(input.checked, true);
+});
+
+test('a rejection lands on the offer that caused it', () => {
+  const { fragment } = form();
+  const unplaced = showRejections(fragment, [
+    { fact: 'omgevingsvergunning_verleend_op', message: 'Datum ligt voor 1900-01-01.' },
+  ]);
+  assert.equal(unplaced.length, 0);
+  const field = fieldFor(fragment, 'pre2021_permit');
+  assert.equal(field.querySelector('[data-slot="rejection"]').hidden, false);
+  assert.ok(field.classList.contains('answer--rejected'));
+});
+
+test('an offer this page cannot draw a control for shows NO result', () => {
+  // A silently missing offer is the exemption gap coming back: the verdict is
+  // still correct, and the favourable path is again never put to the user. The
+  // realistic slip is the server growing a `kind` this page has not seen — so it
+  // goes through the same refusal every other unrenderable answer does, rather
+  // than rendering an offer with no way to accept it.
+  const data = structuredClone(OK);
+  const activity = data.activities.find((a) => a.claimable_exemptions.length > 0);
+  activity.claimable_exemptions[0].kind = 'a_kind_from_the_future';
+  assert.throws(() => renderResult(data), RenderError);
 });
 
 /* ---- what changed, and what did not -------------------------------------- */

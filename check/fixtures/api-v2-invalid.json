@@ -1,1 +1,0 @@
-{"schema_version":2,"status":"invalid_facts","declared_facts":{"accepted":[],"rejected":[{"fact":"gbo_m2","reason":"not_user_declared","message":"'gbo_m2' halen wij uit de BAG. Dit gegeven kunt u niet zelf opgeven — anders zou een opgave een gecontroleerde bron kunnen overschrijven.","expected":"komt uit de BAG","got":null}]}}

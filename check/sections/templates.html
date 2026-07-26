@@ -70,20 +70,48 @@
 
     <div class="result__activities" data-slot="activities"></div>
 
-    <!-- The answer form. ONE form for the whole result, not one per activity:
-         facts are request-scoped, so the same question under two activities would
-         be two controls for one fact and would let a user contradict themselves
-         inside a single submit. The questions come from the union of every
-         activity's `open_questions`, deduped by question id. -->
+    <!-- The answer form. ONE form for the whole result, not one per activity and
+         not one per channel: facts are request-scoped, so the same question under
+         two activities would be two controls for one fact and would let a user
+         contradict themselves inside a single submit.
+
+         TWO GROUPS INSIDE ONE FORM, and the split is the point (schema_version 4,
+         ADR-0017). `open_questions` are points we could NOT test. `claimable_
+         exemptions` hang off points we DID test and decided — they are an offer,
+         not a doubt. Rendering them under the same heading would tell a user
+         their verdict is uncertain when it is not.
+
+         Either group alone is enough to show the form: the answered state — every
+         open question resolved, both vrijstellingen still open — is a real
+         response, and it is exactly the one where the old single-block form
+         disappeared. -->
     <section class="answers" data-slot="answers-block" hidden>
-      <h3 class="answers__title">Beantwoord wat u zelf kunt beantwoorden</h3>
-      <p class="answers__note">
-        Wij bewaren deze antwoorden nergens — niet in uw browser, niet in een
-        cookie, niet in de link. Ververst u de pagina, dan zijn ze weg en begint
-        de scan opnieuw bij het adres.
-      </p>
       <form class="answers__form" data-slot="answers-form" novalidate>
-        <div class="answers__list" data-slot="questions"></div>
+        <!-- Applies to BOTH groups, so it sits above them. `mantelzorg_noodzakelijk`
+             is a statement about someone's health needs; it must carry this
+             promise wherever it is asked. -->
+        <p class="answers__note">
+          Wij bewaren deze antwoorden nergens — niet in uw browser, niet in een
+          cookie, niet in de link. Ververst u de pagina, dan zijn ze weg en begint
+          de scan opnieuw bij het adres.
+        </p>
+
+        <div class="answers__group" data-slot="questions-block" hidden>
+          <h3 class="answers__title">Beantwoord wat u zelf kunt beantwoorden</h3>
+          <div class="answers__list" data-slot="questions"></div>
+        </div>
+
+        <!-- The heading is the ONLY chrome this group gets. Every substantive
+             claim — what the vrijstelling is, that leaving it blank changes
+             nothing, what claiming it would do — is the response's own
+             `statement` and `offer`, rendered per item below. A note here would
+             be the page restating the law in its own words. -->
+        <div class="answers__group answers__group--exemptions"
+             data-slot="exemptions-block" hidden>
+          <h3 class="answers__title">Vrijstellingen die u mogelijk kunt inroepen</h3>
+          <div class="answers__list" data-slot="exemptions"></div>
+        </div>
+
         <!-- Shown when the service refused the answers. The per-question message
              is the API's own and sits on the field that caused it; this line only
              says that nothing was tested. -->
@@ -95,8 +123,29 @@
              rather than in place of the result, because replacing the result
              would take the user's answers with it — and being locked out of
              your own form for ten minutes is the failure batching exists to
-             avoid in the first place. -->
-        <p class="answers__service" data-slot="answers-service" role="alert" hidden></p>
+             avoid in the first place.
+
+             The retry line is chrome around the response's own number, and it is
+             here for the same reason it is on tpl-service: "try again later"
+             without a countdown is the half of the message the user can act on,
+             missing. -->
+        <div class="answers__service" data-slot="answers-service" role="alert" hidden>
+          <p data-slot="answers-service-message"></p>
+          <p class="note" data-slot="answers-retry-line" hidden>
+            Probeert u het over <span data-slot="answers-retry-seconds"></span>
+            seconden opnieuw.
+          </p>
+        </div>
+        <!-- The service answered, but with nothing we may quote. Same class as
+             tpl-transport's copy: a failure where we have no sentence of theirs
+             to show. It keeps the form — and the answers — on screen, which is
+             the whole reason this branch exists rather than falling through to a
+             view that would replace them. -->
+        <p class="answers__service" data-slot="answers-service-fallback" role="alert" hidden>
+          De dienst is nu niet beschikbaar en gaf geen toelichting. Er is niets
+          getoetst — dit zegt niets over uw adres. Uw antwoorden staan er nog;
+          probeert u het over enkele minuten opnieuw.
+        </p>
         <button type="submit" class="btn btn--primary answers__submit" data-slot="answers-submit">
           Uitkomst bijwerken
         </button>
@@ -150,6 +199,41 @@
   <fieldset class="answer answer--sub" data-slot="answer">
     <legend class="answer__text" data-slot="text"></legend>
     <div class="answer__control" data-slot="control"></div>
+  </fieldset>
+</template>
+
+<!-- ---- One claimable exemption (schema_version 4, ADR-0017) ---------------
+     Structurally an answer — same `.answer[data-question]` hook, so the one
+     form reads, restores and validates it exactly like any other control, and
+     a 422 lands on it the same way. What differs is what it MEANS, and three
+     extra slots carry that, all of them response fields:
+
+       statement — what the vrijstelling is. The corpus exception's own
+                   description, verbatim.
+       promise   — the response's `offer`: that leaving this blank changes
+                   nothing, and what claiming it would do. Reusing the promise
+                   slot is deliberate — it is the same job (what will and will
+                   not happen if you answer), and it keeps one template shape.
+       citation  — the article, next to the rule id it hangs off.
+
+     No Dutch of this page's own. An offer sitting beside a verdict reads as
+     doubt about that verdict unless something says otherwise, and the sentence
+     that says otherwise is the server's, not ours. -->
+<template id="tpl-exemption">
+  <fieldset class="answer answer--exemption" data-slot="answer">
+    <legend class="answer__text" data-slot="text"></legend>
+    <p class="answer__statement" data-slot="statement"></p>
+    <p class="answer__promise" data-slot="promise"></p>
+    <div class="answer__control" data-slot="control"></div>
+    <div class="answer__subs" data-slot="sub_questions" hidden></div>
+    <p class="answer__rejection" data-slot="rejection" role="alert" hidden>
+      <span class="answer__rejection-fact" data-slot="fact"></span>
+      <span data-slot="message"></span>
+    </p>
+    <p class="citation">
+      <span class="entry__rule-id" data-slot="rule_id"></span>
+      <span data-slot="citation"></span>
+    </p>
   </fieldset>
 </template>
 

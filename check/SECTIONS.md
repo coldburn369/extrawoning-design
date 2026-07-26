@@ -141,6 +141,43 @@ question, so a bucket-C question never reads as "answer this and you will know".
 the screen where a user has just done everything asked of them is exactly where
 it must not disappear.
 
+## Claimable exemptions (schema_version 4)
+
+A **second group inside the same form**, and the separation is the whole point.
+
+| | `open_questions` | `claimable_exemptions` |
+|---|---|---|
+| the rule is | UNKNOWN — we could not test it | decided (PASS/FAIL) |
+| says | "we could not test this" | "we tested it; here is a door" |
+| unanswered | the point stays untested | **the verdict is unchanged and complete** |
+| heading | *Beantwoord wat u zelf kunt beantwoorden* | *Vrijstellingen die u mogelijk kunt inroepen* |
+
+The gap it closes: the buckets are keyed on what is unresolved, so a rule that
+resolved carried no questions. `zst-wv-000` resolves to PASS — *you need a
+permit* — and its two vrijstellingen (mantelzorg; a pre-2021 omgevingsvergunning)
+were never put to anyone. See ADR-0017 in the API repo.
+
+Four things this page must keep true:
+
+1. **Never under the bucket-B heading.** Filing a vrijstelling as an open
+   question tells a user their verdict is uncertain when it is not.
+2. **Either group alone shows the form.** `api-v4-answered.json` is the case:
+   bucket B empty, both offers still open. Gating on `open_questions.length` —
+   what the single-block form did — makes the favourable path unreachable exactly
+   when the user has done everything else asked of them.
+3. **The offers are in `state.questions`.** `answerableOf()` is the union, and it
+   is what `readAnswers`/`applyAnswers`/`nextFacts` drive off. An offer missing
+   from it renders as a control whose value is never sent — a button that does
+   nothing, on the one question that could improve the answer.
+4. **Only the heading is chrome.** What the vrijstelling is (`statement`, the
+   corpus text verbatim), that leaving it blank changes nothing, and what
+   claiming it would do are all the response's own `offer`. An offer beside a
+   verdict reads as doubt about that verdict unless something says otherwise, and
+   the sentence that says otherwise is the server's.
+
+Accent, not green and not danger: an offer is neither good news nor a fault until
+the user says whether it applies to them.
+
 ### The answers never leave memory
 
 `mantelzorg_noodzakelijk` is a statement about someone's health needs and the
@@ -153,9 +190,21 @@ too — they describe a household at a specific dwelling.
 
 A 422 on a re-check does not unmount the result. Each rejection lands on the
 field that caused it carrying the API's own `message`; a rejection the page
-cannot place falls through to the dedicated 422 view rather than disappearing. A
-429/503 renders beside the form for the same reason — being locked out of your
-own form is what the batching exists to avoid.
+cannot place falls through to the dedicated 422 view rather than disappearing.
+
+**A 429/503 now gets the same treatment, which it did not before.** Two gaps
+were closed:
+
+- `handleInPlace` returned `Boolean(body.message)`, so a service response
+  carrying no sentence fell through to a view that **replaces** the result —
+  taking the half-filled form with it, on the one path where the service had
+  already told us it was overloaded. It now always keeps the form, and
+  `showServiceMessage` renders a chrome fallback when there is nothing of theirs
+  to quote, so keeping the form never means saying nothing.
+- The in-place path showed no `retry_after_seconds`. "Probeer het later opnieuw"
+  without the countdown is the half of a 429 a user can act on, missing — and
+  `tpl-service` had always shown it, which made the in-place path the worse of
+  the two for no reason.
 
 ### What changed
 
@@ -176,6 +225,12 @@ This is the seam between two repositories that deploy independently, and the one
 failure mode the split introduces. Bump `SCHEMA_VERSION` in the change that
 adopts the new contract, never ahead of one. `check/version-guard.test.mjs` runs
 it against verbatim v1, v2 and v3 captures in `check/fixtures/`.
+
+**v3 → v4 is the instructive one, because it was purely additive.** Every slot on
+this page would have filled correctly against a v4 body while still on v3, and the
+result would have looked completely normal — with the two vrijstellingen missing
+and nothing on screen to say so. A silently absent offer is indistinguishable
+from an address that has none. That is why an added field still gets a bump.
 
 ## Input
 
@@ -252,10 +307,9 @@ node --test check/*.test.mjs           # version guard · render · the answer f
   `schema_version` 3: `outcome.statement` + `outcome.consequence` for
   `out_of_scope` / `address_not_found` / `source_timeout`. There is now **no
   outcome sentence on this page that the API does not supply.**
-- **A 429 during a re-check loses the answers.** They live in memory only (by
-  design), and the message renders beside the form rather than replacing it — so
-  the form survives a rate limit, but a reload does not. See `TODO.md` in the API
-  repo.
+- ~~**A 429 during a re-check loses the answers.**~~ Closed: the in-place path
+  now keeps the form unconditionally and carries the countdown. A **reload** still
+  loses them, and always will — they live in memory only, by design.
 - ~~**API gap — the response does not echo the RESOLVED address.**~~ Closed by
   `schema_version` 2: `address_query` / `address_resolved` / `address_match`.
   `address_not_found` is now reachable and means "no hit at all"; a hit that is

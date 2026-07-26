@@ -1,0 +1,632 @@
+{
+  "schema_version": 4,
+  "status": "ok",
+  "address_query": "1501CA 3A",
+  "address_resolved": {
+    "postcode": "1501CA",
+    "huisnummer": 3,
+    "toevoeging": "A",
+    "straatnaam": "Zuiddijk",
+    "woonplaats": "Zaandam",
+    "weergavenaam": "Zuiddijk 3A, 1501CA Zaandam"
+  },
+  "address_match": {
+    "verified": true,
+    "hit_type": "adres",
+    "postcode_matches": true,
+    "huisnummer_matches": true,
+    "asked_postcode": "1501CA",
+    "asked_huis_nlt": "3A",
+    "resolved_postcode": "1501CA",
+    "resolved_huis_nlt": "3A",
+    "statement": null,
+    "consequence": null
+  },
+  "gemeente": "Zaanstad",
+  "gemeentecode": "0479",
+  "outcome": null,
+  "disclaimer": "Dit is een pre-scan op basis van open data en de gemeentelijke regelset. Het is geen juridisch advies en geen besluit van de gemeente. Wijzigen de feiten, dan wijzigt de uitkomst. Onbekend is niet hetzelfde als goedgekeurd.",
+  "presumptions": [
+    {
+      "fact": "owner_is_housing_corporation",
+      "value": false,
+      "direction": "conservatief",
+      "citation": "CVDR732060_2 art. 3.1.1 lid 2",
+      "statement": "Wij nemen aan dat deze woonruimte g\u00e9\u00e9n eigendom is van een woningcorporatie.",
+      "consequence": "Is de woonruimte w\u00e9l eigendom van een woningcorporatie, dan geldt afdeling 3.1 niet: de vergunningplicht en alle weigeringsgronden hieronder vervallen. Deze aanname kan de uitkomst dus alleen strenger maken, nooit soepeler."
+    }
+  ],
+  "declared_facts": {
+    "accepted": [
+      {
+        "fact": "aantal_personen_in_gebruik",
+        "value": 3,
+        "used": true,
+        "reason": null,
+        "message": null
+      },
+      {
+        "fact": "bbl_conformity_plausible",
+        "value": true,
+        "used": true,
+        "reason": null,
+        "message": null
+      },
+      {
+        "fact": "belongs_to_appartementencomplex",
+        "value": false,
+        "used": true,
+        "reason": null,
+        "message": null
+      },
+      {
+        "fact": "min_new_unit_gbo_m2",
+        "value": 62.0,
+        "used": true,
+        "reason": null,
+        "message": null
+      },
+      {
+        "fact": "verhuurder_eigen_go_m2",
+        "value": 40.0,
+        "used": true,
+        "reason": null,
+        "message": null
+      },
+      {
+        "fact": "verhuurder_heeft_hoofdverblijf_in_woonruimte",
+        "value": false,
+        "used": true,
+        "reason": null,
+        "message": null
+      },
+      {
+        "fact": "verhuurder_is_woonachtig_in_woonruimte",
+        "value": true,
+        "used": true,
+        "reason": null,
+        "message": null
+      }
+    ],
+    "rejected": []
+  },
+  "declared_exclusions": [],
+  "caveats": [
+    {
+      "id": "gbo-1",
+      "channel": "gbo",
+      "text": "gbo_m2 komt uit BAG (huidige VBO); zst-wv-001 vraagt het oorspronkelijke hoofdgebouw v\u00f3\u00f3r splitsing. Dit pand heeft meerdere VBO's \u2014 de gelijkstelling is onzeker; verifieer de hoofdgebouw-oppervlakte handmatig."
+    },
+    {
+      "id": "permits-1",
+      "channel": "permits",
+      "text": "voorraadvergunningen_within_100m blijft ONBEKEND \u2014 bron leeg: geen verleende HVV-voorraadvergunning-besluiten gepubliceerd voor GM0479 per 2026-07-26 (bron leeg, niet nul)."
+    },
+    {
+      "id": "permits-2",
+      "channel": "permits",
+      "text": "complex_voorraadvergunning_ratio blijft ONBEKEND \u2014 bron leeg: geen verleende HVV-voorraadvergunning-besluiten gepubliceerd voor GM0479 per 2026-07-26 (bron leeg, niet nul)."
+    },
+    {
+      "id": "zones-1",
+      "channel": "zones",
+      "text": "address_in_omzettingsverbodsgebied=true uit CBS buurtindeling 2025 (wijk WK047911 'Zaandam Zuid', buurt BU04791132 Prins Hendrikbuurt); verifieer bij twijfel over wijkgrens."
+    }
+  ],
+  "activities": [
+    {
+      "activity": "omzetting",
+      "verdict": "unlikely",
+      "verdict_label": "Onwaarschijnlijk",
+      "verdict_statement": "Op basis van open data is er ten minste \u00e9\u00e9n harde weigeringsgrond die deze activiteit blokkeert. Dit is een pre-scan, geen besluit van de gemeente.",
+      "verdict_ceiling": "uncertain",
+      "verdict_ceiling_reason": "De instrumentlaag 'omgevingsplan' is voor deze activiteit nog niet gecontroleerd of ge\u00ebncodeerd. Die laag telt verplicht mee, dus zolang zij ontbreekt is een positieve uitkomst onbereikbaar \u2014 ongeacht welke gegevens u aanlevert.",
+      "corpus_ref": "Zaanstad/omzetting/CVDR732060",
+      "instrument": {
+        "title": "Huisvestingsverordening gemeente Zaanstad 2025",
+        "cvdr_id": "CVDR732060",
+        "identifier": "CVDR732060_2",
+        "url": "https://lokaleregelgeving.overheid.nl/CVDR732060/2",
+        "version_label": "versie 2026-03-18 (CVDR732060_2)",
+        "version_date": "2026-03-18"
+      },
+      "buckets": {
+        "decided": [
+          {
+            "rule_id": "zst-omz-000",
+            "kind": "soft_signal",
+            "status": "PASS",
+            "description": "Alle omzetting van zelfstandige naar onzelfstandige woonruimte (kamergewijze verhuur) van aangewezen woonruimte is vergunningplichtig; er geldt geen ondergrens voor de vergunningplicht zelf",
+            "citation": "CVDR732060_2 art. 3.1.2 lid 1 jo. art. 3.1.1 lid 2",
+            "semantic": "permit_required",
+            "presentation": {
+              "tone": "obligation",
+              "label": "Vergunningplicht",
+              "statement": "Vergunningplicht: voor deze activiteit is een vergunning vereist."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-omz-zone",
+            "kind": "hard_gate",
+            "status": "FAIL",
+            "description": "Omzettingsvergunning wordt niet verleend in de in bijlage 3 aangewezen wijken (vijf wijken Zaandam-Oost + Russische buurt)",
+            "citation": "CVDR732060_2 art. 3.3.1a lid 1 jo. bijlage 3",
+            "semantic": "refusal_ground",
+            "presentation": {
+              "tone": "blocking",
+              "label": "Blokkade",
+              "statement": "Dit is een weigeringsgrond: op dit punt wordt de vergunning geweigerd."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [
+              "zones-1"
+            ],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-omz-001",
+            "kind": "hard_gate",
+            "status": "FAIL",
+            "description": "Omzettingsvergunning wordt geweigerd als het per persoon beschikbare gebruiksoppervlak in de woning gemiddeld genomen kleiner is dan 25 m\u00b2",
+            "citation": "CVDR732060_2 art. 3.3.1a lid 2 onder a",
+            "semantic": "refusal_ground",
+            "presentation": {
+              "tone": "blocking",
+              "label": "Blokkade",
+              "statement": "Dit is een weigeringsgrond: op dit punt wordt de vergunning geweigerd."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-omz-002",
+            "kind": "hard_gate",
+            "status": "PASS",
+            "description": "Omzettingsvergunning wordt geweigerd als de woning in gebruik wordt gegeven aan 5 of meer personen",
+            "citation": "CVDR732060_2 art. 3.3.1a lid 2 onder b",
+            "semantic": null,
+            "presentation": {
+              "tone": "cleared",
+              "label": "Geen blokkade op dit punt",
+              "statement": "Op dit punt is geen blokkade gevonden."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-omz-004",
+            "kind": "hard_gate",
+            "status": "NOT_APPLICABLE",
+            "description": "Omzettingsvergunning wordt geweigerd als de woonruimte tot een appartementencomplex behoort en voor m\u00e9\u00e9r dan 10% van de woningen in het complex al een omzettings- of woningvormingsvergunning is verleend",
+            "citation": "CVDR732060_2 art. 3.3.1a lid 2 onder d",
+            "semantic": null,
+            "presentation": {
+              "tone": "not_applicable",
+              "label": "Niet van toepassing",
+              "statement": "Deze regel geldt niet voor uw situatie."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [
+              "permits-1",
+              "permits-2"
+            ],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-omz-005",
+            "kind": "soft_signal",
+            "status": "PASS",
+            "description": "De omzettingsvergunning KAN worden geweigerd als de aanvrager naar het oordeel van B&W niet aan de criteria van goed verhuurderschap voldoet \u2014 oordeelsafhankelijke discretionaire grond, niet door software te beoordelen: disclosure, geen gate",
+            "citation": "CVDR732060_2 art. 3.3.1a lid 3",
+            "semantic": "goed_verhuurderschap_ground_exists",
+            "presentation": {
+              "tone": "disclosure",
+              "label": "Aanvullende toets",
+              "statement": "Goed verhuurderschap (art. 3.3.1a lid 3): B&W kan de vergunning weigeren als de aanvrager niet aan de criteria voldoet \u2014 discretionair, buiten deze scan."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-omz-006",
+            "kind": "soft_signal",
+            "status": "PASS",
+            "description": "De gemeente behoudt discretionaire, oordeelsafhankelijke weigeringsgronden buiten deze scan (leefbaarheid, Wet Bibob, onderhoudsniveau); deze kunnen niet door software worden beoordeeld \u2014 disclosure, geen gate",
+            "citation": "CVDR732060_2 art. 3.3.1 lid 2 onder a, b, c",
+            "semantic": "discretionary_grounds_exist",
+            "presentation": {
+              "tone": "disclosure",
+              "label": "Aanvullende toets",
+              "statement": "Discretionaire weigeringsgronden buiten deze scan: leefbaarheid, Wet Bibob, onderhoudsniveau (oordeelsafhankelijk)."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          }
+        ],
+        "needs_user_input": [],
+        "needs_external_source": [
+          {
+            "rule_id": "zst-omz-003",
+            "kind": "hard_gate",
+            "status": "UNKNOWN",
+            "description": "Omzettingsvergunning wordt geweigerd als de woonruimte niet tot een appartementencomplex behoort \u00e9n binnen een straal van 100 meter al een omzettings- of woningvormingsvergunning is verleend",
+            "citation": "CVDR732060_2 art. 3.3.1a lid 2 onder c",
+            "semantic": null,
+            "presentation": {
+              "tone": "unknown",
+              "label": "Nog niet te beoordelen",
+              "statement": "Wij konden dit punt niet beoordelen. Onbekend is niet hetzelfde als goedgekeurd."
+            },
+            "missing_facts": [
+              "voorraadvergunningen_within_100m"
+            ],
+            "questions": [],
+            "caveat_ids": [
+              "permits-1",
+              "permits-2"
+            ],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [
+              "voorraadvergunningen_within_100m"
+            ],
+            "unavailable_reason": "Zaanstad publiceert geen verleende voorraadvergunningen; uit de openbare bekendmakingen is daarom geen aantal af te leiden. Dat er niets is gepubliceerd, bewijst niet dat er niets is verleend \u2014 daarom melden wij dit punt als onbekend en niet als nul (ADR-0010). De kanttekening hieronder vermeldt of en wanneer wij die bron hebben geraadpleegd."
+          },
+          {
+            "rule_id": "layer:omgevingsplan:unresolved",
+            "kind": "hard_gate",
+            "status": "UNKNOWN",
+            "description": "Instrumentlaag 'omgevingsplan' is nog niet gecontroleerd voor deze activiteit",
+            "citation": "omgevingsplan: geen corpus beschikbaar \u2014 nog niet gecontroleerd/ge\u00ebncodeerd",
+            "semantic": null,
+            "presentation": {
+              "tone": "unknown",
+              "label": "Nog niet te beoordelen",
+              "statement": "Wij konden dit punt niet beoordelen. Onbekend is niet hetzelfde als goedgekeurd."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": "De omgevingsplan-laag is voor deze gemeente nog niet ontsloten. Die laag telt verplicht mee, maar de bron (DSO) is nog niet beschikbaar."
+          }
+        ]
+      },
+      "open_questions": [],
+      "claimable_exemptions": []
+    },
+    {
+      "activity": "woningvorming",
+      "verdict": "unlikely",
+      "verdict_label": "Onwaarschijnlijk",
+      "verdict_statement": "Op basis van open data is er ten minste \u00e9\u00e9n harde weigeringsgrond die deze activiteit blokkeert. Dit is een pre-scan, geen besluit van de gemeente.",
+      "verdict_ceiling": "uncertain",
+      "verdict_ceiling_reason": "De instrumentlaag 'omgevingsplan' is voor deze activiteit nog niet gecontroleerd of ge\u00ebncodeerd. Die laag telt verplicht mee, dus zolang zij ontbreekt is een positieve uitkomst onbereikbaar \u2014 ongeacht welke gegevens u aanlevert.",
+      "corpus_ref": "Zaanstad/woningvorming/CVDR732060",
+      "instrument": {
+        "title": "Huisvestingsverordening gemeente Zaanstad 2025",
+        "cvdr_id": "CVDR732060",
+        "identifier": "CVDR732060_2",
+        "url": "https://lokaleregelgeving.overheid.nl/CVDR732060/2",
+        "version_label": "versie 2026-03-18 (CVDR732060_2)",
+        "version_date": "2026-03-18"
+      },
+      "buckets": {
+        "decided": [
+          {
+            "rule_id": "zst-wv-000",
+            "kind": "soft_signal",
+            "status": "PASS",
+            "description": "Alle woningvorming (bouwkundig splitsen) van aangewezen woonruimte is vergunningplichtig; er geldt geen ondergrens voor de vergunningplicht zelf",
+            "citation": "CVDR732060_2 art. 3.1.2 lid 2 jo. art. 3.1.1 lid 2",
+            "semantic": "permit_required",
+            "presentation": {
+              "tone": "obligation",
+              "label": "Vergunningplicht",
+              "statement": "Vergunningplicht: voor deze activiteit is een vergunning vereist."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-wv-001",
+            "kind": "hard_gate",
+            "status": "FAIL",
+            "description": "Woningvormingsvergunning wordt geweigerd als het gebruiksoppervlak van het oorspronkelijke hoofdgebouw v\u00f3\u00f3r splitsing kleiner is dan 140 m\u00b2 (bij hoofdgebouwen met meerdere functies telt alleen de woonruimte)",
+            "citation": "CVDR732060_2 art. 3.3.1b onder a",
+            "semantic": "refusal_ground",
+            "presentation": {
+              "tone": "blocking",
+              "label": "Blokkade",
+              "statement": "Dit is een weigeringsgrond: op dit punt wordt de vergunning geweigerd."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [
+              "gbo-1"
+            ],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-wv-002",
+            "kind": "hard_gate",
+            "status": "PASS",
+            "description": "Woningvormingsvergunning wordt geweigerd als het gebruiksoppervlak van (een van) de woonruimten n\u00e1 de voorgenomen splitsing kleiner is dan 50 m\u00b2",
+            "citation": "CVDR732060_2 art. 3.3.1b onder b",
+            "semantic": null,
+            "presentation": {
+              "tone": "cleared",
+              "label": "Geen blokkade op dit punt",
+              "statement": "Op dit punt is geen blokkade gevonden."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-wv-004",
+            "kind": "conditional",
+            "status": "PASS",
+            "description": "Woningvormingsvergunning k\u00e1n worden geweigerd als vergunningverlening zou leiden tot strijd met de voorschriften uit het Besluit bouwwerken leefomgeving (Bbl)",
+            "citation": "CVDR732060_2 art. 3.3.1 lid 2 onder d",
+            "semantic": null,
+            "presentation": {
+              "tone": "cleared",
+              "label": "Geen blokkade op dit punt",
+              "statement": "Op dit punt is geen blokkade gevonden."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-wv-007",
+            "kind": "hard_gate",
+            "status": "NOT_APPLICABLE",
+            "description": "Woningvormingsvergunning wordt geweigerd als de woonruimte tot een appartementencomplex behoort en voor m\u00e9\u00e9r dan 10% van de woningen in het complex al een omzettings- of woningvormingsvergunning is verleend",
+            "citation": "CVDR732060_2 art. 3.3.1b onder d",
+            "semantic": null,
+            "presentation": {
+              "tone": "not_applicable",
+              "label": "Niet van toepassing",
+              "statement": "Deze regel geldt niet voor uw situatie."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [
+              "permits-1",
+              "permits-2"
+            ],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          },
+          {
+            "rule_id": "zst-wv-005",
+            "kind": "soft_signal",
+            "status": "PASS",
+            "description": "De gemeente behoudt discretionaire, oordeelsafhankelijke weigeringsgronden buiten deze scan (leefbaarheid, Wet Bibob, onderhoudsniveau); deze kunnen niet door software worden beoordeeld \u2014 disclosure, geen gate",
+            "citation": "CVDR732060_2 art. 3.3.1 lid 2 onder a, b, c",
+            "semantic": "discretionary_grounds_exist",
+            "presentation": {
+              "tone": "disclosure",
+              "label": "Aanvullende toets",
+              "statement": "Discretionaire weigeringsgronden buiten deze scan: leefbaarheid, Wet Bibob, onderhoudsniveau (oordeelsafhankelijk)."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": null
+          }
+        ],
+        "needs_user_input": [],
+        "needs_external_source": [
+          {
+            "rule_id": "zst-wv-006",
+            "kind": "hard_gate",
+            "status": "UNKNOWN",
+            "description": "Woningvormingsvergunning wordt geweigerd als de woonruimte niet tot een appartementencomplex behoort \u00e9n binnen een straal van 100 meter al een omzettings- of woningvormingsvergunning is verleend",
+            "citation": "CVDR732060_2 art. 3.3.1b onder c",
+            "semantic": null,
+            "presentation": {
+              "tone": "unknown",
+              "label": "Nog niet te beoordelen",
+              "statement": "Wij konden dit punt niet beoordelen. Onbekend is niet hetzelfde als goedgekeurd."
+            },
+            "missing_facts": [
+              "voorraadvergunningen_within_100m"
+            ],
+            "questions": [],
+            "caveat_ids": [
+              "permits-1",
+              "permits-2"
+            ],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [
+              "voorraadvergunningen_within_100m"
+            ],
+            "unavailable_reason": "Zaanstad publiceert geen verleende voorraadvergunningen; uit de openbare bekendmakingen is daarom geen aantal af te leiden. Dat er niets is gepubliceerd, bewijst niet dat er niets is verleend \u2014 daarom melden wij dit punt als onbekend en niet als nul (ADR-0010). De kanttekening hieronder vermeldt of en wanneer wij die bron hebben geraadpleegd."
+          },
+          {
+            "rule_id": "layer:omgevingsplan:unresolved",
+            "kind": "hard_gate",
+            "status": "UNKNOWN",
+            "description": "Instrumentlaag 'omgevingsplan' is nog niet gecontroleerd voor deze activiteit",
+            "citation": "omgevingsplan: geen corpus beschikbaar \u2014 nog niet gecontroleerd/ge\u00ebncodeerd",
+            "semantic": null,
+            "presentation": {
+              "tone": "unknown",
+              "label": "Nog niet te beoordelen",
+              "statement": "Wij konden dit punt niet beoordelen. Onbekend is niet hetzelfde als goedgekeurd."
+            },
+            "missing_facts": [],
+            "questions": [],
+            "caveat_ids": [],
+            "would_be_status": null,
+            "would_be_semantic": null,
+            "unavailable_facts": [],
+            "unavailable_reason": "De omgevingsplan-laag is voor deze gemeente nog niet ontsloten. Die laag telt verplicht mee, maar de bron (DSO) is nog niet beschikbaar."
+          }
+        ]
+      },
+      "open_questions": [],
+      "claimable_exemptions": [
+        {
+          "id": "mantelzorg",
+          "kind": "bool",
+          "text": "Is de woningvorming noodzakelijk voor mantelzorg, AANTOONBAAR met een verklaring van huisarts/wijkverpleegkundige/aangewezen adviseur?",
+          "facts": [
+            "mantelzorg_noodzakelijk"
+          ],
+          "choices": [
+            {
+              "id": "ja",
+              "label": "Ja",
+              "facts": {
+                "mantelzorg_noodzakelijk": true
+              }
+            },
+            {
+              "id": "nee",
+              "label": "Nee",
+              "facts": {
+                "mantelzorg_noodzakelijk": false
+              }
+            }
+          ],
+          "sub_questions": [],
+          "ask_if": null,
+          "rule_id": "zst-wv-000",
+          "rule_description": "Alle woningvorming (bouwkundig splitsen) van aangewezen woonruimte is vergunningplichtig; er geldt geen ondergrens voor de vergunningplicht zelf",
+          "exception_id": "mantelzorg",
+          "citation": "CVDR732060_2 art. 3.1.3 lid 3",
+          "statement": "Woningvorming is vrijgesteld van de vergunningplicht zolang zij noodzakelijk is voor mantelzorg",
+          "offer": "Wij passen deze vrijstelling niet uit onszelf toe, omdat wij niet weten of zij voor u geldt. Laat u dit open, dan blijft de uitkomst hierboven precies zoals zij nu is \u2014 dit is een extra mogelijkheid, geen twijfel over wat wij hebben getoetst. Geldt de vrijstelling w\u00e9l, dan is dit punt vrijgesteld. Daarmee vervallen ook de 6 weigeringsgronden die aan deze vergunningplicht hangen. Een vrijstelling van de vergunningplicht heft de onderliggende wettelijke plichten niet op."
+        },
+        {
+          "id": "pre2021_permit",
+          "kind": "pre2021_permit",
+          "text": "Is er voor DE WONINGVORMING ZELF een omgevingsvergunning verleend voor 1-4-2021?",
+          "facts": [
+            "omgevingsvergunning_verleend_op"
+          ],
+          "choices": [
+            {
+              "id": "ja",
+              "label": "Ja",
+              "facts": {}
+            },
+            {
+              "id": "nee",
+              "label": "Nee",
+              "facts": {}
+            }
+          ],
+          "sub_questions": [
+            {
+              "id": "scope",
+              "kind": "bool",
+              "text": "Was die vergunning voor de woningvorming zelf (niet voor bv. een dakkapel/aanbouw)?",
+              "role": "gate",
+              "fact": null,
+              "choices": [
+                {
+                  "id": "ja",
+                  "label": "Ja",
+                  "facts": {}
+                },
+                {
+                  "id": "nee",
+                  "label": "Nee",
+                  "facts": {}
+                }
+              ]
+            },
+            {
+              "id": "datum",
+              "kind": "date",
+              "text": "Datum van verlening",
+              "role": "fact",
+              "fact": "omgevingsvergunning_verleend_op",
+              "choices": []
+            },
+            {
+              "id": "kenmerk",
+              "kind": "text",
+              "text": "Kenmerk/zaaknummer van de vergunning (voor het dossier)",
+              "role": "dossier",
+              "fact": null,
+              "choices": []
+            }
+          ],
+          "ask_if": null,
+          "rule_id": "zst-wv-000",
+          "rule_description": "Alle woningvorming (bouwkundig splitsen) van aangewezen woonruimte is vergunningplichtig; er geldt geen ondergrens voor de vergunningplicht zelf",
+          "exception_id": "pre-2021-omgevingsvergunning",
+          "citation": "CVDR732060_2 art. 3.1.3 lid 4",
+          "statement": "Woningvorming is vrijgesteld van de vergunningplicht indien daarvoor v\u00f3\u00f3r 1 april 2021 een omgevingsvergunning is verleend",
+          "offer": "Wij passen deze vrijstelling niet uit onszelf toe, omdat wij niet weten of zij voor u geldt. Laat u dit open, dan blijft de uitkomst hierboven precies zoals zij nu is \u2014 dit is een extra mogelijkheid, geen twijfel over wat wij hebben getoetst. Geldt de vrijstelling w\u00e9l, dan is dit punt vrijgesteld. Daarmee vervallen ook de 6 weigeringsgronden die aan deze vergunningplicht hangen. Een vrijstelling van de vergunningplicht heft de onderliggende wettelijke plichten niet op."
+        }
+      ]
+    }
+  ],
+  "covered_gemeenten": []
+}

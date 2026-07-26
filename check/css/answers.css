@@ -25,9 +25,30 @@
   color: var(--color-text-muted); font-size: var(--text-sm);
   line-height: var(--leading-normal); max-width: 78ch;
 }
-.answers__form { display: flex; flex-direction: column; gap: var(--space-5); }
+.answers__form { display: flex; flex-direction: column; gap: var(--space-6); }
+.answers__group { display: flex; flex-direction: column; gap: var(--space-4); }
 .answers__list { display: flex; flex-direction: column; gap: var(--space-5); }
 .answers__submit { align-self: flex-start; }
+
+/* The exemption group (schema_version 4, ADR-0017). Set apart by a rule and a
+   surface change, NOT by a warning colour and not by anything louder than the
+   questions above it.
+
+   The distinction it has to carry: these hang off points that WERE tested and
+   decided. The group above is "we could not test this"; this one is "we did, the
+   answer stands, and here is a door you may be able to open". Accent — the
+   colour this page already uses for a permit duty, i.e. attention without
+   judgement — because an offer is neither good news nor a problem until the user
+   says whether it applies to them. Success green would promise an outcome; danger
+   would make an opportunity look like a fault. Both would be the page deciding
+   something the server has not stated. */
+.answers__group--exemptions {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  border-inline-start: 3px solid var(--color-accent-ui);
+  background: var(--color-surface);
+}
 /* The limit is stated where the button is, not in a footnote. A user who is
    about to be told "probeer het over tien minuten opnieuw" should have been able
    to read why before pressing, not after. */
@@ -65,6 +86,16 @@
   color: var(--color-text-muted); font-size: var(--text-sm);
   line-height: var(--leading-normal); max-width: 78ch;
 }
+/* What the vrijstelling IS — the corpus exception's own description, verbatim.
+   Set at reading size and in full text colour, above the muted `offer`: it is
+   the sentence a user checks themselves against, and the one thing on this
+   control that is quoted law rather than our explanation of it. */
+.answer--exemption .answer__statement {
+  color: var(--color-text); font-size: var(--text-base);
+  line-height: var(--leading-normal); max-width: 78ch;
+}
+.answer--exemption .citation { margin-block-start: var(--space-1); }
+
 .answer__control { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
 .answer__input {
   font: inherit; font-size: var(--text-base);

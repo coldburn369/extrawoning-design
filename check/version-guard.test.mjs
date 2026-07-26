@@ -34,6 +34,13 @@ test('every previous contract is refused, not rendered', () => {
   //        `kind`, so a form would draw no control and a bucket-B question
   //        would silently go back to being read-only. It also has no
   //        `outcome`, so a terminal status would render an empty box.
+  //   v3 — has no `claimable_exemptions`. This is the subtle one, and the
+  //        reason an ADDITIVE change still got a version bump: every slot on
+  //        this page would fill correctly and the result would look completely
+  //        normal. What would be missing is the favourable path — the two
+  //        vrijstellingen on a decided rule — with nothing on screen to say so.
+  //        A silently absent offer is indistinguishable from an address that has
+  //        none.
   const v1 = load('api-v1-ok.json');
   assert.equal(v1.schema_version, 1);
   assert.equal(contractMatches(v1), false);
@@ -44,6 +51,28 @@ test('every previous contract is refused, not rendered', () => {
   assert.equal(contractMatches(v2), false);
   const question = v2.activities[0].open_questions[0];
   assert.ok('prompt' in question && !('kind' in question), 'v2 fixture must be genuinely older');
+
+  const v3 = load('api-v3-ok.json');
+  assert.equal(v3.schema_version, 3);
+  assert.equal(contractMatches(v3), false);
+  assert.ok(
+    v3.activities.every((a) => !('claimable_exemptions' in a)),
+    'v3 fixture must be genuinely older',
+  );
+});
+
+test('the version this page speaks actually carries the channel it was bumped for', () => {
+  // Guards the other direction: a bump with no adoption behind it. If this ever
+  // passes vacuously — an ok fixture where no activity offers anything — the
+  // fixture stopped exercising the reason v4 exists.
+  const body = load(`api-v${SCHEMA_VERSION}-ok.json`);
+  const offered = body.activities.flatMap((a) => a.claimable_exemptions ?? []);
+  assert.ok(offered.length > 0, 'the v4 fixture must actually carry an offer');
+  for (const offer of offered) {
+    for (const field of ['id', 'kind', 'rule_id', 'exception_id', 'citation', 'statement', 'offer']) {
+      assert.ok(offer[field], `offer is missing ${field}`);
+    }
+  }
 });
 
 test('any other version is refused, not rendered', () => {
@@ -56,7 +85,7 @@ test('any other version is refused, not rendered', () => {
 test('every shape the API returns carries the field, so the guard is answerable', () => {
   // The guard runs before `status` is read, so it must work on the shapes that
   // are not a check result at all.
-  for (const name of ['api-v3-ok.json', 'api-v3-mismatch.json', 'api-v3-invalid.json']) {
+  for (const name of ['api-v4-ok.json', 'api-v4-mismatch.json', 'api-v4-invalid.json']) {
     const body = load(name);
     assert.ok(Number.isInteger(body.schema_version), `${name} must carry an integer version`);
     assert.equal(contractMatches(body), true, name);

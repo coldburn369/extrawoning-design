@@ -27,14 +27,14 @@ const { renderResult, renderMismatch, RenderError } = await import('./render.js'
 /* ---- the tests ----------------------------------------------------------- */
 
 test('a real ok response renders, completeness guard included', () => {
-  const data = load('api-v3-ok.json');
+  const data = load('api-v4-ok.json');
   assert.equal(data.status, 'ok');
   const fragment = renderResult(data); // assertComplete throws on any shortfall
   assert.ok(fragment);
 });
 
 test('the heading is the RESOLVED address, not what was typed', () => {
-  const data = load('api-v3-ok.json');
+  const data = load('api-v4-ok.json');
   const fragment = renderResult(data);
   const heading = fragment.querySelector('[data-slot="address_resolved"]');
   assert.equal(heading.textContent, data.address_resolved.weergavenaam);
@@ -47,7 +47,7 @@ test('the heading is the RESOLVED address, not what was typed', () => {
 });
 
 test('every linked caveat is rendered on its own entry', () => {
-  const data = load('api-v3-ok.json');
+  const data = load('api-v4-ok.json');
   const linked = data.activities.flatMap((a) =>
     ['decided', 'needs_user_input', 'needs_external_source'].flatMap((k) =>
       (a.buckets[k] ?? []).flatMap((e) => e.caveat_ids ?? []),
@@ -59,20 +59,20 @@ test('every linked caveat is rendered on its own entry', () => {
 });
 
 test('the summary list still carries every caveat', () => {
-  const data = load('api-v3-ok.json');
+  const data = load('api-v4-ok.json');
   const fragment = renderResult(data);
   assert.equal(fragment.querySelectorAll('.caveats .caveat').length, data.caveats.length);
 });
 
 test('a dangling caveat id refuses to render rather than dropping the flag', () => {
-  const data = load('api-v3-ok.json');
+  const data = load('api-v4-ok.json');
   const broken = structuredClone(data);
   broken.activities[0].buckets.decided[0].caveat_ids = ['does-not-exist'];
   assert.throws(() => renderResult(broken), RenderError);
 });
 
 test('a real mismatch renders the API sentences and offers the resolved address', () => {
-  const data = load('api-v3-mismatch.json');
+  const data = load('api-v4-mismatch.json');
   assert.equal(data.status, 'address_mismatch');
   let resubmitted = null;
   const fragment = renderMismatch(data, (r) => {
@@ -102,7 +102,7 @@ test('a real mismatch renders the API sentences and offers the resolved address'
 });
 
 test('a mismatch without a statement refuses rather than showing an empty box', () => {
-  const data = structuredClone(load('api-v3-mismatch.json'));
+  const data = structuredClone(load('api-v4-mismatch.json'));
   data.address_match.statement = null;
   assert.throws(() => renderMismatch(data, () => {}), RenderError);
 });

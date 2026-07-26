@@ -27,9 +27,9 @@
 import { SCHEMA_VERSION, contractMatches } from './contract.js';
 import {
   RenderError,
+  answerableOf,
   applyAnswers,
   nextFacts,
-  openQuestionsOf,
   readAnswers,
   renderInvalid,
   renderMismatch,
@@ -264,8 +264,16 @@ function handleInPlace({ status, body }) {
   }
   if (status === 429 || status === 503) {
     showRejections(result, []);
-    showServiceMessage(result, body?.message);
-    return Boolean(body?.message);
+    showServiceMessage(result, body);
+    // ALWAYS handled here — the 422's treatment, which this used to lack. It
+    // previously returned `Boolean(body.message)`, so a service response with no
+    // message fell through to a view that REPLACES the result, taking the user's
+    // answers with it. Being locked out of your own half-filled form is the
+    // exact failure the one-submit batching exists to avoid, and it happened on
+    // the one path where the service had already told us it was overloaded.
+    // `showServiceMessage` renders the fallback when there is no sentence to
+    // quote, so keeping the form never means saying nothing.
+    return true;
   }
   return false;
 }
@@ -326,7 +334,11 @@ async function run(asked, facts = null) {
  */
 function remember({ status, body }) {
   if (status !== 200 || body?.status !== 'ok' || !contractMatches(body)) return;
-  state.questions = openQuestionsOf(body);
+  // BOTH channels: open questions and claimable exemptions share one form, so
+  // they share one list. `readAnswers` / `applyAnswers` / `nextFacts` all drive
+  // off this, and an offer missing from it would render as a control whose value
+  // is never read — a button that does nothing.
+  state.questions = answerableOf(body);
   state.openRules = ruleIdsIn(body, 'needs_user_input');
 }
 
