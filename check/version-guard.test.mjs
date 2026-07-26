@@ -24,15 +24,26 @@ test('the page accepts the contract version it was built against', () => {
   assert.equal(contractMatches(body), true);
 });
 
-test('the previous contract is refused, not rendered', () => {
-  // A real v1 body, captured from this same service before the bump. This is the
-  // case the guard exists for and the one a synthetic object cannot prove: the v1
-  // response carries `address`, no `address_resolved` and no `caveat_ids`, and
-  // every slot on this page would still find something to put in it.
+test('every previous contract is refused, not rendered', () => {
+  // Real bodies captured from this same service before each bump. These are the
+  // cases the guard exists for and the ones a synthetic object cannot prove:
+  // every slot on this page would still find SOMETHING to put in them.
+  //
+  //   v1 — carries `address`, no `address_resolved`, no `caveat_ids`.
+  //   v2 — carries `open_questions[].prompt` (a CLI prompt string) and no
+  //        `kind`, so a form would draw no control and a bucket-B question
+  //        would silently go back to being read-only. It also has no
+  //        `outcome`, so a terminal status would render an empty box.
   const v1 = load('api-v1-ok.json');
   assert.equal(v1.schema_version, 1);
   assert.equal(contractMatches(v1), false);
   assert.ok('address' in v1 && !('address_resolved' in v1), 'v1 fixture must be genuinely older');
+
+  const v2 = load('api-v2-ok.json');
+  assert.equal(v2.schema_version, 2);
+  assert.equal(contractMatches(v2), false);
+  const question = v2.activities[0].open_questions[0];
+  assert.ok('prompt' in question && !('kind' in question), 'v2 fixture must be genuinely older');
 });
 
 test('any other version is refused, not rendered', () => {
@@ -45,7 +56,7 @@ test('any other version is refused, not rendered', () => {
 test('every shape the API returns carries the field, so the guard is answerable', () => {
   // The guard runs before `status` is read, so it must work on the shapes that
   // are not a check result at all.
-  for (const name of ['api-v2-ok.json', 'api-v2-mismatch.json', 'api-v2-invalid.json']) {
+  for (const name of ['api-v3-ok.json', 'api-v3-mismatch.json', 'api-v3-invalid.json']) {
     const body = load(name);
     assert.ok(Number.isInteger(body.schema_version), `${name} must carry an integer version`);
     assert.equal(contractMatches(body), true, name);

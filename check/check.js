@@ -12,10 +12,25 @@
  * into one string here used to be this file's job; it no longer is, and must not
  * become it again — the join is what made "which dwelling did you mean?"
  * unanswerable on the server. See check/SECTIONS.md.
+ *
+ * ANSWERS (schema_version 3). Bucket B is answerable, and the answers go over in
+ * ONE request. The limiter allows five checks per ten minutes, so a page that
+ * re-checked after each answer would lock a user out of their own result partway
+ * through filling the form in — the batching is a correctness property of this
+ * file, not a nicety.
+ *
+ * THE ANSWERS NEVER LEAVE MEMORY. `mantelzorg_noodzakelijk` is a statement about
+ * someone's health needs and the household facts describe who lives where.
+ * Nothing here writes to localStorage, sessionStorage, a cookie or the URL, and
+ * nothing should: a reload legitimately loses them.
  */
 import { SCHEMA_VERSION, contractMatches } from './contract.js';
 import {
   RenderError,
+  applyAnswers,
+  nextFacts,
+  openQuestionsOf,
+  readAnswers,
   renderInvalid,
   renderMismatch,
   renderRenderFailure,
@@ -24,6 +39,9 @@ import {
   renderTerminal,
   renderTransportError,
   renderVersionMismatch,
+  ruleIdsIn,
+  showRejections,
+  showServiceMessage,
 } from './render.js';
 
 const ENDPOINT = '/api/check';
@@ -57,6 +75,19 @@ const fields = {
 
 let inFlight = null;
 
+/**
+ * Everything the page remembers between requests. IN MEMORY ONLY — see the file
+ * header. `answers` accumulates across re-checks so a question that left bucket
+ * B keeps the answer that moved it there; `openRules` is what makes "these
+ * points are now tested" showable after the next response arrives.
+ */
+const state = {
+  asked: null,
+  answers: {},
+  questions: [],
+  openRules: new Set(),
+};
+
 /* ---- form state ---------------------------------------------------------- */
 
 function showFieldError(name) {
@@ -67,13 +98,25 @@ function showFieldError(name) {
   // Drop any previous result. The user has changed the input, so leaving the
   // last address's verdict on screen invites reading it against what is now in
   // the fields.
-  result.replaceChildren();
+  clearResult();
   fields[name]?.focus();
 }
 
 function clearFieldError() {
   errorBox.hidden = true;
   for (const el of errorBox.querySelectorAll('[data-invalid]')) el.hidden = true;
+}
+
+/**
+ * A new address is a new subject. The answers describe a household at a specific
+ * dwelling, so carrying them to another address would attach someone's living
+ * arrangements to a house they did not ask about.
+ */
+function clearResult() {
+  result.replaceChildren();
+  state.answers = {};
+  state.questions = [];
+  state.openRules = new Set();
 }
 
 /**
@@ -86,8 +129,8 @@ function clearFieldError() {
  * where the house number ends.
  *
  * Postcode is upper-cased and stripped of its internal space, toevoeging
- * upper-cased. That is the only transformation this page performs on user input,
- * and the API normalises again on its own side regardless.
+ * upper-cased. That is the only transformation this page performs on address
+ * input, and the API normalises again on its own side regardless.
  */
 function readForm() {
   const postcode = fields.postcode.value.replace(/\s+/g, '').toUpperCase();
@@ -107,11 +150,19 @@ function askedLabel({ postcode, huisnummer, toevoeging }) {
   return `${postcode} ${huisnummer}${toevoeging ?? ''}`;
 }
 
-function setPending(label) {
+/**
+ * `keepResult` is what makes a re-check non-destructive: the answers a user is
+ * waiting on stay on screen, so a refusal can point at the field that caused it
+ * instead of at an empty page.
+ */
+function setPending(label, { keepResult = false } = {}) {
   pendingAddress.textContent = label;
   pending.hidden = !label;
   submit.disabled = Boolean(label);
-  if (label) result.replaceChildren();
+  for (const button of result.querySelectorAll('[data-slot="answers-submit"]')) {
+    button.disabled = Boolean(label);
+  }
+  if (label && !keepResult) clearResult();
 }
 
 /**
@@ -136,7 +187,35 @@ function resubmit(resolved) {
 
 function mount(fragment) {
   result.replaceChildren(fragment);
+  wireAnswerForm();
   result.querySelector('.result')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+/* ---- the answer form ----------------------------------------------------- */
+
+/**
+ * Attach behaviour to a freshly mounted form: restore the accumulated answers,
+ * apply the `ask_if` conditions, and submit ONCE for all of them.
+ *
+ * `readAnswers` is what applies the conditions — one walk in DOM order, because
+ * a conditional question depends on an answer given above it and the API emits
+ * questions in its declared asking order so that a single pass is enough.
+ */
+function wireAnswerForm() {
+  const answerForm = result.querySelector('[data-slot="answers-form"]');
+  if (!answerForm) return;
+
+  applyAnswers(result, state.questions, state.answers);
+  readAnswers(result, state.questions);
+
+  answerForm.addEventListener('input', () => readAnswers(result, state.questions));
+  answerForm.addEventListener('change', () => readAnswers(result, state.questions));
+  answerForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!state.asked) return;
+    state.answers = nextFacts(result, state.questions, state.answers);
+    run(state.asked, state.answers);
+  });
 }
 
 /* ---- transport ----------------------------------------------------------- */
@@ -146,11 +225,14 @@ function mount(fragment) {
  * `body` is the parsed JSON, or throws so the caller can report a transport
  * failure — the page never invents a result when there is no answer.
  */
-async function postCheck(asked, signal) {
+async function postCheck(asked, facts, signal) {
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(asked),
+    // Omitted entirely when there is nothing to send: the API distinguishes "I
+    // supplied nothing" from "I supplied things and none were used", and an
+    // empty object would claim the second.
+    body: JSON.stringify(facts && Object.keys(facts).length ? { ...asked, facts } : asked),
     signal,
   });
   let body = null;
@@ -160,6 +242,32 @@ async function postCheck(asked, signal) {
     throw new RenderError('body');
   }
   return { status: response.status, body };
+}
+
+/**
+ * A refusal or a service message on a RE-CHECK, handled without unmounting.
+ *
+ * Returns true when it was handled in place. Answers stay in the form, and each
+ * rejection lands on the field that caused it carrying the API's own message. A
+ * rejection this page cannot place falls through to the dedicated 422 view
+ * rather than disappearing — a message the user never sees is exactly the
+ * silent-ignore failure the 422 exists to prevent.
+ */
+function handleInPlace({ status, body }) {
+  if (!result.querySelector('[data-slot="answers-form"]')) return false;
+  if (status === 422) {
+    const rejected = body?.declared_facts?.rejected ?? [];
+    showServiceMessage(result, null);
+    // A 422 with nothing named would leave the form looking accepted. Fall
+    // through to the dedicated view, which at least says nothing was tested.
+    return rejected.length > 0 && showRejections(result, rejected).length === 0;
+  }
+  if (status === 429 || status === 503) {
+    showRejections(result, []);
+    showServiceMessage(result, body?.message);
+    return Boolean(body?.message);
+  }
+  return false;
 }
 
 /**
@@ -176,7 +284,7 @@ function fragmentFor({ status, body }) {
   if (status === 422) return renderInvalid(body);
   if (status === 429 || status === 503) return renderService(body);
   if (status !== 200) return renderTransportError('unexpected', `http-${status}`);
-  if (body?.status === 'ok') return renderResult(body);
+  if (body?.status === 'ok') return renderResult(body, { previouslyOpen: state.openRules });
   // Its own branch, above the terminal statuses: a mismatch is the one non-`ok`
   // outcome that carries something actionable — the address we DID find.
   if (body?.status === 'address_mismatch') return renderMismatch(body, resubmit);
@@ -184,23 +292,42 @@ function fragmentFor({ status, body }) {
   return renderTransportError('unexpected', 'status');
 }
 
-async function run(asked) {
+async function run(asked, facts = null) {
   inFlight?.abort();
   const controller = new AbortController();
   inFlight = controller;
   const timer = setTimeout(() => controller.abort('timeout'), CLIENT_TIMEOUT_MS);
-  setPending(askedLabel(asked));
+  const isRecheck = Boolean(facts);
+  setPending(askedLabel(asked), { keepResult: isRecheck });
+  if (!isRecheck) state.asked = asked;
 
   try {
-    mount(fragmentFor(await postCheck(asked, controller.signal)));
+    const answer = await postCheck(asked, facts, controller.signal);
+    if (isRecheck && contractMatches(answer.body) && handleInPlace(answer)) return;
+    const fragment = fragmentFor(answer);
+    remember(answer);
+    mount(fragment);
   } catch (error) {
     if (controller.signal.aborted && controller.signal.reason !== 'timeout') return;
     mount(errorFragment(error, controller.signal));
   } finally {
     clearTimeout(timer);
     if (inFlight === controller) inFlight = null;
-    setPending(null);
+    setPending(null, { keepResult: true });
   }
+}
+
+/**
+ * What this response leaves behind for the next one.
+ *
+ * `openRules` is captured BEFORE the fragment is mounted, from the response we
+ * are about to replace — it is what lets the next result say which points the
+ * user's answers moved out of bucket B.
+ */
+function remember({ status, body }) {
+  if (status !== 200 || body?.status !== 'ok' || !contractMatches(body)) return;
+  state.questions = openQuestionsOf(body);
+  state.openRules = ruleIdsIn(body, 'needs_user_input');
 }
 
 /**

@@ -20,7 +20,7 @@
  * render a contract it has not been updated for, which is the exact failure this
  * exists to prevent.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /**
  * Does this response body speak the contract this page understands?

@@ -88,6 +88,389 @@ const fillList = (root, name, items, build) => {
 };
 
 /* -------------------------------------------------------------------------
+   The answer form.
+
+   Every control is drawn from `question.kind` and labelled from
+   `question.choices`. This module still writes no Dutch: a radio's label is a
+   response string, a number field's label is the question's own `text`, and the
+   sentence under each question is the response's `promise`.
+
+   ONE form for the whole result. Facts are request-scoped, so a question that
+   appears under both activities gets ONE control — two would be two answers for
+   one fact inside a single submit.
+------------------------------------------------------------------------- */
+
+/** kind -> the `type` attribute of a scalar input. Choice kinds are absent. */
+const SCALAR_INPUT = Object.freeze({
+  int: { type: 'number', step: '1' },
+  float: { type: 'number', step: 'any' },
+  date: { type: 'date' },
+  text: { type: 'text' },
+});
+
+const CHOICE_KINDS = new Set(['bool', 'categorical', 'three_way', 'pre2021_permit']);
+
+/**
+ * One radio group, from the declared choices.
+ *
+ * `name` scopes the group; `value` is the choice's own id. The id is what the
+ * server round-trips — never an index, never a letter — so a reordered choice
+ * list cannot silently change what a stored selection means.
+ */
+function buildChoices(host, name, choices) {
+  for (const choice of choices) {
+    const node = clone('tpl-answer-choice');
+    const input = slot(node, 'input');
+    input.name = name;
+    input.value = choice.id;
+    setText(node, 'label', choice.label);
+    host.append(node);
+  }
+}
+
+function buildScalar(host, name, kind) {
+  const spec = SCALAR_INPUT[kind];
+  if (!spec) throw new RenderError(`kind:${kind}`);
+  const node = clone('tpl-answer-scalar');
+  const input = slot(node, 'input');
+  input.name = name;
+  input.type = spec.type;
+  if (spec.step) input.step = spec.step;
+  host.append(node);
+}
+
+function buildControl(host, name, kind, choices) {
+  if (CHOICE_KINDS.has(kind)) buildChoices(host, name, choices ?? []);
+  else buildScalar(host, name, kind);
+}
+
+/**
+ * One question, with its sub-questions if it has any.
+ *
+ * The sub-questions are rendered inside their parent and stay hidden until the
+ * parent gate is answered affirmatively. That nesting is not cosmetic: the
+ * pre-2021 permit date only counts when the permit was granted for the
+ * woningvorming itself, and a date field that could be reached without the gate
+ * in front of it would be the guard removed.
+ */
+function buildAnswer(question) {
+  const node = clone('tpl-answer');
+  const field = slot(node, 'answer');
+  field.dataset.question = question.id;
+  field.dataset.kind = question.kind;
+  if (question.ask_if) field.dataset.askIfFact = question.ask_if.fact;
+
+  setText(node, 'text', question.text);
+  setText(node, 'promise', question.promise);
+  buildControl(slot(node, 'control'), `q-${question.id}`, question.kind, question.choices);
+
+  const subs = question.sub_questions ?? [];
+  fillList(node, 'sub_questions', subs, (sub) => {
+    const item = clone('tpl-answer-sub');
+    const subField = slot(item, 'answer');
+    subField.dataset.sub = sub.id;
+    subField.dataset.role = sub.role;
+    if (sub.fact) subField.dataset.fact = sub.fact;
+    setText(item, 'text', sub.text);
+    buildControl(slot(item, 'control'), `q-${question.id}-${sub.id}`, sub.kind, sub.choices);
+    return item;
+  });
+  show(node, 'sub_questions', false);
+
+  return node;
+}
+
+/**
+ * Every open question across every activity, deduped by question id, in the
+ * order the API sent them.
+ *
+ * That order is contract, not convenience: `verhuurder_eigen_go_m2` is gated on
+ * an answer the self-inhabitation question supplies, and the API emits questions
+ * in its catalog's declared asking order so a conditional field never precedes
+ * the answer that decides whether to show it.
+ */
+export function openQuestionsOf(data) {
+  const seen = new Map();
+  for (const activity of data.activities ?? []) {
+    for (const question of activity.open_questions ?? []) {
+      if (!seen.has(question.id)) seen.set(question.id, question);
+    }
+  }
+  return [...seen.values()];
+}
+
+function renderAnswerForm(root, data) {
+  const questions = openQuestionsOf(data);
+  fillList(root, 'questions', questions, (question) => {
+    const node = buildAnswer(question);
+    const field = node.querySelector('.answer');
+    field.dataset.facts = (question.facts ?? []).join(' ');
+    if (question.ask_if) field.dataset.askIfEquals = JSON.stringify(question.ask_if.equals);
+    return node;
+  });
+  show(root, 'answers-block', questions.length > 0);
+  return questions;
+}
+
+/* -------------------------------------------------------------------------
+   Reading the form back.
+
+   One walk in DOM order does two jobs, and it has to be one walk: a conditional
+   question's visibility depends on an answer given ABOVE it, and the API emits
+   questions in its declared asking order precisely so that this is possible in
+   a single pass.
+
+   Absent is never defaulted. An untouched control contributes nothing, the
+   server sees UNKNOWN, and the verdict degrades honestly — the same product law
+   the CLI's "leeg = overslaan" obeys.
+------------------------------------------------------------------------- */
+
+const checkedValue = (field, name) =>
+  field.querySelector(`input[name="${name}"]:checked`)?.value ?? null;
+
+/** A scalar's value, or null when the user has not filled it in. */
+function scalarValue(field, name, kind) {
+  const raw = field.querySelector(`input[name="${name}"]`)?.value ?? '';
+  const text = raw.trim();
+  if (!text) return null;
+  if (kind === 'date' || kind === 'text') return text;
+  // Comma decimals are how Dutch keyboards produce 52,5. Normalising here is the
+  // same class of transformation as upper-casing the postcode, and the server
+  // validates the number regardless.
+  const number = Number(text.replace(',', '.'));
+  // A value we cannot turn into a number is sent AS TYPED, not dropped. It comes
+  // back as a named 422 the user can see; dropping it silently is how someone
+  // believes they answered while the verdict did not move.
+  return Number.isFinite(number) ? number : text;
+}
+
+/** The facts one choice-kind question declares, from the catalog's own map. */
+function choiceFacts(question, id) {
+  return (question.choices ?? []).find((choice) => choice.id === id)?.facts ?? null;
+}
+
+/**
+ * The pre-2021 permit question: the date is supplied only when the top-level
+ * gate AND every declared `gate` sub-question are affirmative.
+ *
+ * Driven off `role`, exactly as the server's own consumer is. A renderer that
+ * decided for itself which sub-question was the guard would be the place the
+ * guard gets lost — and losing it means a permit for a dakkapel EXEMPTs the
+ * permit duty and MOOTs six weigeringsgronden.
+ */
+function permitFacts(field, question) {
+  const gates = (question.sub_questions ?? []).filter((sub) => sub.role === 'gate');
+  const open = checkedValue(field, `q-${question.id}`) === 'ja';
+  field.querySelector('[data-slot="sub_questions"]').hidden = !open;
+  if (!open) return null;
+  for (const gate of gates) {
+    if (checkedValue(field, `q-${question.id}-${gate.id}`) !== 'ja') return null;
+  }
+  const out = {};
+  for (const sub of question.sub_questions ?? []) {
+    if (sub.role !== 'fact' || !sub.fact) continue;
+    const value = scalarValue(field, `q-${question.id}-${sub.id}`, sub.kind);
+    if (value !== null) out[sub.fact] = value;
+  }
+  return out;
+}
+
+/**
+ * Read every visible answer, applying `ask_if` as it goes.
+ *
+ * A question whose condition is not met is hidden AND cleared. Leaving a stale
+ * value behind would let an answer the user gave under one premise be submitted
+ * under another — and for `verhuurder_eigen_go_m2` that premise is what makes
+ * the number mean anything at all.
+ */
+export function readAnswers(root, questions) {
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  const facts = {};
+  for (const field of root.querySelectorAll('.answer[data-question]')) {
+    const question = byId.get(field.dataset.question);
+    if (!question) continue;
+
+    if (field.dataset.askIfFact) {
+      const met =
+        JSON.stringify(facts[field.dataset.askIfFact]) === field.dataset.askIfEquals;
+      field.hidden = !met;
+      if (!met) {
+        for (const input of field.querySelectorAll('input')) {
+          if (input.type === 'radio') input.checked = false;
+          else input.value = '';
+        }
+        continue;
+      }
+    }
+
+    if (question.kind === 'pre2021_permit') {
+      Object.assign(facts, permitFacts(field, question) ?? {});
+      continue;
+    }
+    if (CHOICE_KINDS.has(question.kind)) {
+      const id = checkedValue(field, `q-${question.id}`);
+      if (id !== null) Object.assign(facts, choiceFacts(question, id) ?? {});
+      continue;
+    }
+    const value = scalarValue(field, `q-${question.id}`, question.kind);
+    if (value !== null) facts[(question.facts ?? [])[0]] = value;
+  }
+  return facts;
+}
+
+/**
+ * Put the answers back into the form after a re-check or a refusal.
+ *
+ * A choice is selected by finding the declared choice whose facts map is
+ * satisfied — matched against the DECLARATION, never reconstructed. That is what
+ * keeps a three-way selection whole: "Ja, als hoofdverblijf" is restored only
+ * when both of its facts are, and never split into two half-answers.
+ */
+export function applyAnswers(root, questions, facts) {
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  for (const field of root.querySelectorAll('.answer[data-question]')) {
+    const question = byId.get(field.dataset.question);
+    if (!question) continue;
+    if (question.kind === 'pre2021_permit') {
+      applyPermitAnswers(field, question, facts);
+      continue;
+    }
+    if (CHOICE_KINDS.has(question.kind)) {
+      const match = (question.choices ?? []).find((choice) =>
+        Object.entries(choice.facts ?? {}).every(([k, v]) => facts[k] === v),
+      );
+      if (!match) continue;
+      const input = field.querySelector(`input[name="q-${question.id}"][value="${match.id}"]`);
+      if (input) input.checked = true;
+      continue;
+    }
+    const value = facts[(question.facts ?? [])[0]];
+    if (value === undefined) continue;
+    const input = field.querySelector(`input[name="q-${question.id}"]`);
+    if (input) input.value = String(value);
+  }
+}
+
+/**
+ * The permit question restored from the one fact it can produce.
+ *
+ * Both gates go back to "ja", because the date could not have been supplied
+ * otherwise. The kenmerk is NOT restored: it is a dossier note, never a fact, so
+ * it never left the browser and there is nothing to restore it from. Inventing
+ * one would be this page making up a reference number.
+ */
+function applyPermitAnswers(field, question, facts) {
+  const supplies = (question.sub_questions ?? []).find((sub) => sub.role === 'fact');
+  const value = supplies?.fact ? facts[supplies.fact] : undefined;
+  if (value === undefined) return;
+  const tick = (name) => {
+    const input = field.querySelector(`input[name="${name}"][value="ja"]`);
+    if (input) input.checked = true;
+  };
+  tick(`q-${question.id}`);
+  for (const gate of (question.sub_questions ?? []).filter((s) => s.role === 'gate')) {
+    tick(`q-${question.id}-${gate.id}`);
+  }
+  const input = field.querySelector(`input[name="q-${question.id}-${supplies.id}"]`);
+  if (input) input.value = String(value);
+  field.querySelector('[data-slot="sub_questions"]').hidden = false;
+}
+
+/**
+ * The facts to send next: what is on the form now, plus what was accepted for
+ * questions the form no longer shows.
+ *
+ * The split matters in both directions. A question that left bucket B because it
+ * was answered must keep its answer, or the next re-check would silently undo
+ * it. A question still ON the form is authoritative — including when its control
+ * is now empty, which is how clearing a conditional answer actually clears it
+ * rather than resurrecting the value from this cache.
+ */
+export function nextFacts(root, questions, accumulated = {}) {
+  const onForm = new Set(questions.flatMap((q) => q.facts ?? []));
+  const carried = Object.fromEntries(
+    Object.entries(accumulated).filter(([fact]) => !onForm.has(fact)),
+  );
+  return { ...carried, ...readAnswers(root, questions) };
+}
+
+/** 429 / 503 on a re-check: the service's own sentence, beside the form. */
+export function showServiceMessage(root, message) {
+  const line = root.querySelector('[data-slot="answers-service"]');
+  if (!line) return;
+  line.textContent = message ?? '';
+  line.hidden = !message;
+}
+
+/**
+ * Put each rejection on the field that caused it, using the API's own message.
+ *
+ * Returns the rejections that found no field. A message the user never sees is
+ * the silent-ignore failure the 422 exists to prevent, so the caller falls back
+ * to the dedicated 422 view rather than letting one disappear.
+ */
+export function showRejections(root, rejections) {
+  for (const field of root.querySelectorAll('.answer[data-question]')) {
+    field.querySelector('[data-slot="rejection"]').hidden = true;
+    field.classList.remove('answer--rejected');
+  }
+  const unplaced = [];
+  for (const rejection of rejections) {
+    const field = root.querySelector(`.answer[data-facts~="${CSS.escape(rejection.fact)}"]`);
+    if (!field) {
+      unplaced.push(rejection);
+      continue;
+    }
+    const line = field.querySelector('[data-slot="rejection"]');
+    line.querySelector('[data-slot="fact"]').textContent = rejection.fact;
+    line.querySelector('[data-slot="message"]').textContent = rejection.message;
+    line.hidden = false;
+    field.classList.add('answer--rejected');
+  }
+  const error = root.querySelector('[data-slot="answers-error"]');
+  if (error) error.hidden = rejections.length === 0;
+  return unplaced;
+}
+
+/* -------------------------------------------------------------------------
+   What the answers changed.
+------------------------------------------------------------------------- */
+
+/** Rule ids currently sitting in a bucket, across every activity. */
+export function ruleIdsIn(data, bucket) {
+  const ids = new Set();
+  for (const activity of data.activities ?? []) {
+    for (const entry of activity.buckets?.[bucket] ?? []) ids.add(entry.rule_id);
+  }
+  return ids;
+}
+
+/**
+ * The points that moved out of "you can answer this" into "we tested it".
+ *
+ * This is the entire reward for filling the form in, so it is shown rather than
+ * left for the user to spot by comparing two screens. Computed from the two
+ * responses' own bucket membership — no inference about WHY a rule moved, and
+ * no claim about what the test then found: the entry below says that.
+ */
+function renderChanged(root, data, previouslyOpen) {
+  const decided = [];
+  for (const activity of data.activities ?? []) {
+    for (const entry of activity.buckets?.decided ?? []) {
+      if (previouslyOpen?.has(entry.rule_id)) decided.push(entry);
+    }
+  }
+  fillList(root, 'changed', decided, (entry) => {
+    const node = clone('tpl-changed-item');
+    setText(node, 'rule_id', entry.rule_id);
+    setText(node, 'description', entry.description);
+    return node;
+  });
+  show(root, 'changed-block', decided.length > 0);
+  return decided.length;
+}
+
+/* -------------------------------------------------------------------------
    Disclosure channels. Presumptions and declared exclusions share a shape;
    they are kept as two calls rather than one generic loop so that a change to
    one channel cannot silently alter the other.
@@ -276,6 +659,11 @@ function assertComplete(fragment, data) {
   const disclaimer = fragment.querySelector('.disclosure--disclaimer [data-slot="disclaimer"]');
   if (!disclaimer?.textContent.trim()) throw new RenderError('disclaimer');
 
+  // Every open question must have a control. A question that renders as prose
+  // but not as a field is one the user is told about and cannot answer — the
+  // read-only state this slice exists to end, reintroduced by a template slip.
+  expect('open_questions', countIn(fragment, '.answer[data-question]'), openQuestionsOf(data).length);
+
   const activities = data.activities ?? [];
   expect('activities', countIn(fragment, '.activity'), activities.length);
 
@@ -318,8 +706,14 @@ function renderResolvedAddress(fragment, data) {
   show(fragment, 'address-resolved-line', Boolean(resolved?.weergavenaam));
 }
 
-/** status === "ok": the full result. */
-export function renderResult(data) {
+/**
+ * status === "ok": the full result, plus the form that makes bucket B answerable.
+ *
+ * `previouslyOpen` is the set of rule ids that sat in `needs_user_input` on the
+ * response this one replaces. Passed in rather than remembered here, because
+ * this module owns no state across requests.
+ */
+export function renderResult(data, { previouslyOpen } = {}) {
   const fragment = clone('tpl-result');
   renderResolvedAddress(fragment, data);
   setText(fragment, 'gemeente', data.gemeente);
@@ -333,6 +727,9 @@ export function renderResult(data) {
   fillList(fragment, 'activities', data.activities ?? [], (activity) =>
     buildActivity(activity, caveatsById),
   );
+
+  renderChanged(fragment, data, previouslyOpen);
+  renderAnswerForm(fragment, data);
 
   assertComplete(fragment, data);
   return fragment;
@@ -377,14 +774,23 @@ export function renderMismatch(data, onResubmit) {
   return fragment;
 }
 
-/** status is out_of_scope / address_not_found / source_timeout. */
+/**
+ * status is out_of_scope / address_not_found / source_timeout.
+ *
+ * Both sentences come from `outcome` since schema_version 3. This page used to
+ * carry all three headings itself — the last outcome text it wrote — and writing
+ * "wij konden dit adres niet vaststellen" for ourselves was a claim about our
+ * own coverage that the service never made. A response without the sentence is
+ * a RenderError, not a silently blank box.
+ */
 export function renderTerminal(data) {
   const fragment = clone('tpl-status');
   setText(fragment, 'address_query', data.address_query);
 
-  const heading = fragment.querySelector(`.statusbox__title[data-status="${data.status}"]`);
-  if (!heading) throw new RenderError(data.status);
-  heading.hidden = false;
+  const outcome = data.outcome;
+  if (!outcome?.statement) throw new RenderError('outcome');
+  setText(fragment, 'statement', outcome.statement);
+  setText(fragment, 'consequence', outcome.consequence);
 
   const covered = data.covered_gemeenten ?? [];
   fillList(fragment, 'covered_gemeenten', covered, (g) => {

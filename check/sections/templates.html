@@ -55,13 +55,113 @@
       <div class="disclosure__items" data-slot="declared_exclusions"></div>
     </section>
 
+    <!-- What the previous answers resolved. Renders only after a re-check, and
+         only when something actually moved out of "nog open — dit kunt u zelf
+         beantwoorden" into "wat wij hebben kunnen toetsen". The rule ids and
+         descriptions are the response's; the two sentences are chrome. -->
+    <section class="changed" data-slot="changed-block" hidden>
+      <h3 class="changed__title">Wat uw antwoorden hebben opgelost</h3>
+      <p class="changed__note">
+        Deze punten stonden bij de vorige uitkomst nog open en zijn nu getoetst.
+        Wat de toets oplevert, staat hieronder bij de activiteit zelf.
+      </p>
+      <ul class="changed__list" data-slot="changed"></ul>
+    </section>
+
     <div class="result__activities" data-slot="activities"></div>
+
+    <!-- The answer form. ONE form for the whole result, not one per activity:
+         facts are request-scoped, so the same question under two activities would
+         be two controls for one fact and would let a user contradict themselves
+         inside a single submit. The questions come from the union of every
+         activity's `open_questions`, deduped by question id. -->
+    <section class="answers" data-slot="answers-block" hidden>
+      <h3 class="answers__title">Beantwoord wat u zelf kunt beantwoorden</h3>
+      <p class="answers__note">
+        Wij bewaren deze antwoorden nergens — niet in uw browser, niet in een
+        cookie, niet in de link. Ververst u de pagina, dan zijn ze weg en begint
+        de scan opnieuw bij het adres.
+      </p>
+      <form class="answers__form" data-slot="answers-form" novalidate>
+        <div class="answers__list" data-slot="questions"></div>
+        <!-- Shown when the service refused the answers. The per-question message
+             is the API's own and sits on the field that caused it; this line only
+             says that nothing was tested. -->
+        <p class="answers__error" data-slot="answers-error" role="alert" hidden>
+          Er is niets getoetst: een of meer antwoorden zijn niet aanvaard. Wat er
+          per vraag mis is, staat bij die vraag. Uw antwoorden staan er nog.
+        </p>
+        <!-- 429 / 503 on a re-check. The service's own sentence, shown HERE
+             rather than in place of the result, because replacing the result
+             would take the user's answers with it — and being locked out of
+             your own form for ten minutes is the failure batching exists to
+             avoid in the first place. -->
+        <p class="answers__service" data-slot="answers-service" role="alert" hidden></p>
+        <button type="submit" class="btn btn--primary answers__submit" data-slot="answers-submit">
+          Uitkomst bijwerken
+        </button>
+        <p class="answers__budget note">
+          Wij versturen al uw antwoorden in één keer. Elke controle telt mee voor
+          een limiet van vijf per tien minuten.
+        </p>
+      </form>
+    </section>
 
     <section class="disclosure disclosure--caveats" data-slot="caveats-block" hidden>
       <h3 class="disclosure__title">Kanttekeningen bij de gebruikte gegevens</h3>
       <ul class="caveats" data-slot="caveats"></ul>
     </section>
   </section>
+</template>
+
+<template id="tpl-changed-item">
+  <li class="changed-item">
+    <span class="changed-item__rule" data-slot="rule_id"></span>
+    <span data-slot="description"></span>
+  </li>
+</template>
+
+<!-- ---- One question on the answer form ----------------------------------
+     `text`, `promise` and every choice label come from the response. The only
+     Dutch below is the rejection prefix, and even that is a label, not a claim:
+     the message beside it is the server's own.
+
+     `promise` is not decoration. It is what stops a bucket-C question — one that
+     needs our answer AND a source we do not have — from reading as "answer this
+     and you will know". The response says which it is; this renders it. -->
+<template id="tpl-answer">
+  <fieldset class="answer" data-slot="answer">
+    <legend class="answer__text" data-slot="text"></legend>
+    <p class="answer__promise" data-slot="promise"></p>
+    <div class="answer__control" data-slot="control"></div>
+    <div class="answer__subs" data-slot="sub_questions" hidden></div>
+    <p class="answer__rejection" data-slot="rejection" role="alert" hidden>
+      <span class="answer__rejection-fact" data-slot="fact"></span>
+      <span data-slot="message"></span>
+    </p>
+  </fieldset>
+</template>
+
+<!-- A sub-question. `role` decides whether it is a gate, the fact itself, or a
+     dossier note; the renderer reads that from the response and never from the
+     wording. The scope gate is the legally load-bearing one — a permit for a
+     dakkapel is not a permit for the woningvorming. -->
+<template id="tpl-answer-sub">
+  <fieldset class="answer answer--sub" data-slot="answer">
+    <legend class="answer__text" data-slot="text"></legend>
+    <div class="answer__control" data-slot="control"></div>
+  </fieldset>
+</template>
+
+<template id="tpl-answer-choice">
+  <label class="choice">
+    <input type="radio" class="choice__input" data-slot="input" />
+    <span class="choice__label" data-slot="label"></span>
+  </label>
+</template>
+
+<template id="tpl-answer-scalar">
+  <input class="answer__input" data-slot="input" autocomplete="off" />
 </template>
 
 <template id="tpl-presumption">
@@ -234,9 +334,12 @@
 </template>
 
 <!-- ---- Non-`ok` outcomes -------------------------------------------------
-     These are the three statuses that carry no activities. The response has no
-     message field for them, so the heading below is chrome — see the API-gap
-     note in SECTIONS.md. The disclaimer still comes from the response. -->
+     The three statuses that carry no activities. Since schema_version 3 the
+     response supplies both sentences in `outcome`, so this template holds NO
+     copy about the outcome at all — the three headings that used to live here
+     were the last outcome text this page wrote for itself, and a page writing
+     "wij konden dit adres niet vaststellen" is a page making a claim about our
+     coverage that we never made. -->
 <template id="tpl-status">
   <section class="result result--terminal">
     <header class="result__head">
@@ -245,15 +348,8 @@
     </header>
 
     <div class="statusbox">
-      <p class="statusbox__title" data-status="out_of_scope" hidden>
-        Dit adres valt buiten het bereik van deze scan.
-      </p>
-      <p class="statusbox__title" data-status="address_not_found" hidden>
-        Wij konden dit adres niet vaststellen.
-      </p>
-      <p class="statusbox__title" data-status="source_timeout" hidden>
-        Een bron reageerde niet op tijd. Er is niets getoetst.
-      </p>
+      <p class="statusbox__title" data-slot="statement"></p>
+      <p class="statusbox__consequence" data-slot="consequence"></p>
 
       <div class="statusbox__covered" data-slot="covered-block" hidden>
         <p class="statusbox__covered-title">Wel gedekt op dit moment:</p>

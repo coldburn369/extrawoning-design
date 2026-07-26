@@ -12,8 +12,10 @@ behaviour in two ES modules at the page root.
 | `sections/templates.html` | every `<template>` the renderer clones — **and all of the page's own Dutch** |
 | `css/check.css` | page shell, the address bar, the pending panel |
 | `css/result.css` | disclosures, verdict, buckets, entries, **the tone table** |
-| `check.js` | form → compose address → POST → mount. Transport and page state. |
-| `render.js` | response → detached DOM fragment, plus the completeness guard |
+| `css/answers.css` | the answer form, and the "what your answers resolved" panel |
+| `check.js` | form → POST → mount. Transport, page state, **the answers** |
+| `render.js` | response → detached DOM fragment, the form, the completeness guard |
+| `test-dom.mjs` | the tiny DOM shim both test files use. Not shipped to the page. |
 
 Shared: `../design-system/tokens.css`, `../landing/css/base.css`,
 `../landing/css/components.css`. This page does **not** load `landing/css/cta.css`
@@ -104,6 +106,64 @@ correct outcome.
 
 All text lands via `textContent`, never `innerHTML`.
 
+## The answer form (schema_version 3)
+
+Bucket B is answerable. Each question in `open_questions[]` renders as the
+control its `kind` declares — a radio group from `choices`, a number field, a
+date field — and **every label comes from the response**. The page composes no
+Dutch here either: `text`, each choice `label`, and `promise` are all response
+strings.
+
+Four rules it exists to obey:
+
+1. **ONE form, ONE submit.** Facts are request-scoped, so a question open under
+   both activities gets one control (two would let a user contradict themselves
+   in a single submit). And the limiter allows five checks per ten minutes: a
+   page that re-checked after each answer would lock a user out of their own
+   result partway through the form. The batching is correctness, not polish.
+2. **One question sets its facts WHOLE.** `choice.facts` is the payload the
+   server round-trips, so "Ja, als hoofdverblijf" submits hoofdverblijf AND
+   woonachtig together. Splitting them is the combination the corpus forbids, and
+   the server refuses it — this is why the API is question-scoped (ADR-0016).
+3. **`ask_if` hides AND clears.** `verhuurder_eigen_go_m2` appears only once the
+   in-gebruik-gever is woonachtig, and withdrawing that answer empties the field.
+   A stale value would be a number given under one premise submitted under
+   another. The hint is convenience — the server enforces the condition anyway.
+4. **`sub_questions` carry a `role`.** For the pre-2021 permit: `gate` must be
+   affirmative, `fact` supplies the date, `dossier` never leaves the browser. The
+   date travels only when every gate says yes, because the permit must have been
+   for the woningvorming itself — an early date EXEMPTs the permit duty and MOOTs
+   six weigeringsgronden.
+
+`fully_resolves: false` renders as the API's `promise` sentence under the
+question, so a bucket-C question never reads as "answer this and you will know".
+`verdict_ceiling_reason` still renders after the buckets on the re-check screen —
+the screen where a user has just done everything asked of them is exactly where
+it must not disappear.
+
+### The answers never leave memory
+
+`mantelzorg_noodzakelijk` is a statement about someone's health needs and the
+household facts describe who lives where. Nothing is written to `localStorage`,
+`sessionStorage`, a cookie or the URL, and `check/answers.test.mjs` asserts that
+mechanically. A reload legitimately loses them. Changing the address clears them
+too — they describe a household at a specific dwelling.
+
+### A refusal keeps what was typed
+
+A 422 on a re-check does not unmount the result. Each rejection lands on the
+field that caused it carrying the API's own `message`; a rejection the page
+cannot place falls through to the dedicated 422 view rather than disappearing. A
+429/503 renders beside the form for the same reason — being locked out of your
+own form is what the batching exists to avoid.
+
+### What changed
+
+After a re-check the page lists the rules that were in `needs_user_input` and are
+now in `decided`. Both responses are in memory, the membership is the response's
+own, and the panel claims nothing about what the test then FOUND — the entry
+below it says that.
+
 ## The contract version
 
 `check/contract.js` holds `SCHEMA_VERSION` and the predicate. `check.js` checks
@@ -115,7 +175,7 @@ address.
 This is the seam between two repositories that deploy independently, and the one
 failure mode the split introduces. Bump `SCHEMA_VERSION` in the change that
 adopts the new contract, never ahead of one. `check/version-guard.test.mjs` runs
-it against verbatim v1 and v2 captures in `check/fixtures/`.
+it against verbatim v1, v2 and v3 captures in `check/fixtures/`.
 
 ## Input
 
@@ -170,24 +230,35 @@ that never had it.
 
 `ok` · **`address_mismatch`** (API statement + consequence, and a button that
 resubmits `address_resolved`) · `out_of_scope` (lists `covered_gemeenten`) ·
-`address_not_found` · `source_timeout` · HTTP 422 (per-rejection `message`) · 429
-(API message + `retry_after_seconds`) · 503 (API message) · **contract-version
-mismatch** · network failure · a client-side validation error per field. The
-pending state names the sources being consulted rather than spinning blankly.
+`address_not_found` · `source_timeout` — the last three now render
+`outcome.statement` + `.consequence` · HTTP 422 (per-rejection `message`, **in
+place on a re-check**, in its own view otherwise) · 429 (API message +
+`retry_after_seconds`, **beside the form on a re-check**) · 503 (API message) ·
+**contract-version mismatch** · network failure · a client-side validation error
+per field. The pending state names the sources being consulted rather than
+spinning blankly, and a re-check keeps the previous result on screen while it runs.
+
+## Checks
+
+```
+node design-system/check.mjs           # structural lint, all pages
+node design-system/verify-contrast.mjs
+node --test check/*.test.mjs           # version guard · render · the answer form
+```
 
 ## Known / open
 
-- **API gap — no message for the terminal statuses.** `CheckResponse` has no
-  message field, so the headings for `out_of_scope` / `address_not_found` /
-  `source_timeout` are chrome in `sections/templates.html`. They remain the only
-  outcome sentences on this page that the API does not supply — `address_mismatch`
-  deliberately does not join them: it carries `address_match.statement` and
-  `.consequence` from the server.
+- ~~**API gap — no message for the terminal statuses.**~~ Closed by
+  `schema_version` 3: `outcome.statement` + `outcome.consequence` for
+  `out_of_scope` / `address_not_found` / `source_timeout`. There is now **no
+  outcome sentence on this page that the API does not supply.**
+- **A 429 during a re-check loses the answers.** They live in memory only (by
+  design), and the message renders beside the form rather than replacing it — so
+  the form survives a rate limit, but a reload does not. See `TODO.md` in the API
+  repo.
 - ~~**API gap — the response does not echo the RESOLVED address.**~~ Closed by
   `schema_version` 2: `address_query` / `address_resolved` / `address_match`.
   `address_not_found` is now reachable and means "no hit at all"; a hit that is
   not the dwelling asked for is `address_mismatch`.
-- The page renders `questions[].prompt` read-only. Answering them (POSTing
-  `facts`) is not in this slice, so the 422 path is defensive only.
 - No favicon: the browser's `/favicon.ico` request 404s, as on the landing page.
 - `check.mjs` covers this page — see the `PAGES` table at the top of it.

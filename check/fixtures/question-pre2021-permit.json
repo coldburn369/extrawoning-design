@@ -1,0 +1,59 @@
+{
+  "id": "pre2021_permit",
+  "kind": "pre2021_permit",
+  "text": "Is er voor DE WONINGVORMING ZELF een omgevingsvergunning verleend voor 1-4-2021?",
+  "facts": [
+    "omgevingsvergunning_verleend_op"
+  ],
+  "choices": [
+    {
+      "id": "ja",
+      "label": "Ja",
+      "facts": {}
+    },
+    {
+      "id": "nee",
+      "label": "Nee",
+      "facts": {}
+    }
+  ],
+  "sub_questions": [
+    {
+      "id": "scope",
+      "kind": "bool",
+      "text": "Was die vergunning voor de woningvorming zelf (niet voor bv. een dakkapel/aanbouw)?",
+      "role": "gate",
+      "fact": null,
+      "choices": [
+        {
+          "id": "ja",
+          "label": "Ja",
+          "facts": {}
+        },
+        {
+          "id": "nee",
+          "label": "Nee",
+          "facts": {}
+        }
+      ]
+    },
+    {
+      "id": "datum",
+      "kind": "date",
+      "text": "Datum van verlening",
+      "role": "fact",
+      "fact": "omgevingsvergunning_verleend_op",
+      "choices": []
+    },
+    {
+      "id": "kenmerk",
+      "kind": "text",
+      "text": "Kenmerk/zaaknummer van de vergunning (voor het dossier)",
+      "role": "dossier",
+      "fact": null,
+      "choices": []
+    }
+  ],
+  "ask_if": null,
+  "fully_resolves": false
+}
