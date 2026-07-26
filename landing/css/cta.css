@@ -113,7 +113,10 @@
    transparent miniature remain above both. */
 .final-cta__map {
   position: absolute;
-  inset: -24% -12% -10%;
+  top: 2%;
+  right: -3%;
+  width: min(61rem, 72vw);
+  aspect-ratio: 4 / 3;
   z-index: 0;
   pointer-events: none;
   background: url("../../assets/miniatur-map-bg.webp") no-repeat center / cover;
@@ -135,4 +138,10 @@
 /* ---- Responsive -------------------------------------------------------- */
 @media (max-width: 62rem) {
   .final-cta { grid-template-columns: minmax(0, 1fr); }
+  .final-cta__map {
+    top: auto;
+    right: -25%;
+    bottom: -6%;
+    width: 150%;
+  }
 }
