@@ -125,7 +125,37 @@ function renderDisclosures(root, data) {
    Rule entries
 ------------------------------------------------------------------------- */
 
-function buildEntry(entry) {
+/**
+ * The caveats bearing on ONE entry, rendered inline with it.
+ *
+ * The server resolved which caveats those are (`entry.caveat_ids`) by
+ * intersecting the facts a caveat qualifies with the facts the rule reads. This
+ * page looks them up by id and renders them; it does not know, and must not
+ * learn, which caveat belongs to which rule.
+ *
+ * An id that does not resolve is a RenderError, not a silent skip. The whole
+ * point of the linkage is that a Blokkade whose basis is flagged uncertain
+ * carries the flag WHERE IT IS READ; an entry that quietly lost its caveat looks
+ * exactly like an entry that never had one, and the summary list at the foot is
+ * precisely the distance this exists to close. Showing nothing beats showing a
+ * blockade with its qualification missing.
+ */
+function buildEntryCaveats(node, entry, caveatsById) {
+  const ids = entry.caveat_ids ?? [];
+  const found = ids.map((id) => {
+    const caveat = caveatsById.get(id);
+    if (!caveat) throw new RenderError(`caveat:${id}`);
+    return caveat;
+  });
+  fillList(node, 'entry-caveats-list', found, (caveat) => {
+    const item = clone('tpl-entry-caveat');
+    setText(item, 'text', caveat.text);
+    return item;
+  });
+  show(node, 'entry-caveats', found.length > 0);
+}
+
+function buildEntry(entry, caveatsById = new Map()) {
   const node = clone('tpl-entry');
   const article = node.querySelector('.entry');
 
@@ -154,6 +184,8 @@ function buildEntry(entry) {
   });
   show(node, 'questions', questions.length > 0);
 
+  buildEntryCaveats(node, entry, caveatsById);
+
   return node;
 }
 
@@ -167,7 +199,7 @@ const BUCKETS = Object.freeze([
    Activities
 ------------------------------------------------------------------------- */
 
-function buildActivity(activity) {
+function buildActivity(activity, caveatsById = new Map()) {
   const node = clone('tpl-activity');
 
   setText(node, 'activity', activity.activity);
@@ -176,7 +208,7 @@ function buildActivity(activity) {
 
   for (const [key, blockSlot] of BUCKETS) {
     const entries = activity.buckets?.[key] ?? [];
-    fillList(node, key, entries, buildEntry);
+    fillList(node, key, entries, (entry) => buildEntry(entry, caveatsById));
     show(node, blockSlot, entries.length > 0);
   }
 
@@ -218,6 +250,29 @@ function assertComplete(fragment, data) {
   );
   expect('caveats', countIn(fragment, '.caveats .caveat'), (data.caveats ?? []).length);
 
+  // Every caveat the server linked to an entry must actually be sitting on that
+  // entry. Counted across the fragment because the per-entry lookup already
+  // throws on an unresolved id; this catches the other direction — a template or
+  // slot change that stopped placing them at all.
+  expect(
+    'caveat_ids',
+    countIn(fragment, '.entry .entry-caveat'),
+    (data.activities ?? []).reduce(
+      (total, activity) =>
+        total +
+        BUCKETS.reduce(
+          (n, [key]) =>
+            n +
+            (activity.buckets?.[key] ?? []).reduce(
+              (m, entry) => m + (entry.caveat_ids ?? []).length,
+              0,
+            ),
+          0,
+        ),
+      0,
+    ),
+  );
+
   const disclaimer = fragment.querySelector('.disclosure--disclaimer [data-slot="disclaimer"]');
   if (!disclaimer?.textContent.trim()) throw new RenderError('disclaimer');
 
@@ -247,25 +302,85 @@ function assertComplete(fragment, data) {
    Entry points. Each returns a detached fragment; the caller mounts it.
 ------------------------------------------------------------------------- */
 
+/**
+ * The resolved address is the HEADLINE of a result, not a footnote.
+ *
+ * A typo that is itself a real address — "Zuiddijk 4A" for "Zuiddijk 3A" — passes
+ * every server-side check there is, because the user typed a valid dwelling. The
+ * only thing that catches it is the user reading which house we answered about.
+ * So `address_resolved` is what the heading says, and `address_query` is shown
+ * beneath it as what was asked, clearly the lesser of the two.
+ */
+function renderResolvedAddress(fragment, data) {
+  const resolved = data.address_resolved;
+  setText(fragment, 'address_resolved', resolved?.weergavenaam ?? '');
+  setText(fragment, 'address_query', data.address_query);
+  show(fragment, 'address-resolved-line', Boolean(resolved?.weergavenaam));
+}
+
 /** status === "ok": the full result. */
 export function renderResult(data) {
   const fragment = clone('tpl-result');
-  setText(fragment, 'address', data.address);
+  renderResolvedAddress(fragment, data);
   setText(fragment, 'gemeente', data.gemeente);
   setText(fragment, 'gemeentecode', data.gemeentecode);
   show(fragment, 'gemeente-line', Boolean(data.gemeente));
 
   renderDisclosures(fragment, data);
-  fillList(fragment, 'activities', data.activities ?? [], buildActivity);
+  // Indexed once, so an entry can find the caveats bearing on it without this
+  // module ever deciding which those are.
+  const caveatsById = new Map((data.caveats ?? []).map((c) => [c.id, c]));
+  fillList(fragment, 'activities', data.activities ?? [], (activity) =>
+    buildActivity(activity, caveatsById),
+  );
 
   assertComplete(fragment, data);
+  return fragment;
+}
+
+/**
+ * status === "address_mismatch": we resolved something, but not what was asked.
+ *
+ * Deliberately NOT a flavour of `ok` or of `address_not_found`. There IS an
+ * answer available and it is about a different dwelling; showing it would be the
+ * exact failure this outcome exists to prevent. So: no verdict, the API's own
+ * two sentences, and — when we found a real dwelling — a button that resubmits
+ * it, because a dead end is how a user ends up accepting their second guess.
+ *
+ * `onResubmit` is passed in rather than imported: this module builds DOM and
+ * does not own the transport.
+ */
+export function renderMismatch(data, onResubmit) {
+  const fragment = clone('tpl-mismatch');
+  const match = data.address_match ?? {};
+
+  setText(fragment, 'address_query', data.address_query);
+  // Both sentences come from the response. The server picks between "this house
+  // number does not exist on this postcode" and "we found a different address";
+  // choosing here would be this page deciding what the server's evidence means.
+  setText(fragment, 'statement', match.statement);
+  setText(fragment, 'consequence', match.consequence);
+
+  const resolved = data.address_resolved;
+  setText(fragment, 'address_resolved', resolved?.weergavenaam ?? '');
+  show(fragment, 'resolved-block', Boolean(resolved));
+
+  const button = slot(fragment, 'resubmit');
+  if (resolved && typeof onResubmit === 'function') {
+    button.addEventListener('click', () => onResubmit(resolved));
+  } else {
+    button.hidden = true;
+  }
+
+  renderDisclosures(fragment, data);
+  if (!match.statement) throw new RenderError('address_match.statement');
   return fragment;
 }
 
 /** status is out_of_scope / address_not_found / source_timeout. */
 export function renderTerminal(data) {
   const fragment = clone('tpl-status');
-  setText(fragment, 'address', data.address);
+  setText(fragment, 'address_query', data.address_query);
 
   const heading = fragment.querySelector(`.statusbox__title[data-status="${data.status}"]`);
   if (!heading) throw new RenderError(data.status);

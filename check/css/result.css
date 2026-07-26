@@ -5,9 +5,17 @@
    ========================================================================== */
 
 .result { display: flex; flex-direction: column; gap: var(--space-6); max-width: 62rem; }
+/* A mismatch carries no activities, so it needs no activity spacing — but it is
+   still a result shell and inherits the disclosure stack below it. */
+.result--mismatch { gap: var(--space-5); }
 .result__head { display: flex; flex-direction: column; gap: var(--space-1); }
 .result__address { font-size: var(--display-sm); }
 .result__where { margin: 0; }
+/* What was TYPED, sitting under the resolved address that is the heading. Muted
+   on purpose: the resolved address is the claim, this is only the query that
+   produced it. A typo that is itself a real address is caught by nobody except a
+   user reading these two lines and noticing they differ. */
+.result__asked { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); max-width: 70ch; }
 .result__activities { display: flex; flex-direction: column; gap: var(--space-7); }
 
 /* ---- Disclosure channels ------------------------------------------------
@@ -139,6 +147,27 @@
 .entry__unavailable { color: var(--color-text-muted); font-size: var(--text-sm); line-height: var(--leading-normal); max-width: 86ch; }
 .entry__rule-id { font-family: var(--font-mono); }
 
+/* A caveat rendered WITH the point it qualifies. Marked out with a warning edge
+   rather than muted away: this is the line that says the basis of the statement
+   above it is uncertain, and it is exactly the thing a reader skips when it sits
+   thirty screens down in a summary list. The summary list still carries every
+   caveat, including the ones that bear on nothing in particular. */
+.entry__caveats {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  margin-block-start: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 2px solid var(--color-accent-ui);
+  background: var(--color-accent-wash);
+  border-radius: var(--radius-sm);
+}
+.entry__caveats-title {
+  font-size: var(--text-2xs); font-weight: var(--weight-semibold);
+  text-transform: uppercase; letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+.entry__caveats ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.entry-caveat { font-size: var(--text-sm); line-height: var(--leading-normal); color: var(--color-text); max-width: 84ch; }
+
 .entry__questions { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-1); }
 .entry__questions-title { font-size: var(--text-sm); font-weight: var(--weight-medium); }
 .entry__questions ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
@@ -226,6 +255,19 @@
 /* Errors and refused input take the danger edge: nothing was assessed. */
 .statusbox--error, .statusbox--invalid { border-inline-start: 3px solid var(--color-danger); }
 .statusbox--service { border-inline-start: 3px solid var(--color-accent-ui); }
+/* A mismatch is not an error and not a result: nothing was assessed, but we DID
+   find something and can offer it. Warning edge, not danger — the user has not
+   done anything wrong and there is a way forward on the screen. */
+.statusbox--mismatch { border-inline-start: 3px solid var(--color-accent-ui); }
+.statusbox__consequence { color: var(--color-text); font-size: var(--text-sm); line-height: var(--leading-normal); max-width: 76ch; }
+.mismatch__found {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2);
+  padding: var(--space-4); border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+}
+.mismatch__found-label { font-size: var(--text-sm); color: var(--color-text-muted); }
+.mismatch__found-address { font-family: var(--font-display); font-size: var(--text-lg); line-height: var(--leading-snug); }
+.mismatch__asked { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
 
 .rejections { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .rejection { font-size: var(--text-sm); line-height: var(--leading-normal); }

@@ -6,16 +6,18 @@
  * states (idle, pending, mounted); render.js owns turning a response into DOM.
  * Neither writes a Dutch sentence — the copy lives in sections/*.html.
  *
- * INPUT. The landing hero asks for postcode + huisnummer because that geocodes
- * far more reliably than free text, and the API takes a single address string.
- * Joining them is therefore a client-side concern and lives in composeAddress()
- * below. Verified against real Zaanstad addresses including huisletter and
- * toevoeging cases — see check/SECTIONS.md.
+ * INPUT. The form asks for postcode + huisnummer + toevoeging, and since
+ * schema_version 2 it sends them exactly that way: the API takes components and
+ * refuses to answer unless the address it resolves matches them. Joining them
+ * into one string here used to be this file's job; it no longer is, and must not
+ * become it again — the join is what made "which dwelling did you mean?"
+ * unanswerable on the server. See check/SECTIONS.md.
  */
 import { SCHEMA_VERSION, contractMatches } from './contract.js';
 import {
   RenderError,
   renderInvalid,
+  renderMismatch,
   renderRenderFailure,
   renderResult,
   renderService,
@@ -75,18 +77,18 @@ function clearFieldError() {
 }
 
 /**
- * The three fields -> the one string the API takes.
+ * The three fields -> the request body, unchanged in shape.
  *
- * Postcode is upper-cased and stripped of its internal space; huisletter and
- * toevoeging are appended directly to the number ("1501CM 50A-A"). That is the
- * shape the PDOK Locatieserver resolves best, and it is the only transformation
- * this page performs on user input.
+ * Since schema_version 2 the API takes the components separately and refuses to
+ * answer unless the address it resolves matches them (ADR-0015). This page no
+ * longer joins them into a string: the join was the step that made "which
+ * dwelling did you mean?" unanswerable, and the server must not have to guess
+ * where the house number ends.
+ *
+ * Postcode is upper-cased and stripped of its internal space, toevoeging
+ * upper-cased. That is the only transformation this page performs on user input,
+ * and the API normalises again on its own side regardless.
  */
-function composeAddress({ postcode, huisnummer, toevoeging }) {
-  return `${postcode} ${huisnummer}${toevoeging}`;
-}
-
-/** Returns the composed address, or null after showing which field is wrong. */
 function readForm() {
   const postcode = fields.postcode.value.replace(/\s+/g, '').toUpperCase();
   const huisnummer = fields.huisnummer.value.trim();
@@ -97,14 +99,39 @@ function readForm() {
   if (toevoeging && !TOEVOEGING_RE.test(toevoeging)) return showFieldError('toevoeging'), null;
 
   clearFieldError();
-  return composeAddress({ postcode, huisnummer, toevoeging });
+  return { postcode, huisnummer: Number(huisnummer), toevoeging: toevoeging || null };
 }
 
-function setPending(address) {
-  pendingAddress.textContent = address;
-  pending.hidden = !address;
-  submit.disabled = Boolean(address);
-  if (address) result.replaceChildren();
+/** What the user typed, for the pending line only — never presented as an answer. */
+function askedLabel({ postcode, huisnummer, toevoeging }) {
+  return `${postcode} ${huisnummer}${toevoeging ?? ''}`;
+}
+
+function setPending(label) {
+  pendingAddress.textContent = label;
+  pending.hidden = !label;
+  submit.disabled = Boolean(label);
+  if (label) result.replaceChildren();
+}
+
+/**
+ * Put a resolved address back into the form and re-run it.
+ *
+ * The API returns `address_resolved` in exactly the shape `CheckRequest` takes,
+ * so this is a copy, not a translation. Offering it matters: a refusal that
+ * forces retyping is how a user ends up accepting whatever their second guess
+ * resolves to.
+ */
+function resubmit(resolved) {
+  fields.postcode.value = resolved.postcode;
+  fields.huisnummer.value = String(resolved.huisnummer);
+  fields.toevoeging.value = resolved.toevoeging ?? '';
+  clearFieldError();
+  run({
+    postcode: resolved.postcode,
+    huisnummer: resolved.huisnummer,
+    toevoeging: resolved.toevoeging ?? null,
+  });
 }
 
 function mount(fragment) {
@@ -119,11 +146,11 @@ function mount(fragment) {
  * `body` is the parsed JSON, or throws so the caller can report a transport
  * failure — the page never invents a result when there is no answer.
  */
-async function postCheck(address, signal) {
+async function postCheck(asked, signal) {
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ address }),
+    body: JSON.stringify(asked),
     signal,
   });
   let body = null;
@@ -150,19 +177,22 @@ function fragmentFor({ status, body }) {
   if (status === 429 || status === 503) return renderService(body);
   if (status !== 200) return renderTransportError('unexpected', `http-${status}`);
   if (body?.status === 'ok') return renderResult(body);
+  // Its own branch, above the terminal statuses: a mismatch is the one non-`ok`
+  // outcome that carries something actionable — the address we DID find.
+  if (body?.status === 'address_mismatch') return renderMismatch(body, resubmit);
   if (TERMINAL_STATUSES.has(body?.status)) return renderTerminal(body);
   return renderTransportError('unexpected', 'status');
 }
 
-async function run(address) {
+async function run(asked) {
   inFlight?.abort();
   const controller = new AbortController();
   inFlight = controller;
   const timer = setTimeout(() => controller.abort('timeout'), CLIENT_TIMEOUT_MS);
-  setPending(address);
+  setPending(askedLabel(asked));
 
   try {
-    mount(fragmentFor(await postCheck(address, controller.signal)));
+    mount(fragmentFor(await postCheck(asked, controller.signal)));
   } catch (error) {
     if (controller.signal.aborted && controller.signal.reason !== 'timeout') return;
     mount(errorFragment(error, controller.signal));
@@ -186,8 +216,8 @@ function errorFragment(error, signal) {
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
-  const address = readForm();
-  if (address) run(address);
+  const asked = readForm();
+  if (asked) run(asked);
 });
 
 for (const field of Object.values(fields)) {

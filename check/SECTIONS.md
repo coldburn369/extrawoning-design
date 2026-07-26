@@ -104,11 +104,34 @@ correct outcome.
 
 All text lands via `textContent`, never `innerHTML`.
 
+## The contract version
+
+`check/contract.js` holds `SCHEMA_VERSION` and the predicate. `check.js` checks
+it **before reading any other field**, including `status` — once the version is
+wrong, the field that selects the template is itself a guess. On a mismatch the
+page shows `#tpl-version-mismatch` and nothing else, and says nothing about the
+address.
+
+This is the seam between two repositories that deploy independently, and the one
+failure mode the split introduces. Bump `SCHEMA_VERSION` in the change that
+adopts the new contract, never ahead of one. `check/version-guard.test.mjs` runs
+it against verbatim v1 and v2 captures in `check/fixtures/`.
+
 ## Input
 
-The API takes one address string; the form has three fields. `composeAddress()`
-in `check.js` joins them as `"<POSTCODE> <nr><toevoeging>"` (postcode upper-cased,
-internal space stripped). That is the only transformation applied to user input.
+Since `schema_version` 2 the API takes the three fields **separately** and the
+page sends them that way. It no longer joins them into a string.
+
+That join is gone on purpose. It was the step that made "which dwelling did you
+mean?" unanswerable on the server: given only `"1501CA 887"` the API had to
+either guess where the house number ended or trust whatever the Locatieserver
+fuzzily matched. Measured, 38 of 47 corrupted queries resolved to a different
+real dwelling and returned a full verdict about it. The API now compares the
+resolved postcode and `huis_nlt` against the components it was given and refuses
+when they differ. **Do not reintroduce a compose step here.**
+
+The only transformation applied to user input is upper-casing and stripping the
+postcode's internal space; the API normalises again on its own side regardless.
 
 Verified against real Zaanstad addresses:
 
@@ -118,27 +141,52 @@ Verified against real Zaanstad addresses:
 | `1506 CS` + `1` + `A` | Zeemansstraat 1A, Zaandam (huisletter) |
 | `1501 CM` + `50` + `A-A` | Zuiddijk 50A-A, Zaandam (huisletter + toevoeging) |
 | `1012 AB` + `1` | Amsterdam → `out_of_scope` |
+| `1501 CA` + `887` | → `address_mismatch` (no such number on that postcode) |
+
+## The resolved address is the headline
+
+`address_query` is what was typed; `address_resolved` is the dwelling the verdict
+is about. The heading shows the **resolved** one and the query sits under it,
+muted.
+
+That ordering is load-bearing. A typo that is itself a real address —
+`Zuiddijk 4A` for `Zuiddijk 3A` — passes every check the server can make, because
+the user typed a valid dwelling. Nothing catches it except a reader noticing the
+two lines differ, so the resolved address cannot be a footnote.
+
+## Caveats render twice, deliberately
+
+Each bucket entry carries `caveat_ids`, resolved server-side. The page looks them
+up by id and renders them inside the entry; it does not know, and must not learn,
+which caveat belongs to which rule. A `Blokkade` whose basis is flagged uncertain
+must carry the flag where it is read.
+
+The summary list at the foot still carries **every** caveat, including those that
+bear on nothing in particular. An id that does not resolve is a `RenderError` and
+no result is shown — an entry that quietly lost its caveat looks exactly like one
+that never had it.
 
 ## States handled
 
-`ok` · `out_of_scope` (lists `covered_gemeenten`) · `address_not_found` ·
-`source_timeout` · HTTP 422 (per-rejection `message`) · 429 (API message +
-`retry_after_seconds`) · 503 (API message) · network failure · a client-side
-validation error per field. The pending state names the sources being consulted
-rather than spinning blankly.
+`ok` · **`address_mismatch`** (API statement + consequence, and a button that
+resubmits `address_resolved`) · `out_of_scope` (lists `covered_gemeenten`) ·
+`address_not_found` · `source_timeout` · HTTP 422 (per-rejection `message`) · 429
+(API message + `retry_after_seconds`) · 503 (API message) · **contract-version
+mismatch** · network failure · a client-side validation error per field. The
+pending state names the sources being consulted rather than spinning blankly.
 
 ## Known / open
 
 - **API gap — no message for the terminal statuses.** `CheckResponse` has no
   message field, so the headings for `out_of_scope` / `address_not_found` /
-  `source_timeout` are chrome in `sections/templates.html`. They are the only
-  outcome sentences on this page that the API does not supply.
-- **API gap — the response does not echo the RESOLVED address.** `address` is
-  the string we sent. The PDOK Locatieserver matches fuzzily, so a postcode +
-  huisnummer that does not exist silently resolves to a neighbour, and the page
-  cannot show what was actually checked. `9999ZZ 999` comes back as a real
-  Utrecht address, which is also why `address_not_found` is not reachable from
-  this form today.
+  `source_timeout` are chrome in `sections/templates.html`. They remain the only
+  outcome sentences on this page that the API does not supply — `address_mismatch`
+  deliberately does not join them: it carries `address_match.statement` and
+  `.consequence` from the server.
+- ~~**API gap — the response does not echo the RESOLVED address.**~~ Closed by
+  `schema_version` 2: `address_query` / `address_resolved` / `address_match`.
+  `address_not_found` is now reachable and means "no hit at all"; a hit that is
+  not the dwelling asked for is `address_mismatch`.
 - The page renders `questions[].prompt` read-only. Answering them (POSTing
   `facts`) is not in this slice, so the 422 path is defensive only.
 - No favicon: the browser's `/favicon.ico` request 404s, as on the landing page.

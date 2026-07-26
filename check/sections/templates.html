@@ -21,9 +21,17 @@
 <!-- ---- The result shell ------------------------------------------------- -->
 <template id="tpl-result">
   <section class="result">
+    <!-- The RESOLVED address is the heading, and what was typed sits under it.
+         A typo that is itself a real address passes every check the server can
+         make, so the only thing that catches it is the user reading which house
+         we answered about. That has to be the most prominent line here. -->
     <header class="result__head">
       <p class="eyebrow">Uitkomst voor</p>
-      <h2 class="result__address" data-slot="address"></h2>
+      <h2 class="result__address" data-slot="address_resolved"></h2>
+      <p class="result__asked note" data-slot="address-resolved-line" hidden>
+        U vroeg naar <span data-slot="address_query"></span>. Klopt het adres
+        hierboven niet, controleert u dan postcode en huisnummer.
+      </p>
       <p class="result__where note" data-slot="gemeente-line" hidden>
         Gemeente <span data-slot="gemeente"></span>
         (<span data-slot="gemeentecode"></span>)
@@ -146,6 +154,14 @@
       <p class="entry__statement" data-slot="presentation.statement"></p>
       <p class="entry__description" data-slot="description"></p>
       <p class="entry__unavailable" data-slot="unavailable_reason" hidden></p>
+      <!-- The caveats bearing on THIS point, resolved server-side. A Blokkade
+           whose basis is flagged uncertain must carry that flag where it is
+           read; the summary list at the foot stays, for the caveats that bear on
+           nothing in particular. -->
+      <div class="entry__caveats" data-slot="entry-caveats" hidden>
+        <p class="entry__caveats-title">Kanttekening bij dit punt</p>
+        <ul data-slot="entry-caveats-list"></ul>
+      </div>
       <div class="entry__questions" data-slot="questions" hidden>
         <p class="entry__questions-title">Wat wij hiervoor van u nodig hebben</p>
         <ul data-slot="questions-list"></ul>
@@ -162,6 +178,61 @@
   <li class="question" data-slot="prompt"></li>
 </template>
 
+<template id="tpl-entry-caveat">
+  <li class="entry-caveat" data-slot="text"></li>
+</template>
+
+<!-- ---- status === "address_mismatch" ------------------------------------
+     We resolved something, but not confidently what was asked for. No verdict,
+     because showing one would be a legal statement about a house the user did
+     not ask about — the failure this outcome exists to prevent.
+
+     Both sentences come from `address_match`: the server distinguishes "this
+     house number does not exist on this postcode" from "we found a different
+     address", and picking between them here would be this page deciding what
+     the server's evidence means. The only Dutch below is the button and the
+     labels around the two addresses. -->
+<template id="tpl-mismatch">
+  <section class="result result--mismatch">
+    <div class="statusbox statusbox--mismatch">
+      <p class="statusbox__title" data-slot="statement"></p>
+      <p class="statusbox__consequence" data-slot="consequence"></p>
+
+      <div class="mismatch__found" data-slot="resolved-block" hidden>
+        <p class="mismatch__found-label">Wij vonden dit adres:</p>
+        <p class="mismatch__found-address" data-slot="address_resolved"></p>
+        <button type="button" class="btn btn--ghost" data-slot="resubmit">
+          Dit adres controleren
+        </button>
+      </div>
+
+      <p class="mismatch__asked note">
+        U vroeg naar <span data-slot="address_query"></span>.
+      </p>
+    </div>
+
+    <aside class="disclosure disclosure--disclaimer">
+      <h3 class="disclosure__title">Lees dit eerst</h3>
+      <p data-slot="disclaimer"></p>
+    </aside>
+
+    <section class="disclosure disclosure--presumptions" data-slot="presumptions-block" hidden>
+      <h3 class="disclosure__title">Aannames die wij hebben gedaan</h3>
+      <div class="disclosure__items" data-slot="presumptions"></div>
+    </section>
+
+    <section class="disclosure disclosure--exclusions" data-slot="exclusions-block" hidden>
+      <h3 class="disclosure__title">Buiten toepassing gelaten op uw eigen opgave</h3>
+      <div class="disclosure__items" data-slot="declared_exclusions"></div>
+    </section>
+
+    <section class="disclosure disclosure--caveats" data-slot="caveats-block" hidden>
+      <h3 class="disclosure__title">Kanttekeningen bij de gebruikte gegevens</h3>
+      <ul class="caveats" data-slot="caveats"></ul>
+    </section>
+  </section>
+</template>
+
 <!-- ---- Non-`ok` outcomes -------------------------------------------------
      These are the three statuses that carry no activities. The response has no
      message field for them, so the heading below is chrome — see the API-gap
@@ -170,7 +241,7 @@
   <section class="result result--terminal">
     <header class="result__head">
       <p class="eyebrow">Uitkomst voor</p>
-      <h2 class="result__address" data-slot="address"></h2>
+      <h2 class="result__address" data-slot="address_query"></h2>
     </header>
 
     <div class="statusbox">
