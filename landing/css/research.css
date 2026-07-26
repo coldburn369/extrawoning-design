@@ -9,7 +9,7 @@
    sheets replace the old flattened image so the stack can assemble and fan.
    ========================================================================== */
 
-.split--4 > .stack-lg {
+.split--4 > .stack:not(.panel) {
   gap: var(--space-6);
   padding-block: var(--space-5);
 }
