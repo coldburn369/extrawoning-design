@@ -1,0 +1,106 @@
+<!-- Hero (#adrescheck) — styles: css/hero.css + css/cta.css (the form)
+     DONE, matches the concept. Change with care. -->
+<section class="hero" id="adrescheck">
+  <div class="hero__map" aria-hidden="true"></div>
+  <div class="container hero__grid">
+    <div class="hero__copy stack-lg">
+      <h1 class="hero__title">Zit er een <span class="hl">extra woning</span> in jouw huis?</h1>
+      <p class="hero__intro">
+        Ontdek binnen enkele minuten of jouw woning kansrijk is voor een vergunde extra
+        wooneenheid — inclusief een duidelijk rapport met de toepasselijke regels,
+        mogelijke waarde-impact en vervolgstappen.
+      </p>
+
+      <!-- One segmented bar: postcode · huisnummer · submit. See css/cta.css for
+           why the fields are fixed at 9rem/7rem rather than flexing. -->
+      <form class="addresscheck" onsubmit="return false">
+        <div class="addressbar">
+          <div class="addressbar__field addressbar__field--postcode">
+            <label for="pc1">Postcode</label>
+            <input id="pc1" name="postcode" type="text" placeholder="1234 AB"
+                   autocomplete="postal-code" maxlength="7" spellcheck="false" />
+          </div>
+          <span class="addressbar__sep" aria-hidden="true"></span>
+          <div class="addressbar__field addressbar__field--number">
+            <label for="hn1">Huisnummer</label>
+            <input id="hn1" name="huisnummer" type="text" placeholder="12"
+                   inputmode="numeric" maxlength="5" autocomplete="address-line2" />
+          </div>
+          <button class="btn btn--primary" type="submit">Check mijn adres</button>
+        </div>
+        <p class="note">Geen spam. Geen verborgen kosten. Direct een eerste indicatie.</p>
+      </form>
+
+      <ul class="trust-row">
+        <li>
+          <span class="medallion"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="bezel" cx="24" cy="24" r="22"/><circle class="ring" cx="24" cy="24" r="16.5"/><use href="#i-clock" x="13" y="13" width="22" height="22"/></svg></span>
+          <h4>Resultaat in 2 minuten</h4>
+        </li>
+        <li>
+          <span class="medallion"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="bezel" cx="24" cy="24" r="22"/><circle class="ring" cx="24" cy="24" r="16.5"/><use href="#i-shield-check" x="13" y="13" width="22" height="22"/></svg></span>
+          <h4>Advies door experts</h4>
+        </li>
+        <li>
+          <span class="medallion"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="bezel" cx="24" cy="24" r="22"/><circle class="ring" cx="24" cy="24" r="16.5"/><use href="#i-check" x="13" y="13" width="22" height="22"/></svg></span>
+          <h4>No-cure no-pay</h4>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero__visual">
+      <div class="hero__stage">
+        <img class="hero__house" src="../assets/hero_house2.webp"
+             alt="Herenhuis met een gemarkeerde bouwkundige uitsnede die een mogelijke extra wooneenheid toont"
+             width="1086" height="901" fetchpriority="high" />
+
+        <div class="hero-card hero-card--steps">
+          <ul class="steplist">
+            <li class="steplist__item is-active">
+              <span class="steplist__ico"><svg><use href="#i-pin"/></svg></span>
+              <span class="steplist__label"><b>1.</b> Locatiecheck en regels</span>
+              <svg class="steplist__chev"><use href="#i-right"/></svg>
+            </li>
+            <li class="steplist__item">
+              <span class="steplist__ico"><svg><use href="#i-build"/></svg></span>
+              <span class="steplist__label"><b>2.</b> Bouwkundige toets</span>
+            </li>
+            <li class="steplist__item">
+              <span class="steplist__ico"><svg><use href="#i-euro"/></svg></span>
+              <span class="steplist__label"><b>3.</b> Financiële analyse</span>
+            </li>
+            <li class="steplist__item">
+              <span class="steplist__ico"><svg><use href="#i-layout"/></svg></span>
+              <span class="steplist__label"><b>4.</b> Programma &amp; waarde</span>
+            </li>
+            <li class="steplist__item is-expert">
+              <span class="steplist__ico"><svg><use href="#i-expert"/></svg></span>
+              <span class="steplist__label">Advies door experts</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="hero-card hero-card--verdict stack-sm">
+          <p class="verdict__loc">Locatie in Amsterdam</p>
+          <p class="verdict-title">Kansrijk</p>
+          <ul class="checklist checklist--sm">
+            <li><svg class="ico"><use href="#i-check"/></svg> Technisch vergund</li>
+            <li><svg class="ico"><use href="#i-check"/></svg> Fijn financieel potentieel</li>
+            <li><svg class="ico"><use href="#i-check"/></svg> Programma passend</li>
+          </ul>
+          <a class="btn btn--ghost btn--sm" href="#voorbeeldrapport">Bekijk analyse <svg class="arrow" width="16" height="16"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+
+      <ul class="hero__proof">
+        <li>
+          <span class="medallion"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="bezel" cx="24" cy="24" r="22"/><circle class="ring" cx="24" cy="24" r="16.5"/><use href="#i-gauge" x="13" y="13" width="22" height="22"/></svg></span>
+          <h4>Snel rapport, duidelijk advies</h4>
+        </li>
+        <li>
+          <span class="medallion"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="bezel" cx="24" cy="24" r="22"/><circle class="ring" cx="24" cy="24" r="16.5"/><use href="#i-target" x="13" y="13" width="22" height="22"/></svg></span>
+          <h4>Alles inzichtelijk in één dashboard</h4>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>

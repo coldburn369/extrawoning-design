@@ -1,0 +1,418 @@
+/* ============================================================================
+   extrawoning — design tokens
+   ----------------------------------------------------------------------------
+   THREE TIERS. The rule that makes this a system:
+
+     Tier 1  --ew-*        primitives. Raw values, no meaning.
+                           NEVER referenced by a component.
+     Tier 2  --color-*     semantic. Role-based ("surface", "text-muted").
+             --space-*     Components use these.
+             --text-* etc.
+     Tier 3  --button-*    component tokens. Let a component be re-skinned
+             --card-*      without touching its CSS.
+
+   Components may only use Tier 2 and Tier 3. Never a raw hex, never a Tier 1.
+
+   THEMING. Semantic colors are declared exactly once using light-dark().
+   The OS preference drives it via `color-scheme: light dark`; the app's
+   theme toggle overrides it by flipping `color-scheme` on :root. There is
+   no duplicated dark-mode block to keep in sync.
+
+   Baseline 2024 — light-dark() needs Chrome/Edge 123+, Firefox 120+,
+   Safari 17.5+. See the fallback note at the bottom if you must support older.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Typeface — Manrope is the brand face: the extrawoning wordmark is set in
+   Manrope Semi-Bold (600). ENABLED 2026-07-25, variable font shipped in
+   design-system/fonts/ under the SIL Open Font License 1.1 (see OFL.txt,
+   which must travel with the font).
+
+   The fallback stack is picked to sit as close to Manrope as system faces get:
+   geometric-humanist grotesques with a generous x-height (SF Pro / Segoe UI
+   Variable / Roboto), so the font-display: swap is not jarring.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Manrope";
+  /* Latin subset, 29 KB (from a 167 KB variable TTF — see subset-fonts.mjs).
+     Full weight axis 200–800 preserved. */
+  src: url("./fonts/Manrope-Variable.woff2") format("woff2-variations");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;   /* system stack paints first, Manrope swaps in */
+}
+
+/* Inter — the BODY face. Open-source (SIL OFL) counterpart to SF Pro: same
+   neutral-humanist skeleton and tall x-height, but licensed for the web, so
+   Windows visitors get the same rendering as macOS. SF Pro itself cannot be
+   used here — Apple's licence covers mocking up Apple-platform UI only, not
+   embedding or redistributing as a webfont.
+
+   Shipping since 2026-07-25, from the official rsms.me/inter 4.1 web build.
+   SIL OFL 1.1 — LICENSE-Inter.txt must travel with it. One file covers weights
+   100–900 plus the optical-size axis, so no static cuts are needed.
+
+   Latin subset, 100 KB (from 352 KB — the upstream file also carries Greek,
+   Cyrillic and Vietnamese, which a Dutch page never renders). Regenerate with
+   design-system/subset-fonts.mjs. */
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/Inter-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;   /* system stack paints first, Inter swaps in */
+}
+
+:root {
+  /* =========================================================================
+     TIER 1 — PRIMITIVES
+     Raw palette + raw values. Do not use these in components.
+     ====================================================================== */
+
+  /* Orange — the brand accent. Steps exist for CONTRAST reasons, not variety:
+     each one is the lightest orange that still passes at its job.           */
+  --ew-orange-700: #a84c11;   /* accent TEXT on light  — 5.3:1 vs clay-50   */
+  --ew-orange-600: #d9640e;   /* accent BORDER/FOCUS on light — 3.4:1       */
+  --ew-orange-500: #f2762e;   /* BRAND CORE — the X, fills, large graphics  */
+  --ew-orange-400: #f6813c;   /* accent on dark — 6.8:1 vs clay-900, text-safe */
+  --ew-orange-300: #ffa066;   /* hover / emphasis on dark                   */
+
+  /* Green — STATUS ONLY, never decorative. Added for the landing page: the
+     report verdicts ("Kansrijk") and the check-list marks need a "positive
+     finding" colour, which the system had no token for. Same contrast-driven
+     stepping as the orange.                                                 */
+  --ew-green-700: #2f6f45;    /* success TEXT on light                      */
+  --ew-green-600: #3f8f5c;    /* success BORDER/ICON on light               */
+  --ew-green-400: #63c98a;    /* success on dark — text-safe                */
+
+  /* Clay — warm neutral ramp, hue-biased toward the accent so the greys
+     read as chosen rather than inherited.                                   */
+  --ew-white:    #ffffff;
+  --ew-clay-950: #100f0e;     /* dark page                                  */
+  --ew-clay-900: #1a1917;     /* dark raised surface                        */
+  --ew-clay-850: #24221f;     /* nested panel on dark                       */
+  --ew-clay-800: #2b2b28;     /* BRAND INK — light-theme body text          */
+  --ew-clay-700: #3f3c37;
+  --ew-clay-600: #6b6459;     /* muted text on light — 5.5:1                */
+  --ew-clay-500: #8f897e;     /* muted text on dark  — 5.1:1                */
+  --ew-clay-400: #a8a196;
+  --ew-clay-300: #c7c1b6;
+  --ew-clay-200: #ded8cd;
+  --ew-clay-100: #ece7de;     /* dark-theme text / light page               */
+  --ew-clay-50:  #faf8f4;     /* light raised surface                       */
+
+  /* Alphas — hairlines and scrims must sit on top of whatever is behind. */
+  --ew-ink-a12:    rgba(43, 43, 40, .12);
+  --ew-ink-a06:    rgba(43, 43, 40, .06);
+  --ew-white-a09:  rgba(255, 255, 255, .09);
+  --ew-white-a14:  rgba(255, 255, 255, .14);
+
+  /* Brand effect primitives — the loader's glow and travelling light. */
+  --ew-glow-light: rgba(242, 118, 46, .32);
+  --ew-glow-dark:  rgba(246, 129, 60, .60);
+  --ew-sheen:      rgba(255, 247, 239, .92);
+
+
+  /* =========================================================================
+     TIER 2 — SEMANTIC
+     ====================================================================== */
+
+  color-scheme: light dark;
+
+  /* -- Surfaces -- */
+  --color-page:            light-dark(var(--ew-clay-100), var(--ew-clay-950));
+  --color-surface:         light-dark(var(--ew-clay-50),  var(--ew-clay-900));
+  --color-surface-raised:  light-dark(var(--ew-white),    var(--ew-clay-850));
+  --color-surface-sunken:  light-dark(var(--ew-clay-200), var(--ew-clay-950));
+
+  /* -- Text -- */
+  --color-text:            light-dark(var(--ew-clay-800), var(--ew-clay-100));
+  --color-text-muted:      light-dark(var(--ew-clay-600), var(--ew-clay-500));
+  /* Accent-coloured TEXT. Deliberately darker than --color-accent on light:
+     the brand orange is only 2.7:1 on clay-50 and cannot carry small copy.  */
+  --color-text-accent:     light-dark(var(--ew-orange-700), var(--ew-orange-400));
+  --color-text-on-accent:  var(--ew-clay-50);
+
+  /* -- Accent roles --
+     --color-accent    : fills, the mark, large graphics. Brand-true.
+     --color-accent-ui : borders, focus rings, small indicators. Meets the
+                         3:1 non-text contrast floor on light surfaces.      */
+  --color-accent:          light-dark(var(--ew-orange-500), var(--ew-orange-400));
+  --color-accent-ui:       light-dark(var(--ew-orange-600), var(--ew-orange-400));
+  --color-accent-hover:    light-dark(var(--ew-orange-700), var(--ew-orange-300));
+  --color-accent-wash:     color-mix(in srgb, var(--color-accent) 10%, transparent);
+
+  /* -- Status --
+     Semantic, not decorative: success means "a positive finding in the
+     report". Split text/UI the same way the accent is.                      */
+  --color-success:         light-dark(var(--ew-green-600), var(--ew-green-400));
+  --color-text-success:    light-dark(var(--ew-green-700), var(--ew-green-400));
+  --color-success-wash:    color-mix(in srgb, var(--color-success) 12%, transparent);
+
+  /* -- Lines --
+     Used far more sparingly than before. A hairline is now reserved for
+     genuine data separation (the report tables); surfaces separate themselves
+     by elevation instead. See --card-* below.                              */
+  --color-border-subtle:   light-dark(var(--ew-ink-a12),  var(--ew-white-a09));
+  --color-border-strong:   light-dark(var(--ew-clay-300), var(--ew-white-a14));
+
+  /* -- Atmosphere --
+     A wide, very low-contrast accent bloom. On a near-black page this is what
+     creates depth without shadows — the single most "premium dark UI" trick
+     there is. Kept under 10% so it never competes with content.            */
+  --color-bloom: color-mix(in srgb, var(--color-accent) 9%, transparent);
+
+  /* -- Brand effect -- */
+  --color-glow:            light-dark(var(--ew-glow-light), var(--ew-glow-dark));
+  --color-sheen:           var(--ew-sheen);
+
+  /* -- Focus -- */
+  --focus-ring:            2px solid var(--color-accent-ui);
+  --focus-ring-offset:     2px;
+
+
+  /* -- Typography ------------------------------------------------------- */
+  /* TWO FACES, split by job:
+       --font-display  Manrope — headlines and figures. Ties the page to the
+                       wordmark, which is Manrope SemiBold.
+       --font-body     Inter — body copy, UI, labels. Manrope is a display face;
+                       set at reading sizes across a whole page it reads
+                       startup-generic, so it is kept for the loud moments.
+     system-ui sits behind both: on macOS it resolves to real SF Pro. */
+  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI Variable Display",
+                  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body:    "Inter", system-ui, -apple-system, "Segoe UI Variable Text",
+                  "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", "SFMono-Regular", Menlo,
+                  Consolas, monospace;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;   /* the wordmark's weight */
+  --weight-bold:     700;
+
+  /* TWO SCALES, deliberately. The page was previously typeset entirely on the
+     UI scale — 73% of its font-size declarations were <=14px — which is why it
+     read as a dashboard rather than a consumer page.
+
+     UI scale (below): data, labels, captions. The report mockup genuinely
+     needs these sizes; they are unchanged apart from base.
+     DISPLAY scale (further down): headlines. Fluid, so the page scales with
+     the viewport instead of stepping at breakpoints. */
+  --text-2xs:  0.6875rem;   /* 11px — mono labels, status  */
+  --text-xs:   0.8125rem;   /* 13px — captions, notes      */
+  --text-sm:   0.875rem;    /* 14px — dense UI text        */
+  --text-base: 1.0625rem;   /* 17px — body (was 16)        */
+  --text-md:   1.1875rem;   /* 19px — intro paragraphs     */
+  --text-lg:   1.44rem;     /* 23px                        */
+  --text-xl:   1.728rem;    /* 28px                        */
+  --text-2xl:  2.074rem;    /* 33px                        */
+  --text-3xl:  2.488rem;    /* 40px                        */
+  --text-4xl:  2.986rem;    /* 48px                        */
+
+  /* Display scale — fluid. Lower bound is the phone size, upper the desktop
+     size; the vw term carries it between.
+
+     SIZED FOR THE CONTAINER, not just for impact. Most h2s on this page sit in
+     300–480px grid columns with long Dutch headlines, so a "big Apple headline"
+     size wraps them into 5- and 6-line walls. Measured across every h2 on the
+     page: 56px gave a worst case of 6 lines, 34px gives 3. Reach for --md only
+     where the headline is SHORT and the column is WIDE.
+       lg  44 -> 72px   the hero, once per page
+       md  30 -> 44px   opt-in loud headline (.h2--loud): full width, short copy
+       sm  26 -> 34px   the default h2, verdict titles, price figures        */
+  --display-lg: clamp(2.75rem,  1.90rem + 3.4vw, 4.5rem);
+  --display-md: clamp(1.90rem,  1.55rem + 1.4vw, 2.75rem);
+  --display-sm: clamp(1.625rem, 1.45rem + 0.7vw, 2.125rem);
+
+  --leading-display: 1.06;  /* the hero only — tight because it is huge */
+  --leading-tight:   1.15;
+  --leading-snug:    1.3;   /* headings                    */
+  --leading-normal:  1.6;   /* body                        */
+  --leading-relaxed: 1.75;
+
+  /* Optical tracking: the larger the type, the tighter it must set.
+     -0.035em was too aggressive — at 88px it pulls 3px out of every letter
+     gap, which reads cramped rather than tight. Apple sits nearer -0.02em. */
+  --tracking-display: -0.02em;   /* --display-* sizes         */
+  --tracking-tight:  -0.02em;    /* large non-display sizes   */
+  --tracking-normal: 0;
+  --tracking-wide:   0.14em;     /* uppercase button labels   */
+  --tracking-wider:  0.22em;     /* uppercase status readout  */
+
+
+  /* -- Space — 4px base ------------------------------------------------- */
+  --space-0: 0;
+  --space-1: 0.25rem;   /*   4px */
+  --space-2: 0.5rem;    /*   8px */
+  --space-3: 0.75rem;   /*  12px */
+  --space-4: 1rem;      /*  16px */
+  --space-5: 1.5rem;    /*  24px */
+  --space-6: 2rem;      /*  32px */
+  --space-7: 3rem;      /*  48px */
+  --space-8: 4rem;      /*  64px */
+  --space-9: 6rem;      /*  96px */
+  --space-10: 7.5rem;   /* 120px — section rhythm on desktop */
+  --space-11: 10rem;    /* 160px — the page's biggest breath */
+
+  /* Section rhythm, fluid: 64px on a phone up to 120px on desktop. Sections
+     used a flat 64px, which is about half what this kind of page wants. */
+  --section-gap: clamp(4rem, 2rem + 6vw, 7.5rem);
+
+  /* -- Radius ----------------------------------------------------------- */
+  /* Bigger than a typical UI kit on purpose: large soft corners are most of
+     what separates a "product page" surface from an "admin panel" one. */
+  --radius-xs:   4px;
+  --radius-sm:   10px;
+  --radius-md:   16px;
+  --radius-lg:   24px;   /* cards, panels        */
+  --radius-xl:   32px;   /* hero + feature slabs */
+  --radius-full: 999px;
+
+  /* -- Elevation --------------------------------------------------------
+     light-dark() is a <color> function — it CANNOT wrap a whole shadow value.
+     So the geometry is fixed and only the COLOUR varies by theme. A shadow
+     barely reads on a near-black page, hence the second half of the system:
+
+       --elevation-*        the cast shadow. Strong on light, subtle on dark.
+       --surface-highlight  a hairline top highlight. This is what actually
+                            makes a surface look raised on dark — the
+                            light-from-above cue. Transparent on light.
+
+     Apply both together (see --card-shadow). */
+  --elevation-1: 0 1px 2px    light-dark(rgba(0,0,0,.04), rgba(0,0,0,.20));
+  --elevation-2: 0 24px 60px -32px light-dark(rgba(0,0,0,.28), rgba(0,0,0,.45));
+  --elevation-3: 0 40px 90px -40px light-dark(rgba(0,0,0,.36), rgba(0,0,0,.60));
+  --surface-highlight: inset 0 1px 0 light-dark(transparent, rgba(255,255,255,.06));
+  /* Floating elements (hero cards) still need a real cast shadow on dark to
+     separate from the artwork behind them. */
+  --elevation-float: 0 2px 6px rgba(0,0,0,.18), 0 32px 70px -30px rgba(0,0,0,.55);
+
+  /* -- Motion ----------------------------------------------------------- */
+  /* Principles: content resolves LEFT → RIGHT; the accent carries activity;
+     reduced-motion always resolves to the END state, never a jump.         */
+  --ease-settle:   cubic-bezier(.2, .85, .25, 1);   /* the logo reveal      */
+  --ease-standard: cubic-bezier(.4, 0, .2, 1);      /* UI state changes     */
+  --ease-trace:    cubic-bezier(.6, 0, .4, 1);      /* the travelling light */
+
+  --duration-fast:  180ms;
+  --duration-base:  320ms;
+  --duration-slow:  720ms;
+  --duration-trace: 1600ms;
+
+  /* -- Layout -----------------------------------------------------------
+     Promoted out of landing/css/base.css when the wide-screen layout landed.
+
+     90rem (1440px) is the shell width, not a reading width. Prose is bounded
+     separately and in `ch` at each site (.lead 56ch, .hero__intro 44ch,
+     .disclaimer 90ch) because a ch cap tracks font size, which a container
+     cap cannot. That split is the whole wide-screen strategy: let GRIDS and
+     MEDIA grow, keep TEXT columns fixed. Scale everything uniformly instead
+     and a 2560px monitor gets 200-character lines.                         */
+  --layout-max: 90rem;   /* 1440px */
+
+  /* -- Layering --------------------------------------------------------- */
+  --z-base:    0;
+  --z-sticky:  100;
+  --z-overlay: 200;
+  --z-modal:   300;
+  --z-toast:   400;
+
+
+  /* =========================================================================
+     TIER 3 — COMPONENT TOKENS
+     Re-skin a component without editing its CSS.
+     ====================================================================== */
+
+  /* Button — ghost/pill (the one on the loader page) */
+  --button-font:          var(--font-mono);
+  --button-size:          var(--text-2xs);
+  --button-tracking:      var(--tracking-wide);
+  --button-padding:       var(--space-2) var(--space-5);
+  --button-radius:        var(--radius-full);
+  --button-fg:            var(--color-text);
+  --button-border:        var(--color-border-subtle);
+  --button-fg-hover:      var(--color-accent-ui);
+  --button-border-hover:  var(--color-accent-ui);
+  --button-bg-selected:   var(--color-accent-wash);
+  --button-transition:    var(--duration-fast) var(--ease-standard);
+
+  /* Card / stage surface.
+     THE BORDER IS BACK, and here is why. Removing it in favour of pure surface
+     elevation is right on a palette with room between page and surface — but
+     this one has almost none: --color-surface on dark is only 1.09:1 against
+     --color-page. Borderless panels dissolved into the background entirely.
+     Raising the surface instead is not available either: --color-text-muted
+     already sits at 4.62:1 on clay-850, so a lighter panel drops muted text
+     below AA. A hairline is the correct tool here.
+     What stays deleted: section separators, list-row rules, header/footer
+     underlines — those were the actual dashboard tells. */
+  --card-bg:       var(--color-surface);
+  --card-border:   1px solid var(--color-border-subtle);
+  --card-radius:   var(--radius-lg);
+  --card-shadow:   var(--elevation-2), var(--surface-highlight);
+  --card-padding:  var(--space-7) var(--space-6);
+
+  /* Status readout */
+  --status-font:     var(--font-mono);
+  --status-size:     var(--text-2xs);
+  --status-tracking: var(--tracking-wider);
+  --status-fg:       var(--color-text-muted);
+  --status-dot:      var(--color-accent);
+
+  /* Brand mark / loader */
+  --mark-color:     var(--color-accent);
+  --mark-glow:      var(--color-glow);
+  --mark-sheen:     var(--color-sheen);
+  --mark-trace-ease: var(--ease-trace);
+  --mark-trace-duration: var(--duration-trace);
+}
+
+/* The theme toggle. Because semantics are expressed with light-dark(),
+   flipping color-scheme is the ENTIRE override — in both directions. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+
+/* ----------------------------------------------------------------------------
+   CONTRAST BUDGET (verified — see verify-contrast.mjs)
+
+     pair                                    ratio    WCAG
+     text        clay-800 on clay-50         13.4:1   AAA
+     text        clay-100 on clay-900        14.3:1   AAA
+     text-muted  clay-600 on clay-50          5.5:1   AA
+     text-muted  clay-500 on clay-900         5.1:1   AA
+     text-accent orange-700 on clay-50        5.3:1   AA
+     text-accent orange-400 on clay-900       6.8:1   AA
+     accent-ui   orange-600 on clay-50        3.4:1   AA non-text
+     accent-ui   orange-400 on clay-900       6.8:1   AA non-text
+
+   Two rules this encodes, both of which the prototype violated:
+     1. --color-accent (#f2762e) is 2.7:1 on light. It is a GRAPHIC colour.
+        Never put small text or a focus ring in it on a light surface —
+        use --color-text-accent / --color-accent-ui.
+     2. The old muted greys (#8f897e light, #79736a dark) were 3.3:1 and
+        3.7:1 — both failed. They are corrected above.
+
+   FONT PAYLOAD — subset 2026-07-25.
+
+     Inter-Variable.woff2    100 KB   was 352 KB  (-71%)
+     Manrope-Variable.woff2   29 KB   was 167 KB  (-82%)
+     ------------------------------------------------------------------
+     total                   129 KB   was 519 KB  (-75%)
+
+   Both keep their full variable weight axis. The upstream originals live in
+   fonts/src/ and are NOT shipped — build.py only copies files at the top level
+   of fonts/. Regenerate the subsets after any change to page copy:
+
+       node design-system/subset-fonts.mjs      (needs: npm i subset-font)
+
+   The glyph set is every character in the built page UNION Latin-1, Latin
+   Extended-A, curly quotes, dashes, arrows and the star U+2605 used by the
+   Trustpilot rating — so ordinary copy edits cannot silently lose a glyph.
+
+   FALLBACK for pre-2024 browsers: wrap the light values in :root, then add
+   `@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) {...} }`
+   plus `:root[data-theme=dark] {...}`. That is the duplication light-dark()
+   exists to avoid — only take it on if your analytics demand it.
+-------------------------------------------------------------------------- */

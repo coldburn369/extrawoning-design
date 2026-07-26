@@ -1,0 +1,114 @@
+/* ============================================================================
+   cta — the postcode/huisnummer address-check form, and the closing CTA block
+   Sections: the form appears in sections/hero.html AND sections/final-cta.html
+   ========================================================================== */
+
+/* ---- Address check -----------------------------------------------------
+   ONE SEGMENTED BAR, not a card of stacked rows.
+
+   Earlier versions put two narrow fields on one row and the submit button on
+   another, which looked broken however the button was sized: a natural-width
+   button left a ragged gap, and a full-width one read as a banner. The inputs
+   are the problem — a Dutch postcode is "1234 AB" and a house number is at
+   most four digits, so neither can honestly fill a wide row.
+
+   Making the whole control one pill turns that constraint into the design:
+   segments are exactly as wide as their content needs, dividers separate them,
+   and the button sits inside on the right. Nothing has to stretch.
+
+   Field widths come from the real data:
+     postcode  9rem shell -> 120px of content ("1234 AB" sets at ~60px)
+     number    7rem shell ->  88px of content (max 4 digits) */
+/* container-type makes .addresscheck a query container so the bar can respond
+   to ITS OWN width. A viewport media query is wrong here: the bar lives in a
+   grid column that narrows well before the viewport does — at a 1100px
+   viewport the hero copy column is only 405px, so a viewport-keyed rule left
+   the bar's 432px of content overflowing with no breakpoint in sight.
+   Container queries are Baseline 2023 (Chrome 105+, Safari 16+, FF 110+),
+   i.e. safer than the light-dark() this system already depends on. */
+.addresscheck {
+  display: flex; flex-direction: column; gap: var(--space-3); max-width: 30rem;
+  container-type: inline-size;
+}
+
+.addressbar {
+  display: flex; align-items: center;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  padding: var(--space-2);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard);
+}
+/* One focus ring for the whole control. Focusing a segment should not make the
+   bar look like two separate widgets. */
+.addressbar:focus-within {
+  border-color: var(--color-accent-ui);
+  box-shadow: 0 0 0 3px var(--color-accent-wash);
+}
+
+.addressbar__field {
+  display: flex; flex-direction: column; gap: 1px;
+  padding-inline: var(--space-3); min-width: 0;
+}
+.addressbar__field--postcode { flex: 0 0 9rem; }
+.addressbar__field--number   { flex: 0 0 7rem; }
+
+.addressbar__field label {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--color-text-muted); cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+/* The active segment names itself — cheaper than moving a highlight around. */
+.addressbar__field:focus-within label { color: var(--color-text-accent); }
+
+/* Borderless inputs: the bar is the input surface, so a box inside a box would
+   be one border too many. */
+.addressbar__field input {
+  width: 100%; border: 0; background: none; padding: 0;
+  font-family: var(--font-body); font-size: var(--text-base);
+  color: var(--color-text);
+}
+.addressbar__field input::placeholder { color: var(--color-text-muted); opacity: .7; }
+.addressbar__field input:focus { outline: none; }   /* the bar shows focus */
+
+.addressbar__sep {
+  flex: none; width: 1px; align-self: stretch;
+  margin-block: var(--space-1);
+  background: var(--color-border-subtle);
+}
+
+/* Pushed to the right edge and inset by the bar's own padding, so the pill
+   nests inside the pill. */
+.addressbar .btn { margin-inline-start: auto; flex: none; }
+
+/* ---- The bar unpacks -----------------------------------------------------
+   Keyed to the CONTAINER, not the viewport. 28rem (448px) is the inline
+   layout's own requirement plus a little slack: 144 postcode + 1 divider +
+   112 number + 167 button + 16 padding = 440px. Below that the three segments
+   cannot share a line without crushing the inputs, so the bar becomes a
+   stacked block — fields share a row, button full width beneath, and the
+   radius drops from pill to block because a wide pill reads as a lozenge. */
+@container (max-width: 28rem) {
+  .addressbar { flex-wrap: wrap; gap: var(--space-3); border-radius: var(--radius-lg); padding: var(--space-3); }
+  .addressbar__field { flex: 1 1 8rem; padding-inline: 0; }
+  .addressbar__sep { display: none; }
+  .addressbar .btn { flex: 1 1 100%; margin-inline-start: 0; border-radius: var(--radius-md); }
+}
+
+/* ---- Final CTA ---------------------------------------------------------
+   The page's closing statement, so it gets the same atmosphere as the hero —
+   the two accent blooms bracket the page top and bottom. */
+.final-cta-section { position: relative; overflow: hidden; }
+.final-cta-section::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(55% 60% at 50% 100%, var(--color-bloom) 0%, transparent 72%);
+}
+.final-cta { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+.final-cta img { border-radius: var(--radius-xl); }
+
+/* ---- Responsive -------------------------------------------------------- */
+@media (max-width: 62rem) {
+  .final-cta { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,0 +1,27 @@
+/* ============================================================================
+   header — sticky site header + primary nav
+   Section: sections/header.html
+   ========================================================================== */
+
+/* Translucent material, no bottom rule. The blur alone separates it from the
+   content scrolling underneath — that's the whole point of a material. */
+.site-header {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  background: color-mix(in srgb, var(--color-page) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+.site-header__inner { display: flex; align-items: center; gap: var(--space-5); padding-block: var(--space-4); }
+.site-nav { display: flex; gap: var(--space-6); margin-inline: auto; }
+.site-nav a { font-size: var(--text-sm); color: var(--color-text-muted); transition: color var(--duration-fast) var(--ease-standard); }
+.site-nav a:hover { color: var(--color-text); }
+.header-actions { display: flex; align-items: center; gap: var(--space-5); }
+.header-actions .login { font-size: var(--text-sm); color: var(--color-text-muted); }
+.header-actions .login:hover { color: var(--color-text); }
+/* Mobile burger is STUBBED — the nav just hides below 62rem. */
+.nav-toggle { display: none; }
+
+/* ---- Responsive -------------------------------------------------------- */
+@media (max-width: 62rem) {
+  .site-nav, .header-actions .login { display: none; }
+}

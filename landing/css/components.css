@@ -1,0 +1,163 @@
+/* ============================================================================
+   components — reusable across sections: buttons, panels, lists, badges,
+   and the generic .split grid system.
+   Nothing here is owned by a single section. If a rule is only ever used by
+   one section, it belongs in that section's file instead.
+   ========================================================================== */
+
+/* ---- Buttons ----------------------------------------------------------- */
+/* Full-round pills. A 999px radius on a small control is the most immediately
+   recognisable part of the current Apple/consumer idiom, and it pairs with the
+   larger card radii rather than fighting them.
+
+   SIZED FOR DUTCH LABELS. This briefly ran at --text-base (17px) with
+   --space-6 padding, which is fine for short English verbs but made six of the
+   page's fourteen buttons wrap to two lines — "Download investeerders-
+   samenvatting" and "Start gratis adrescheck" sit in 150–200px columns. A
+   button is UI, not reading copy, so it does not need the body size; the
+   tighter setting keeps every label on one line. line-height is pinned because
+   the inherited 1.6 made wrapped pills 80px tall. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-medium);
+  line-height: 1.3;
+  padding: var(--space-3) var(--space-5); border-radius: var(--radius-full);
+  border: 1px solid transparent; cursor: pointer; text-align: center;
+  transition: background var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.btn:active { transform: scale(.97); }
+.btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+.btn--primary { background: var(--color-accent); color: var(--color-text-on-accent); font-weight: var(--weight-semibold); }
+.btn--primary:hover { background: var(--color-accent-hover); }
+/* Secondary action reads as a filled, tinted surface rather than an outline —
+   outlines everywhere were part of the boxed-in feel. */
+.btn--ghost { background: color-mix(in srgb, var(--color-text) 8%, transparent); color: var(--color-text); }
+.btn--ghost:hover { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.btn--quiet { padding-inline: 0; color: var(--color-text-muted); background: none; }
+.btn--quiet:hover { color: var(--color-text-accent); }
+/* Small bordered pill (dashboard top-bar actions) and compact ghost. */
+.btn--chip {
+  padding: var(--space-2) var(--space-3); font-size: var(--text-xs); font-weight: var(--weight-medium);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  text-transform: none; letter-spacing: normal;
+}
+.btn--chip:hover { color: var(--color-text); }
+.btn--sm { font-size: var(--text-xs); padding: var(--space-2) var(--space-4); }
+/* Full-width buttons are not pills: a 999px radius on a wide block reads as a
+   lozenge, and these labels ("Start gratis adrescheck") are long enough to take
+   two lines in a narrow price card. A moderate radius makes that look intended. */
+/* Width is already 100%, so wide side padding buys nothing and only steals room
+   from the label — it was pushing "Start gratis adrescheck" onto a second line
+   by 4px. Radius is moderate rather than full: a 999px radius on a wide block
+   reads as a lozenge. */
+.btn--block { width: 100%; border-radius: var(--radius-md); padding-inline: var(--space-4); }
+.btn .arrow { transition: transform var(--duration-fast) var(--ease-standard); }
+.btn:hover .arrow { transform: translateX(3px); }
+
+/* ---- Panels ------------------------------------------------------------
+   Borderless by default. A panel is a RAISED SURFACE, not an outlined box:
+   on dark it lifts via a hairline top highlight (--elevation-2), on light via
+   a soft cast shadow. This one change does more to shed the "dashboard" look
+   than anything else in this file. */
+.panel {
+  background: var(--card-bg); border: var(--card-border);
+  border-radius: var(--card-radius); padding: var(--space-6);
+  box-shadow: var(--card-shadow);
+}
+.panel--raised { background: var(--color-surface-raised); }
+.panel--sunken { background: var(--color-surface-sunken); }
+.panel--flush { padding: 0; overflow: hidden; }
+/* The one panel that keeps an edge — it is a callout, so it must read as
+   deliberately marked rather than merely raised. */
+.panel--accent { border: 1px solid var(--color-accent-ui); background: var(--color-accent-wash); box-shadow: none; }
+
+/* ---- Lists -------------------------------------------------------------
+   Checklist rows are now a real reading size, and the marks are quieter than
+   the text they sit beside — the words carry the meaning, not the ticks. */
+.checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.checklist li { display: flex; gap: var(--space-3); align-items: flex-start; font-size: var(--text-base); line-height: var(--leading-snug); }
+.checklist .ico { flex: none; width: 1.05rem; height: 1.05rem; margin-top: .3em; color: var(--color-success); opacity: .85; }
+.checklist--accent .ico { color: var(--color-text-accent); opacity: 1; }
+/* Compact variant for dense contexts (the hero verdict card, the report). */
+.checklist--sm li { font-size: var(--text-sm); }
+.checklist--sm { gap: var(--space-2); }
+
+.deflist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.deflist h4 { margin-bottom: var(--space-1); }
+.deflist p { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* Dot bullets (used by the report's orange callout). */
+.bullets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.bullets li { position: relative; padding-inline-start: var(--space-4); font-size: var(--text-sm); color: var(--color-text); }
+.bullets li::before {
+  content: ""; position: absolute; inset-inline-start: 0; top: .5em;
+  width: 5px; height: 5px; border-radius: var(--radius-full); background: var(--color-text-accent);
+}
+
+/* Feature row with an icon tile.
+   Tiles are NEUTRAL now, not orange. Orange on every icon spent the accent so
+   widely that nothing on the page read as the important thing; restraint here
+   is what lets the CTA and the hero highlight land. */
+.feature { display: flex; gap: var(--space-4); align-items: flex-start; }
+.icon-tile {
+  flex: none; width: 2.75rem; height: 2.75rem; border-radius: var(--radius-md);
+  display: grid; place-items: center;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-subtle);   /* see .stat in report.css */
+  color: var(--color-text-muted);
+}
+.icon-tile svg { width: 1.15rem; height: 1.15rem; }
+.icon-tile--round { border-radius: var(--radius-full); }
+.icon-tile--lg { width: 3.25rem; height: 3.25rem; border-radius: var(--radius-md); }
+.icon-tile--lg svg { width: 1.4rem; height: 1.4rem; }
+
+/* ---- Badge ------------------------------------------------------------- */
+.badge {
+  font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: var(--tracking-wide);
+  text-transform: uppercase; padding: .15rem var(--space-2); border-radius: var(--radius-full);
+  background: var(--color-accent-wash); color: var(--color-text-accent); border: 1px solid var(--color-accent-ui);
+}
+.badge--success { background: var(--color-success-wash); color: var(--color-text-success); border-color: var(--color-success); }
+
+/* ---- Generic multi-column section grid --------------------------------- */
+/* Each modifier stands alone — no need to also apply .split, which previously
+   forced callers into a class soup that fought .stack's display:flex. */
+.split, .split--3, .split--4, .split--wide-left { display: grid; gap: var(--space-8); align-items: start; }
+.split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.split--3 { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr) minmax(0, .9fr); }
+/* Research overview: text · what-we-check · artwork · report contents.
+   The artwork is its own column. It briefly moved out to a full-width band
+   below the grid, but a lone image in an empty band reads worse than a narrow
+   column — restored 2026-07-25, ahead of the planned wide-screen layout which
+   is what actually gives these four columns room (see the --container note). */
+.split--4 { grid-template-columns: minmax(0, .85fr) minmax(0, 1fr) minmax(0, .9fr) minmax(0, 1fr); gap: var(--space-5); }
+/* Artwork sizes to the ROW height (≈ the panels) rather than the column width,
+   so the portrait document-stack reads as tall as the panels like the concept.
+   Its wide transparent side-margins overflow the column and bleed into the gap. */
+.split--4 > .is-artwork {
+  align-self: center; height: clamp(21rem, 32vw, 26rem); width: auto; max-width: none;
+  justify-self: center; transform: translateX(-0.5rem); /* asset leans right — recenter the visible stack */
+}
+.split--wide-left { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); }
+
+/* ---- Responsive -------------------------------------------------------- */
+@media (max-width: 62rem) {
+  .split, .split--3, .split--4, .split--wide-left { grid-template-columns: minmax(0, 1fr); gap: var(--space-7); }
+  .split--4 > .is-artwork { display: none; }   /* decorative only */
+}
+
+/* Wide screens (>=1536px). The container is already at its 1440px ceiling by
+   here, so this changes RATIOS rather than total width — it hands the spare
+   room to the columns that were squeezed, and lets the artwork grow into it.
+   Text columns are untouched: their ch caps still bound the measure. */
+@media (min-width: 96rem) {
+  .split--4 { grid-template-columns: minmax(0, .9fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--space-6); }
+  /* The asset is 640px wide with generous transparent margins, so it can take
+     a taller cap here without upscaling past its natural size. */
+  .split--4 > .is-artwork { height: clamp(24rem, 30vw, 30rem); }
+}

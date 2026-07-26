@@ -1,0 +1,105 @@
+/* ============================================================================
+   base — reset, page shell, type roles, brand mark
+   Loaded FIRST. Everything else may override it.
+   Built entirely on design-system/tokens.css (Tier 2 + Tier 3 only).
+   ========================================================================== */
+
+/* --container was promoted into tokens.css as --layout-max (90rem) when the
+   wide-screen layout landed. Kept as a local alias so section stylesheets can
+   keep referring to --container. */
+:root { --container: var(--layout-max); }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; text-decoration: none; }
+
+/* Sprite icons are stroke-drawn. A <use> shadow tree inherits from the
+   REFERENCING element's context, not from the sprite's parent <g> — so the
+   sprite's fill/stroke attributes never arrive and the paths would fill
+   solid black. Declare them on the referencing <svg> instead; fill/stroke
+   are inheritable and do reach the shadow content.
+   Deliberately excludes .logo svg — the wordmark is filled, not stroked.
+   ADDING AN ICON-BEARING COMPONENT? Add its selector here. */
+.ico,
+.icon-tile svg,
+.btn svg,
+.rail-btn svg,
+.example__label svg,
+.steplist__ico svg,
+.steplist__chev {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.container { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: var(--space-5); }
+/* Sections separate by RHYTHM, not by a rule. The old 1px top border on every
+   section was the single biggest "admin panel" tell on the page. */
+.section { padding-block: var(--section-gap); }
+
+/* ---- Type roles --------------------------------------------------------
+   h1/h2 now sit on the fluid display scale. The page's voice lives here:
+   large, tightly tracked, near-solid leading. h3/h4 stay on the UI scale —
+   they label things rather than announce them. */
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: var(--weight-semibold); margin: 0; letter-spacing: var(--tracking-tight); }
+h1 { font-size: var(--display-lg); line-height: var(--leading-display); letter-spacing: var(--tracking-display); font-weight: var(--weight-bold); text-wrap: balance; }
+/* h2 defaults to the SMALL display size, because most section headlines on
+   this page live in a 300–480px grid column. Leading is looser than the hero's
+   because these wrap to 2–3 lines — tighter leading belongs to bigger type. */
+h2 { font-size: var(--display-sm); line-height: var(--leading-tight); letter-spacing: var(--tracking-display); text-wrap: balance; }
+/* Opt in ONLY where the headline is short and the column is full-width. */
+.h2--loud { font-size: var(--display-md); line-height: var(--leading-display); }
+h3 { font-size: var(--text-md); line-height: var(--leading-snug); letter-spacing: var(--tracking-normal); }
+h4 { font-size: var(--text-sm); line-height: var(--leading-snug); letter-spacing: var(--tracking-normal); }
+p { margin: 0; text-wrap: pretty; }
+
+/* The page's main reading text. Was 14px muted — dashboard sizing — which is
+   why nothing on the page felt like it was talking to a homeowner. Now 19px
+   and only lightly muted. Capped in measure so long lines stay readable. */
+.lead { color: var(--color-text-muted); font-size: var(--text-md); line-height: var(--leading-normal); max-width: 56ch; }
+.muted { color: var(--color-text-muted); }
+/* Fine print — genuinely small, for captions and disclaimers only. */
+.note { color: var(--color-text-muted); font-size: var(--text-xs); }
+.eyebrow {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--color-text-muted); margin: 0;
+}
+.stack { display: flex; flex-direction: column; gap: var(--space-4); }
+.stack-sm { display: flex; flex-direction: column; gap: var(--space-2); }
+.stack-lg { display: flex; flex-direction: column; gap: var(--space-5); }
+/* Stop a block-level child of a .stack from stretching to full width —
+   used on inline CTA buttons. Replaces style="align-self:flex-start". */
+.self-start { align-self: flex-start; }
+
+/* ---- Brand mark -------------------------------------------------------- */
+.logo { display: inline-block; color: var(--color-text); }
+.logo svg { display: block; height: 1.75rem; width: auto; }
+.logo--lg svg { height: 1.75rem; }
+
+/* ---- Responsive --------------------------------------------------------
+   The display scale is fluid (clamp), so headings no longer need a breakpoint
+   override — they scale continuously and bottom out at their phone size.
+   Only the container gutter needs adjusting. */
+@media (max-width: 40rem) {
+  .container { padding-inline: var(--space-4); }
+}
+
+/* Global, and deliberately last: !important beats every rule in every file
+   that loads after this one. */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

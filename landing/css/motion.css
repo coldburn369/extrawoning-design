@@ -1,0 +1,74 @@
+/* ============================================================================
+   motion — scroll-driven entrance choreography
+   Loaded LAST so it can animate anything.
+
+   Pure CSS: `animation-timeline: view()` drives each element from its own
+   position in the viewport. No JavaScript, no IntersectionObserver, no
+   scroll listener — the compositor runs it off the main thread.
+
+   Support: Chrome/Edge 115+, Safari 26+. Firefox is behind a flag as of
+   2026-07. Everything is inside @supports, so unsupported browsers simply get
+   the finished state immediately — the page is never left invisible.
+
+   REDUCED MOTION: base.css already zeroes every animation-duration with
+   !important, which lands the element on its END state (opacity 1, no
+   translate). That is the correct resolution — never a jump from hidden.
+   ========================================================================== */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Anything marked .reveal fades and rises as it enters.
+       `view(block 12% 0%)` starts the animation once the element is 12% into
+       the viewport and finishes it before it reaches the middle, so content
+       is fully settled by the time it is comfortable to read.
+       `both` holds the hidden state before the range begins — without it the
+       element flashes visible first (the same fill-mode trap the loader hit). */
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 12% cover 32%;
+    }
+
+    /* Stagger children of a .reveal-group so a row resolves left-to-right,
+       which is the motion principle the design system already states.
+       Kept to 5 steps — beyond that the last item feels late. */
+    .reveal-group > * {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 12% cover 34%;
+    }
+    .reveal-group > :nth-child(2) { animation-range: entry 12% cover 38%; }
+    .reveal-group > :nth-child(3) { animation-range: entry 12% cover 42%; }
+    .reveal-group > :nth-child(4) { animation-range: entry 12% cover 46%; }
+    .reveal-group > :nth-child(n+5) { animation-range: entry 12% cover 50%; }
+
+    /* The hero is above the fold, so it plays on load rather than on scroll.
+
+       DELIBERATELY TRANSFORM-ONLY — no opacity. A time-based animation with
+       `both` fill holds its from-state until the clock advances, so anything
+       that stalls the document timeline (a backgrounded tab on first paint,
+       a frozen preview pane, some embedded webviews) would leave the page's
+       headline INVISIBLE. Sliding an always-visible element is the graceful
+       failure: worst case it rests 14px low. Below-the-fold reveals can
+       safely fade because view() is geometry-driven, not clock-driven — if
+       the element is on screen its progress is already complete. */
+    @keyframes rise-safe {
+      from { transform: translateY(14px); }
+      to   { transform: none; }
+    }
+    .hero__copy > *,
+    .hero__visual {
+      animation: rise-safe var(--duration-slow) var(--ease-settle) both;
+    }
+    .hero__copy > :nth-child(2) { animation-delay: 60ms; }
+    .hero__copy > :nth-child(3) { animation-delay: 120ms; }
+    .hero__copy > :nth-child(4) { animation-delay: 180ms; }
+    .hero__visual { animation-delay: 100ms; }
+  }
+}

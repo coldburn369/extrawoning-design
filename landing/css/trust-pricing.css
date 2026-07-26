@@ -1,0 +1,40 @@
+/* ============================================================================
+   trust + pricing (#onze-belofte)
+   Section: sections/trust-pricing.html
+   NOT YET REVIEWED against the concept section-by-section.
+   OPEN: the page shows €79 (copy doc); the concept screenshot shows
+   Quickscan €395 / Check-up €895. Unresolved — confirm with the user.
+   ========================================================================== */
+
+/* The trust panel is prose + four feature rows; it reads fine narrow. The two
+   pricing cards each carry a heading, a price, a checklist and a button, and
+   were badly cramped at an even split. Give the width to the side that needs
+   it. */
+#onze-belofte .split { grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); }
+
+/* ---- Rating ------------------------------------------------------------ */
+.rating { display: flex; align-items: center; gap: var(--space-2); }
+.rating .stars { color: var(--color-accent); letter-spacing: .1em; }
+.rating strong { font-size: var(--text-sm); }
+
+/* ---- Pricing ----------------------------------------------------------- */
+.pricing { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+.price { display: flex; flex-direction: column; gap: var(--space-5); }
+.price__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.price__amount { font-family: var(--font-display); font-size: var(--display-sm); font-weight: var(--weight-bold); letter-spacing: var(--tracking-display); }
+.price__amount small { font-size: var(--text-sm); font-weight: var(--weight-regular); color: var(--color-text-muted); margin-inline-start: var(--space-2); }
+/* Pinned to the bottom of each card AND given a floor height, so the two cards'
+   buttons line up even though "Start gratis adrescheck" takes two lines in this
+   width and "Check mijn adres" takes one. */
+.price .btn { margin-top: auto; min-height: 3.5rem; }
+/* Highlighted plan. The only panel on the page that keeps an outline — it has
+   to win against its neighbour, and a raised surface alone won't do that. */
+.price--featured { border: 1px solid var(--color-accent-ui); background: var(--color-surface-raised); }
+
+/* ---- Responsive -------------------------------------------------------- */
+@media (max-width: 62rem) {
+  #onze-belofte .split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 40rem) {
+  .pricing { grid-template-columns: minmax(0, 1fr); }
+}

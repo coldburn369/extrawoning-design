@@ -1,0 +1,155 @@
+/* ============================================================================
+   hero (#adrescheck) — DONE, matches the concept. Change with care.
+   Section: sections/hero.html
+   Assets:  assets/hero_house2.webp (thin house, beam+glow baked in)
+            assets/hero_map_bg.jpg  (Amsterdam map, masked to fade left)
+   ========================================================================== */
+
+.hero { position: relative; overflow: hidden; background: var(--color-page); padding-block: var(--space-8) var(--space-10); }
+
+/* Atmosphere: a wide, very low-contrast accent bloom behind the artwork.
+   On a near-black page this is what creates depth — shadows can't, because
+   there is nothing darker to cast onto. Kept under 10% so it never competes.
+   Sits above the map (z 0) but below the content (z 1). */
+.hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 72% 38%, var(--color-bloom) 0%, transparent 70%),
+    radial-gradient(45% 40% at 18% 8%, var(--color-bloom) 0%, transparent 72%);
+}
+
+/* Amsterdam blueprint map, sitting behind the house and fading left into the
+   page so the copy column stays on clean ground.
+   NOTE: url() is relative to THIS file (landing/css/), hence ../../ */
+.hero__map {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: url("../../assets/hero_map_bg.jpg") no-repeat center right / cover;
+  opacity: .9;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.35) 34%, #000 66%);
+          mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.35) 34%, #000 66%);
+}
+/* Columns stretch (not centre) so the two proof rows at the bottom of each
+   column — .trust-row and .hero__proof — can share one baseline. See the
+   margin-top:auto pair further down. */
+/* Copy column deliberately narrower than the visual. Two reasons: the address
+   form reads better at a contained width (a narrow field row above a
+   full-bleed button looked broken), and the house + its flanking cards were
+   cramped at the old near-even split. */
+.hero__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: var(--space-7); align-items: stretch; }
+
+/* Title — the page's one loud typographic moment. Inherits the fluid
+   --display-lg from h1 (48 -> 88px, was capped at 57.6px). */
+.hero__title { max-width: 14ch; margin: 0; }
+.hero__title .hl { color: var(--color-text-accent); }
+.hero__intro { font-size: var(--text-md); line-height: var(--leading-normal); color: var(--color-text-muted); max-width: 44ch; }
+
+/* -- Hero visual: house on the map, cards flanking it -- */
+.hero__visual { display: flex; flex-direction: column; gap: var(--space-4); }
+.hero__stage { position: relative; }
+.hero__house {
+  width: 100%; height: auto;
+  filter: drop-shadow(0 24px 50px rgb(0 0 0 / .55));
+}
+/* Floating glass cards. These keep a real cast shadow (--elevation-float):
+   they overlap the artwork, so they need to separate from it, which a top
+   highlight alone cannot do. The hairline border is replaced by the highlight
+   that the blur+shadow pairing already implies. */
+.hero-card {
+  position: absolute; z-index: 2; width: 12rem;
+  background: color-mix(in srgb, var(--color-surface) 62%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: var(--radius-lg); padding: var(--space-4);
+  box-shadow: var(--elevation-float), inset 0 1px 0 rgb(255 255 255 / .10);
+}
+/* Thin house: the left card tucks into the empty sky at the top-left,
+   clearing the facade entirely; the verdict card sits lower-right over the
+   bushes. The central facade + beam + glowing bay stay fully clear. */
+.hero-card--steps   { left: -5%;  top: 2%; }
+.hero-card--verdict { right: -2%; top: 26%; }
+
+/* Step list inside the left card */
+.steplist { list-style: none; margin: 0; padding: 0; }
+/* Rows separate by spacing, not rules — inside a 12rem glass card, four
+   hairlines read as clutter. */
+.steplist__item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding-block: var(--space-2);
+  font-size: var(--text-xs); line-height: 1.25; color: var(--color-text-muted);
+}
+.steplist__ico {
+  flex: none; width: 2rem; height: 2rem; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text-muted);
+}
+.steplist__ico svg { width: 1rem; height: 1rem; }
+.steplist__label { flex: 1; }
+.steplist__label b { font-weight: var(--weight-semibold); color: var(--color-text); font-variant-numeric: tabular-nums; margin-right: .15em; }
+.steplist__chev { flex: none; width: .85rem; height: .85rem; color: var(--color-text-muted); }
+.steplist__item.is-active { color: var(--color-text); }
+.steplist__item.is-active .steplist__ico { background: color-mix(in srgb, var(--color-text) 14%, transparent); color: var(--color-text); }
+/* The one accented row in the card — the human-expert promise. */
+.steplist__item.is-expert { color: var(--color-text-accent); font-weight: var(--weight-medium); }
+.steplist__item.is-expert .steplist__ico { background: var(--color-accent-wash); color: var(--color-accent); }
+
+/* Verdict card.
+   The title runs at --text-xl here, not the display scale: inside a 12rem card
+   the display size dwarfed everything around it. The report reuses
+   .verdict-title at its own size (see report.css). */
+.verdict__loc { font-size: var(--text-2xs); color: var(--color-text-muted); }
+.verdict-title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-text-success); letter-spacing: var(--tracking-tight); line-height: 1.05; }
+
+/* Breathing room inside the card: a wider base gap, extra under the verdict,
+   and the button pushed clear of the checklist. */
+.hero-card--verdict { gap: var(--space-3); }
+.hero-card--verdict .verdict-title { margin-bottom: var(--space-1); }
+.hero-card--verdict .btn { margin-top: var(--space-2); }
+
+/* -- Medallions: compass-bezel icons for the trust rows -- */
+.medallion { flex: none; }
+.medallion svg {
+  width: 2.6rem; height: 2.6rem;
+  fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round; color: var(--color-text);
+}
+.medallion .bezel { stroke-width: 1; stroke-dasharray: .5 3.1; opacity: .55; }
+.medallion .ring  { stroke-width: 1; opacity: .3; }
+
+.trust-row, .hero__proof { display: grid; list-style: none; padding: 0; }
+.trust-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin: var(--space-4) 0 0; }
+.hero__proof { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin: var(--space-4) 0 0; }
+/* Pin the right-hand proof row to the bottom of its column so it lines up with
+   .trust-row on the left. The house takes the matching auto margin, so the
+   column's spare height splits evenly above each — keeping the house optically
+   centred exactly where it was while the two rows land on one line. */
+.hero__visual > .hero__stage, .hero__proof { margin-top: auto; }
+.trust-row li, .hero__proof li { display: flex; align-items: center; gap: var(--space-3); }
+/* Concept treatment: a single label beside the medallion, wrapping to 2 lines. */
+.trust-row h4, .hero__proof h4 {
+  font-size: var(--text-base); font-weight: var(--weight-medium);
+  color: var(--color-text); line-height: 1.3; letter-spacing: normal;
+}
+
+/* ---- Responsive -------------------------------------------------------- */
+@media (max-width: 62rem) {
+  .hero__grid { grid-template-columns: minmax(0, 1fr); }
+  /* Map only reached under the house; with one column it would sit behind
+     the copy. Drop the reveal-left mask and dim it as a full backdrop. */
+  .hero__map { mask-image: none; -webkit-mask-image: none; opacity: .5; }
+  /* Flanking cards go inline under the house instead of overlapping it. */
+  .hero__stage { display: flex; flex-direction: column; gap: var(--space-3); }
+  .hero-card { position: static; width: auto; }
+  .hero-card--steps, .hero-card--verdict { left: auto; right: auto; top: auto; }
+}
+@media (max-width: 40rem) {
+  .trust-row, .hero__proof { grid-template-columns: minmax(0, 1fr); }
+}
+/* Wide screens: give a little more to the visual. The copy column is already
+   bounded by .hero__title (14ch), .hero__intro (44ch) and .addresscheck
+   (27rem), so widening it further would only add empty space. The house asset
+   is 1086px natural, and the column stays under that at 1440px container —
+   no upscaling. */
+@media (min-width: 96rem) {
+  .hero__grid { grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); }
+}

@@ -1,0 +1,22 @@
+/* ============================================================================
+   research overview (#hoe-het-werkt)
+   Section: sections/research.html
+   Uses the shared .split--4 grid from components.css (four columns:
+   text · what-we-check · artwork · report contents).
+   DONE — reviewed against the concept, then restyled 2026-07-25.
+
+   The report-stack artwork is the grid's THIRD column. Its sizing lives with
+   the grid — see .split--4 > .is-artwork in components.css — because it is
+   sized by the row height rather than by anything in this file.
+   ========================================================================== */
+
+/* Divided research list — icon tile + single two-line label per row.
+   Rows separate by spacing now; the hairlines went with the rest of them. */
+.research-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.research-list li { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
+.research-list li > span:last-child { font-size: var(--text-base); line-height: 1.35; color: var(--color-text); }
+
+/* Intro heading a step smaller than the site h2, to match the concept.
+   With four columns the intro column is ~245px, so the default h2 would wrap
+   hard here. */
+#hoe-het-werkt .split--4 > .stack h2 { font-size: var(--text-lg); }

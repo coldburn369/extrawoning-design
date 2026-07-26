@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>extrawoning — loader & logo reveal</title>
+<style>
+  /* ============================================================
+     extrawoning — loader → logo reveal
+
+     LOADER : the orange X sits centred, pulsing with a soft glow
+              (indeterminate — clearly "working", not a spinner).
+     REVEAL : the X eases down into its slot and the wordmark
+              writes on left→right — "e", then "trawoning".
+
+     INTEGRATION: call  finishLoading()  when your real load is
+     done (e.g. window 'load', or after your data/assets resolve).
+     Remove the DEMO LOOP block near the bottom for production.
+     ============================================================ */
+
+  :root {
+    --ink:      #2b2b28;   /* wordmark      */
+    --accent:   #f2762e;   /* the X (brand) */
+    --page:     #eae6de;   /* behind stage  */
+    --stage:    #faf8f4;   /* splash card   */
+    --muted:    #8f897e;   /* captions      */
+    --hairline: rgba(43, 43, 40, .12);
+    --glow:     rgba(242, 118, 46, .32);
+    --sheen:    rgba(255, 247, 239, .92);   /* the light running along the beams */
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink:      #ece7de;
+      --accent:   #f6813c;
+      --page:     #100f0e;
+      --stage:    #1a1917;
+      --muted:    #79736a;
+      --hairline: rgba(255, 255, 255, .09);
+      --glow:     rgba(246, 129, 60, .6);
+    }
+  }
+  /* Viewer toggle overrides the OS preference in both directions */
+  :root[data-theme="light"] {
+    --ink:#2b2b28; --accent:#f2762e; --page:#eae6de; --stage:#faf8f4;
+    --muted:#8f897e; --hairline:rgba(43,43,40,.12); --glow:rgba(242,118,46,.32);
+  }
+  :root[data-theme="dark"] {
+    --ink:#ece7de; --accent:#f6813c; --page:#100f0e; --stage:#1a1917;
+    --muted:#79736a; --hairline:rgba(255,255,255,.09); --glow:rgba(246,129,60,.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 32px;
+    transition: background .4s ease;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 34px;
+  }
+
+  /* ---- The splash stage: the hero -------------------------- */
+  .stage {
+    width: 100%;
+    background: var(--stage);
+    border: 1px solid var(--hairline);
+    border-radius: 18px;
+    padding: 68px 40px 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 24px 60px -32px rgba(0,0,0,.28);
+  }
+
+  .logo {
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    overflow: visible;   /* the scaled loader can exceed the box */
+  }
+
+  /* status readout — a boot/splash line, in mono */
+  .status {
+    font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    height: 1em;
+    display: inline-flex;
+    align-items: center;
+    gap: .1em;
+  }
+  .status .dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: .7em;
+    transform: translateY(-.5px);
+  }
+  .status.is-loading .dot { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+  /* ---- Controls ------------------------------------------- */
+  .controls { display: flex; gap: 12px; align-items: center; }
+  .btn {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 9px 18px;
+    cursor: pointer;
+    transition: border-color .2s ease, color .2s ease, background .2s ease;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .note {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--muted);
+    text-align: center;
+    max-width: 430px;
+  }
+  .note code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .92em;
+    color: var(--accent);
+  }
+
+  /* ==========================================================
+     ANIMATION
+     Base state = the FINAL assembled logo. The .loading and
+     .reveal classes drive the two phases from there. Wipes use
+     a wide clip rect that slides right (translate only — robust).
+     ========================================================== */
+
+  #logo-x { transform-box: fill-box; transform-origin: center; }
+
+  /* wordmark reveal rects rest at their FULL (revealed) position,
+     so the logo is complete even without JS.                     */
+  #ew-rect-e { transform: translateX(15px); }
+  #ew-rect-r { transform: translateX(112px); }
+
+  /* A light runs along each beam's centreline, drawn as a short dash
+     travelling via stroke-dashoffset (independent of any transform).
+     Both lights move in sync, so they meet at the crossing and part. */
+  .trace {
+    fill: none; stroke: var(--sheen); stroke-width: 1.3;
+    stroke-linecap: round; stroke-dasharray: 15 85; opacity: 0;
+  }
+
+  /* ---- Phase 1 — LOADING ----------------------------------
+     Crisp X, centred + enlarged, breathing a soft glow while the two
+     lights travel along the beams and cross at the centre.       */
+  .logo.loading #ew-rect-e,
+  .logo.loading #ew-rect-r { transform: translateX(0); }     /* wordmark hidden */
+
+  .logo.loading #logo-x {
+    transform: translate(46.86px,.67px) scale(1.2);
+    animation: ew-glow 2s ease-in-out infinite;
+  }
+  @keyframes ew-glow {
+    0%,100% { filter: drop-shadow(0 0 2px var(--glow)); }
+    50%     { filter: drop-shadow(0 0 9px var(--glow)); }
+  }
+  .logo.loading .trace {
+    opacity: 1;
+    animation: ew-trace 1.6s cubic-bezier(.6,0,.4,1) infinite;
+  }
+  @keyframes ew-trace { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+
+  /* ---- Phase 2 — REVEAL -----------------------------------
+     Lights fade, the mark eases into its slot, and the wordmark
+     unfurls left→right from behind the X.                        */
+  .logo.reveal .trace { animation: ew-trace-out .35s ease forwards; }
+  @keyframes ew-trace-out { to { opacity: 0; } }
+
+  .logo.reveal #logo-x {
+    animation: ew-settle .72s cubic-bezier(.2,.85,.25,1) forwards;
+  }
+  @keyframes ew-settle {
+    0%   { transform: translate(46.86px,.67px) scale(1.2);
+           filter: drop-shadow(0 0 6px var(--glow)); }
+    100% { transform: translate(0,0) scale(1);
+           filter: drop-shadow(0 0 0 transparent); }
+  }
+  .logo.reveal #ew-rect-e {
+    animation: ew-wipe-e .5s cubic-bezier(.2,.85,.25,1) .18s both;
+  }
+  @keyframes ew-wipe-e { from { transform: translateX(0); } to { transform: translateX(15px); } }
+
+  .logo.reveal #ew-rect-r {
+    animation: ew-wipe-r .82s cubic-bezier(.2,.85,.25,1) .28s both;
+  }
+  @keyframes ew-wipe-r { from { transform: translateX(0); } to { transform: translateX(112px); } }
+
+  /* Respect reduced-motion: skip the loader, show the logo. */
+  @media (prefers-reduced-motion: reduce) {
+    .logo.loading #ew-rect-e, .logo.reveal #ew-rect-e { transform: translateX(15px) !important; animation: none !important; }
+    .logo.loading #ew-rect-r, .logo.reveal #ew-rect-r { transform: translateX(112px) !important; animation: none !important; }
+    .logo.loading #logo-x,     .logo.reveal #logo-x    { transform: none !important; animation: none !important; filter: none !important; }
+    .trace { opacity: 0 !important; animation: none !important; }
+    .status .dot { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="stage" aria-label="extrawoning loading animation">
+
+      <!-- ==== The logo ==================================== -->
+      <svg class="logo loading" id="ew-logo"
+           viewBox="0 0 129.53934 21.930241"
+           xmlns="http://www.w3.org/2000/svg"
+           role="img" aria-label="extrawoning">
+        <defs>
+          <!-- slide-clip wipes: a wide rect whose right edge sweeps across -->
+          <clipPath id="ew-clip-e" clipPathUnits="userSpaceOnUse">
+            <rect id="ew-rect-e" x="-968" y="125" width="1000" height="18" />
+          </clipPath>
+          <clipPath id="ew-clip-r" clipPathUnits="userSpaceOnUse">
+            <rect id="ew-rect-r" x="-944" y="118" width="1000" height="28" />
+          </clipPath>
+        </defs>
+
+        <g id="layer1" transform="translate(-33.562627,-123.76212)">
+          <!-- "trawoning" -->
+          <path id="logo-right" fill="var(--ink)" clip-path="url(#ew-clip-r)"
+            d="m 62.396016,129.91058 h 3.573653 v -1.86452 h -3.573653 v -3.32949 H 60.08757 v 3.32949 h -2.308446 v 1.86452 h 2.308446 v 5.41597 c 0,1.3096 -0.08879,2.26405 0.421735,3.2407 0.887864,1.68694 3.196311,1.90891 5.460364,1.46498 v -1.9755 c -1.575959,0.24416 -2.796772,0.22197 -3.32949,-0.71029 -0.288556,-0.46613 -0.244163,-1.17642 -0.244163,-2.15307 z m 9.256001,-1.17642 c -0.443932,0.28855 -0.821274,0.73248 -1.10983,1.22081 v -1.90891 h -2.064284 v 11.98617 h 2.330643 v -6.05968 c 0,-1.39838 0.399539,-2.66359 1.531565,-3.37388 0.776881,-0.53272 1.820122,-0.57711 2.597003,-0.37734 v -2.17527 c -1.065437,-0.19977 -2.375037,0 -3.285097,0.6881 z m 14.383405,1.2652 c -0.732488,-1.57596 -2.397233,-2.28625 -4.550303,-2.28625 -2.752378,0 -4.417123,1.3096 -4.994235,3.37389 l 2.15307,0.66589 c 0.421736,-1.35399 1.575959,-1.88671 2.841165,-1.88671 1.842318,0 2.619199,0.77688 2.707985,2.39724 -1.9533,0.28855 -3.928798,0.55491 -5.304987,0.95445 -1.864514,0.59931 -2.841165,1.73134 -2.841165,3.55146 0,1.9533 1.398386,3.59585 4.039781,3.59585 1.953301,0 3.351687,-0.6881 4.328337,-2.08648 v 1.75353 h 2.042088 v -7.39147 c 0,-0.97665 -0.04439,-1.84232 -0.421736,-2.6414 z m -5.526953,8.4791 c -1.487172,0 -2.175267,-0.79907 -2.175267,-1.73133 0,-0.95445 0.710291,-1.44278 1.664745,-1.77573 0.998847,-0.31075 2.35284,-0.48832 4.150764,-0.75468 0,0.55491 -0.0222,1.33179 -0.221966,1.88671 -0.288556,1.15422 -1.442779,2.37503 -3.418276,2.37503 z m 10.942918,1.55377 h 1.864515 l 2.796771,-8.67887 2.685789,8.67887 h 1.997698 l 3.66244,-11.98617 h -2.28625 l -2.530417,8.23494 -2.508216,-8.23494 h -1.997694 l -2.530412,8.23494 -2.508216,-8.23494 -2.308447,-0.0222 z m 19.754973,0.33295 c 3.57365,0 5.8821,-2.57481 5.8821,-6.32604 0,-3.70683 -2.26406,-6.32603 -5.8821,-6.32603 -3.52926,0 -5.8599,2.55261 -5.8599,6.32603 0,3.70684 2.26405,6.32604 5.8599,6.32604 z m 0,-2.19747 c -2.24186,0 -3.39608,-1.62035 -3.39608,-4.12857 0,-2.44162 1.06543,-4.12856 3.39608,-4.12856 2.28625,0 3.41827,1.62035 3.41827,4.12856 0,2.44163 -1.10983,4.12857 -3.41827,4.12857 z m 14.33899,-10.4546 c -1.73134,0 -3.06313,0.6659 -3.951,1.77573 v -1.44278 h -2.08648 v 11.98617 h 2.35284 v -6.23725 c 0,-2.84116 1.37619,-3.8844 3.06313,-3.8844 2.53042,0 3.01874,2.37503 3.01874,4.23955 v 5.8821 h 2.35284 v -6.65898 c 0,-1.84232 -0.59931,-5.66014 -4.75007,-5.66014 z m 7.85759,-1.70913 h 2.33064 v -2.24186 h -2.33064 z m 0,14.02825 h 2.33064 v -11.98617 h -2.33064 z m 11.6754,-12.31912 c -1.73134,0 -3.06313,0.6659 -3.951,1.77573 v -1.44278 h -2.08648 v 11.98617 h 2.35284 v -6.23725 c 0,-2.84116 1.37619,-3.8844 3.06313,-3.8844 2.53041,0 3.01874,2.37503 3.01874,4.23955 v 5.8821 h 2.35284 v -6.65898 c 0,-1.84232 -0.59931,-5.66014 -4.75007,-5.66014 z m 15.98154,0.33295 v 1.08764 c -0.86567,-0.88787 -2.06428,-1.42059 -3.55145,-1.42059 -3.35169,0 -5.46037,2.70799 -5.46037,6.32603 0,3.59585 2.08648,6.32604 5.41597,6.32604 1.354,0 2.46383,-0.42174 3.3073,-1.17642 v 1.13202 c 0.0222,2.08648 -1.13203,3.15192 -3.10753,3.15192 -1.04324,0 -2.10867,-0.46613 -2.6192,-1.48717 l -2.13087,1.08763 c 0.95445,1.70914 2.79677,2.6192 4.75007,2.6192 2.77458,0 4.77227,-1.13203 5.28279,-3.57365 0.11099,-0.55492 0.15538,-1.10983 0.15538,-1.75353 v -12.31912 z m -3.2629,10.21044 c -2.21966,0 -3.2851,-1.84232 -3.2851,-4.21736 0,-2.35284 1.06544,-4.21735 3.35169,-4.21735 2.19746,0 3.19631,1.70914 3.19631,4.21735 0,2.46383 -0.97665,4.21736 -3.2629,4.21736 z" />
+
+          <!-- "e" -->
+          <path id="logo-e" fill="var(--ink)" clip-path="url(#ew-clip-e)"
+            d="m 36.048646,134.68285 h 8.94523 c 0.244162,-4.28395 -1.908908,-6.96974 -5.571347,-6.96974 -3.507063,0 -5.859902,2.50822 -5.859902,6.43702 0,3.68463 2.397233,6.21505 5.993082,6.21505 2.308446,0 4.328337,-1.22082 5.260594,-3.37389 L 42.55225,136.2588 c -0.599308,1.24301 -1.686942,1.90891 -3.129721,1.90891 -2.01989,0 -3.19631,-1.24301 -3.373883,-3.48486 z m 3.46267,-4.90545 c 1.842317,0 2.863361,0.99884 3.107524,3.10752 h -6.503604 c 0.288556,-2.01989 1.442779,-3.10752 3.39608,-3.10752 z" />
+
+          <!-- the X — two orange beams, each with a light running along
+               its centreline (trace) while loading -->
+          <g id="logo-x">
+            <path id="logo-beam-left" fill="var(--accent)"
+              d="m 54.435954,128.01286 -8.90385,12.08867 h 2.813265 l 8.902816,-12.08867 z" />
+            <path id="logo-beam-right" fill="var(--accent)"
+              d="m 45.695402,128.01286 8.903849,12.08867 h 2.812232 l -8.902816,-12.08867 z" />
+            <path id="trace-l" class="trace" pathLength="100" d="M 46.94 140.1 L 55.845 128.013" />
+            <path id="trace-r" class="trace" pathLength="100" d="M 56.005 140.1 L 47.102 128.013" />
+          </g>
+        </g>
+      </svg>
+
+      <div class="status is-loading" id="status" aria-live="polite">
+        <span class="dot"></span><span id="status-text">loading</span>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button class="btn" id="replay" type="button">Replay</button>
+      <button class="btn" id="loop" type="button" aria-pressed="true">Loop</button>
+    </div>
+
+    <p class="note">
+      A light travels along each beam and the two meet at the crossing while
+      loading; then the mark settles and the wordmark unfurls. In your app,
+      call <code>finishLoading()</code> when assets are ready.
+    </p>
+  </main>
+
+<script>
+  (() => {
+    const logo       = document.getElementById('ew-logo');
+    const statusEl   = document.getElementById('status');
+    const statusText = document.getElementById('status-text');
+    const replayBtn  = document.getElementById('replay');
+    const loopBtn    = document.getElementById('loop');
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Demo timings (ms). SIM_LOAD stands in for real load time.
+    const SIM_LOAD    = 2100;   // how long the loader runs before we "finish"
+    const REVEAL_DONE = 1300;   // reveal + settle duration
+    const HOLD        = 2200;   // pause on the assembled logo before looping
+
+    let wantReveal = false;
+    let revealed   = false;
+    let loop       = true;
+    let timers     = [];
+
+    const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+    const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+
+    function startLoading() {
+      revealed = false;
+      wantReveal = false;
+      logo.classList.remove('reveal');
+      void logo.offsetWidth;          // restart the animations cleanly
+      logo.classList.add('loading');
+      statusEl.classList.add('is-loading');
+      statusText.textContent = 'loading';
+    }
+
+    function reveal() {
+      if (revealed) return;
+      revealed = true;
+      logo.classList.remove('loading');
+      void logo.offsetWidth;
+      logo.classList.add('reveal');
+      statusEl.classList.remove('is-loading');
+      statusText.textContent = 'ready';
+      if (loop) later(() => loop && cycle(), REVEAL_DONE + HOLD);
+    }
+
+    // ---- PUBLIC HOOK ---------------------------------------------------
+    // Call this when your real loading completes.
+    function finishLoading() {
+      wantReveal = true;
+      reveal();
+    }
+    window.finishLoading = finishLoading;
+
+    // ---- Demo driver (remove for production) ---------------------------
+    function cycle() {
+      clearTimers();
+      if (reduced) {                 // show the finished logo, no motion
+        logo.classList.remove('loading');
+        logo.classList.add('reveal');
+        statusEl.classList.remove('is-loading');
+        statusText.textContent = 'ready';
+        return;
+      }
+      startLoading();
+      later(finishLoading, SIM_LOAD);
+    }
+
+    replayBtn.addEventListener('click', cycle);
+    loopBtn.addEventListener('click', () => {
+      loop = !loop;
+      loopBtn.setAttribute('aria-pressed', String(loop));
+      if (loop && revealed) later(() => loop && cycle(), 400);
+    });
+
+    cycle();
+  })();
+</script>
+</body>
+</html>

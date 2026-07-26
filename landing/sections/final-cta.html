@@ -1,0 +1,29 @@
+<!-- Final CTA — styles: css/cta.css
+     NOT YET REVIEWED against the concept. -->
+<section class="section final-cta-section">
+  <div class="container final-cta reveal-group">
+    <div class="stack-lg">
+      <h2 class="h2--loud">Ontdek wat er al in je woning verborgen zit</h2>
+      <p class="lead">Binnen enkele minuten weet je waar kansen liggen voor een extra woning — en welke regels, risico's en vervolgstappen daarbij horen.</p>
+      <form class="addresscheck" onsubmit="return false">
+        <div class="addressbar">
+          <div class="addressbar__field addressbar__field--postcode">
+            <label for="pc2">Postcode</label>
+            <input id="pc2" name="postcode" type="text" placeholder="1234 AB"
+                   autocomplete="postal-code" maxlength="7" spellcheck="false" />
+          </div>
+          <span class="addressbar__sep" aria-hidden="true"></span>
+          <div class="addressbar__field addressbar__field--number">
+            <label for="hn2">Huisnummer</label>
+            <input id="hn2" name="huisnummer" type="text" placeholder="12"
+                   inputmode="numeric" maxlength="5" autocomplete="address-line2" />
+          </div>
+          <button class="btn btn--primary" type="submit">Check mijn adres</button>
+        </div>
+        <p class="note">Geen spam. Geen verplichtingen. Direct een eerste indicatie.</p>
+      </form>
+    </div>
+    <img src="../assets/miniature_3d_home_model_on_blueprint.webp"
+         alt="Isometrisch woningmodel op een bouwtekening" width="1200" height="676" loading="lazy" />
+  </div>
+</section>

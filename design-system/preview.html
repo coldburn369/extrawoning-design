@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>extrawoning — design tokens</title>
+<link rel="stylesheet" href="./tokens.css" />
+<style>
+  /* This page uses ONLY Tier 2/3 tokens — no raw hex, no --ew-* primitives.
+     If a value here isn't a token, the system has a gap. */
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    padding: var(--space-7) var(--space-5);
+  }
+  .wrap { max-width: 68rem; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-7); }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-5); flex-wrap: wrap; }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-2xl);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    margin: 0;
+  }
+  h1 em { font-style: normal; color: var(--color-accent); }
+  .sub { color: var(--color-text-muted); font-size: var(--text-xs); margin: var(--space-2) 0 0; }
+
+  h2 {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    font-weight: var(--weight-medium);
+    margin: 0 0 var(--space-4);
+  }
+
+  section { border-top: 1px solid var(--color-border-subtle); padding-top: var(--space-5); }
+
+  .btn {
+    font-family: var(--button-font); font-size: var(--button-size);
+    letter-spacing: var(--button-tracking); text-transform: uppercase;
+    padding: var(--button-padding); border-radius: var(--button-radius);
+    color: var(--button-fg); background: transparent;
+    border: 1px solid var(--button-border); cursor: pointer;
+    transition: color var(--button-transition), border-color var(--button-transition), background var(--button-transition);
+  }
+  .btn:hover { color: var(--button-fg-hover); border-color: var(--button-border-hover); }
+  .btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--space-3); }
+
+  .swatch {
+    background: var(--card-bg); border: var(--card-border);
+    border-radius: var(--radius-md); padding: var(--space-3);
+    display: flex; flex-direction: column; gap: var(--space-2);
+  }
+  .chip { height: 3rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); }
+  .swatch code { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--color-text-muted); }
+  .swatch .val { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--color-text); font-variant-numeric: tabular-nums; }
+
+  .type-row { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border-subtle); }
+  .type-row code { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--color-text-muted); min-width: 6rem; }
+  .type-row span { font-family: var(--font-display); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); }
+
+  .space-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) 0; }
+  .space-row code { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--color-text-muted); min-width: 5rem; }
+  .space-bar { height: .6rem; background: var(--color-accent); border-radius: var(--radius-xs); }
+
+  .elev { background: var(--card-bg); border: var(--card-border); border-radius: var(--card-radius); padding: var(--space-5); text-align: center; font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--color-text-muted); }
+
+  .note { color: var(--color-text-muted); font-size: var(--text-xs); }
+  .note code, .inline-accent { font-family: var(--font-mono); font-size: .92em; color: var(--color-text-accent); }
+
+  .motion { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .motion button {
+    background: var(--card-bg); border: var(--card-border); border-radius: var(--radius-md);
+    padding: var(--space-3); cursor: pointer; font-family: var(--font-mono);
+    font-size: var(--text-2xs); color: var(--color-text-muted); text-align: left; min-width: 12rem;
+  }
+  .motion .track { height: .5rem; background: var(--color-surface-sunken); border-radius: var(--radius-full); margin-top: var(--space-2); overflow: hidden; }
+  .motion .dot { width: 20%; height: 100%; background: var(--color-accent); border-radius: var(--radius-full); }
+  .motion .run .dot { animation: slide var(--duration-slow) var(--ease-settle); }
+  @keyframes slide { from { transform: translateX(0); } to { transform: translateX(400%); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .motion .run .dot { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>extrawoning <em>design tokens</em></h1>
+      <p class="sub">Tier&nbsp;2 semantic + Tier&nbsp;3 component tokens. This page uses no raw values.</p>
+    </div>
+    <button class="btn" id="theme">Toggle theme</button>
+  </header>
+
+  <section>
+    <h2>Surfaces &amp; text</h2>
+    <div class="grid" id="colors"></div>
+  </section>
+
+  <section>
+    <h2>Type scale — Manrope</h2>
+    <div id="type"></div>
+    <p class="note" style="margin-top:var(--space-3)">
+      Accent text uses <code>--color-text-accent</code>, not <code>--color-accent</code> —
+      the brand orange is 2.7:1 on light and cannot carry small copy.
+    </p>
+  </section>
+
+  <section>
+    <h2>Space — 4px base</h2>
+    <div id="space"></div>
+  </section>
+
+  <section>
+    <h2>Elevation</h2>
+    <div class="grid">
+      <div class="elev" style="box-shadow:var(--elevation-1)">--elevation-1</div>
+      <div class="elev" style="box-shadow:var(--elevation-2)">--elevation-2</div>
+      <div class="elev" style="box-shadow:var(--elevation-3)">--elevation-3</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Motion — click to play</h2>
+    <div class="motion" id="motion"></div>
+  </section>
+
+</div>
+
+<script>
+  const COLORS = [
+    '--color-page', '--color-surface', '--color-surface-sunken',
+    '--color-text', '--color-text-muted', '--color-text-accent',
+    '--color-accent', '--color-accent-ui', '--color-accent-hover',
+    '--color-border-subtle', '--color-border-strong', '--color-glow',
+  ];
+  const TYPE = ['--text-4xl','--text-3xl','--text-2xl','--text-xl','--text-lg','--text-md','--text-base','--text-sm','--text-xs','--text-2xs'];
+  const SPACE = ['--space-1','--space-2','--space-3','--space-4','--space-5','--space-6','--space-7','--space-8','--space-9'];
+  const EASES = ['--ease-settle','--ease-standard','--ease-trace'];
+
+  const cs = () => getComputedStyle(document.documentElement);
+
+  function paint() {
+    const s = cs();
+    document.getElementById('colors').innerHTML = COLORS.map((t) => `
+      <div class="swatch">
+        <div class="chip" style="background:var(${t})"></div>
+        <code>${t}</code>
+        <span class="val">${s.getPropertyValue(t).trim() || '—'}</span>
+      </div>`).join('');
+  }
+
+  document.getElementById('type').innerHTML = TYPE.map((t) => `
+    <div class="type-row">
+      <code>${t}</code>
+      <span style="font-size:var(${t})">extrawoning</span>
+    </div>`).join('');
+
+  document.getElementById('space').innerHTML = SPACE.map((t) => `
+    <div class="space-row">
+      <code>${t}</code>
+      <div class="space-bar" style="width:var(${t})"></div>
+    </div>`).join('');
+
+  document.getElementById('motion').innerHTML = EASES.map((t) => `
+    <button data-ease="${t}">
+      ${t}
+      <div class="track"><div class="dot"></div></div>
+    </button>`).join('');
+
+  document.getElementById('motion').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    b.classList.remove('run'); void b.offsetWidth;
+    b.querySelector('.dot').style.animationTimingFunction = cs().getPropertyValue(b.dataset.ease);
+    b.classList.add('run');
+  });
+
+  // Theme toggle — flips color-scheme; light-dark() does the rest.
+  document.getElementById('theme').addEventListener('click', () => {
+    const root = document.documentElement;
+    const now = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.setAttribute('data-theme', now === 'dark' ? 'light' : 'dark');
+    paint();
+  });
+
+  paint();
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+/* ============================================================================
+   investor value (#voor-wie)
+   Section: sections/investor.html
+   DONE — reviewed against the concept, then restyled 2026-07-25.
+
+   The old layout put a hairline down the middle of the panel with a small
+   circular medallion straddling it. It read as a table divider with an
+   ornament stuck on, and gave the section no focal point. Replaced with an
+   animated growth plot above two clean columns: the chart IS the argument
+   (value goes up), and the lists support it.
+   ========================================================================== */
+
+.split-invest { display: grid; grid-template-columns: minmax(0, .6fr) minmax(0, 1.4fr); gap: var(--space-8); align-items: start; }
+/* Intro column: headline, checklist and CTA each need room to separate. The
+   default .stack gap ran them together. */
+.split-invest > .stack { gap: var(--space-5); }
+.split-invest > .stack .btn { margin-top: var(--space-2); }
+
+/* ---- The panel --------------------------------------------------------- */
+.invest-panel { display: flex; flex-direction: column; gap: var(--space-6); }
+
+/* ---- Growth plot ------------------------------------------------------- */
+/* Deliberately ABSTRACT — no figures on the axes. This is a generic "value
+   rises" graphic in a section about investment; putting euro amounts here
+   would read as a forecast we have not made. The report section is where real
+   numbers live, with their own caveats. */
+.growth { margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+
+.growth__plot { position: relative; height: clamp(7rem, 11vw, 9.5rem); }
+/* Baseline the bars stand on. */
+.growth__plot::after {
+  content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 1px;
+  background: var(--color-border-subtle);
+}
+
+.growth__bars { position: relative; z-index: 1; height: 100%; display: flex; align-items: flex-end; gap: var(--space-2); }
+.growth__bars span {
+  flex: 1; transform-origin: bottom;
+  border-radius: var(--radius-sm) var(--radius-sm) 2px 2px;
+  background: linear-gradient(to top,
+    color-mix(in srgb, var(--color-text) 8%, transparent),
+    color-mix(in srgb, var(--color-text) 22%, transparent));
+}
+.growth__bars span:nth-child(1) { height: 30%; }
+.growth__bars span:nth-child(2) { height: 38%; }
+.growth__bars span:nth-child(3) { height: 45%; }
+.growth__bars span:nth-child(4) { height: 55%; }
+.growth__bars span:nth-child(5) { height: 66%; }
+.growth__bars span:nth-child(6) { height: 80%; }
+/* The payoff bar. Accent fill plus a bloom so it reads as the destination. */
+.growth__bars span:last-child {
+  height: 100%;
+  background: linear-gradient(to top,
+    color-mix(in srgb, var(--color-accent) 45%, transparent),
+    var(--color-accent));
+  box-shadow: 0 0 32px var(--color-bloom);
+}
+
+.growth__axis { display: flex; justify-content: space-between; }
+
+/* ---- Two capability columns ------------------------------------------- */
+/* Separated by a generous gap, not a rule — the chart above already gives the
+   panel structure, so a divider here would be noise. */
+.invest-cols {
+  display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-8);
+  padding-top: var(--space-5); border-top: 1px solid var(--color-border-subtle);
+}
+.invest-cols h3 { margin-bottom: var(--space-4); }
+
+/* ---- Motion ------------------------------------------------------------
+   Bars grow from the baseline as the panel enters. Scroll-driven, so it is
+   geometry-linked rather than clock-linked and cannot strand content: if the
+   panel is on screen the animation is already complete.
+   Wrapped in no-preference because a scroll timeline ignores
+   animation-duration, so the !important reduced-motion override in base.css
+   would NOT neutralise it — the base state below must be the finished one. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    @keyframes grow-bar {
+      from { transform: scaleY(.04); opacity: .3; }
+      to   { transform: none;        opacity: 1;  }
+    }
+    .growth__bars span {
+      animation: grow-bar linear both;
+      animation-timeline: view();
+    }
+    /* Stagger via the range, not a delay — all bars share a row, so their own
+       view() progress is identical and a delay would do nothing. */
+    .growth__bars span:nth-child(1) { animation-range: entry 10% cover 26%; }
+    .growth__bars span:nth-child(2) { animation-range: entry 10% cover 30%; }
+    .growth__bars span:nth-child(3) { animation-range: entry 10% cover 34%; }
+    .growth__bars span:nth-child(4) { animation-range: entry 10% cover 38%; }
+    .growth__bars span:nth-child(5) { animation-range: entry 10% cover 42%; }
+    .growth__bars span:nth-child(6) { animation-range: entry 10% cover 46%; }
+    .growth__bars span:nth-child(7) { animation-range: entry 10% cover 52%; }
+  }
+}
+
+/* ---- Responsive -------------------------------------------------------- */
+@media (max-width: 62rem) {
+  .split-invest { grid-template-columns: minmax(0, 1fr); }
+  .invest-cols { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-5); }
+  .invest-cols > * + * { padding-top: var(--space-5); border-top: 1px solid var(--color-border-subtle); }
+}
