@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "Ontdek binnen enkele minuten of jouw woning kansrijk is voor een vergunde extra wooneenheid — inclusief rapport met regels, waarde-impact en vervolgstappen.",
   icons: {
-    icon: [{ url: "/assets/extrawoning-favicon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/assets/extrawoning-favicon.svg?v=2", type: "image/svg+xml" }],
   },
 };
 
