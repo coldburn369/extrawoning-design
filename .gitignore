@@ -3,11 +3,16 @@ __pycache__/
 *.tsbuildinfo
 dist/
 web/.next/
+web/next-env.d.ts
 web/app/legacy.css
+web/app/*-legacy.css
+web/app/**/*-legacy.css
 web/out/
 web/node_modules/
 web/public/assets/
+web/public/extrawoning_logo_web.svg
 web/public/fonts/
+web/public/legacy/
 _backup/
 old/
 .DS_Store

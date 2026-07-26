@@ -1,0 +1,39 @@
+# ExtraWoning Next.js frontend on loopback.
+#
+# Install/update from the design repository root:
+#   cd web && npm ci && npm run build && cd ..
+#   sudo cp deploy/extrawoning-web.service /etc/systemd/system/extrawoning-web.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now extrawoning-web
+#
+# nginx is the public boundary. This process must never bind to a public
+# interface: TLS, Basic Auth, security headers, client IP handling and /api/
+# routing all remain in deploy/nginx-preview-extrawoning.conf.
+
+[Unit]
+Description=ExtraWoning Next.js preview on 127.0.0.1:3012
+After=network.target woningkans-api.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/extrawoning/design/web
+Environment=NODE_ENV=production
+Environment=PORT=3012
+
+ExecStart=/usr/bin/node /srv/extrawoning/design/web/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3012
+
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=30
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=extrawoning-web
+
+[Install]
+WantedBy=multi-user.target

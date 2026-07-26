@@ -1,11 +1,10 @@
-@import "./legacy.css";
+@import "./shared-legacy.css";
 
 /*
- * The first migration slice renders the reviewed static section partials
- * verbatim at build time. display:contents keeps that compatibility boundary
- * from introducing a layout box. Each section can now move to TSX separately
- * without a big-bang visual rewrite.
+ * Migrated routes render their reviewed legacy partials at the Next boundary
+ * first. display:contents prevents that trusted-markup boundary from adding a
+ * layout box. Each section can then move to TSX separately.
  */
-.landing-compat {
+.route-compat {
   display: contents;
 }

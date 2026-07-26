@@ -9,7 +9,7 @@
     "prebuild": "npm run prepare:legacy",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "next": "16.2.12",

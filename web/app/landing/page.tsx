@@ -3,6 +3,7 @@ import path from "node:path";
 import { connection } from "next/server";
 
 import LandingClient from "./landing-client";
+import "./route-legacy.css";
 
 const SECTION_ORDER = [
   "sprites",
@@ -65,7 +66,7 @@ export default async function LandingPage() {
   return (
     <>
       <div
-        className="landing-compat"
+        className="route-compat"
         dangerouslySetInnerHTML={{ __html: LANDING_MARKUP }}
       />
       <LandingClient />

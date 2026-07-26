@@ -1,6 +1,7 @@
 # ExtraWoning — website & design system
 
-Static site, no framework. Five things live here:
+The public preview now runs through Next.js while the reviewed static sources
+remain the compatibility source of truth. Six things live here:
 1. **`design-system/`** — the token-based design system (source of truth for all styling).
 2. **`landing/`** — the marketing landing page, built on the design system.
 3. **`check/`** — the address check page: it renders a `POST /api/check` response
@@ -12,58 +13,50 @@ Static site, no framework. Five things live here:
    Every claim cites the file in `apps/woningkans` that makes it true, in a
    comment beside it — ⚠️ **change one of those files and this page changes in
    the same session.** The TTL number is copied from `config.cache_ttl_hours`.
-5. **`extrawoning-loader.html`** — the brand logo loader→reveal animation (self-contained).
+5. **`web/`** — the Next.js application and deployment boundary. `/landing/`,
+   `/check/`, and `/privacy/` currently render the reviewed sources through
+   compatibility routes; new dashboard work belongs here.
+6. **`extrawoning-loader.html`** — the brand logo loader→reveal animation (self-contained).
 
-No build step is needed to *preview* — `serve.py` resolves the page's includes
-on the fly. `build.py` exists only to flatten everything for deploy.
+`serve.py` remains useful for comparing the legacy pages. The live preview is
+built and served from `web/`.
 
 ExtraWoning is a Dutch prop-tech brand: it tells homeowners whether their house is a candidate for a permitted *extra woning* (extra dwelling). Site copy is **Dutch**.
 
-## This repo is served live from the VPS checkout
+## This repo powers the protected VPS preview
 
-Since slice 1c (2026-07-26) `https://preview.extrawoning.nl` serves **this
-working tree** — nginx `root` is `/srv/extrawoning/design`, a symlink to
-`/home/ubuntu/extrawoning/design`. There is no build step and no release
-artifact between an edit and the live page.
+`https://preview.extrawoning.nl` runs the built Next.js app from `web/`. nginx
+owns TLS, Basic Auth, `/health`, and `/api/`; it proxies page and asset requests
+to `extrawoning-web.service` on `127.0.0.1:3012`.
 
-- **Editing a file here changes what is live on the next refresh.** A
-  half-saved file IS the live page. `dist/` is gitignored and is not served.
-- URLs: `/landing/index.html` · **`/check/`** · **`/privacy/`** · `/` redirects
-  to the landing page. The whole host is behind nginx basic auth (user `ben`);
-  `/health` is the one exception and `/api/` proxies to the woningkans service
-  on `127.0.0.1:8001`.
-- ⚠️ **`serve.py` only resolves includes for a path ending in `.html`.** Open
-  `/privacy/index.html`, not `/privacy/` — the bare directory serves the shell
-  with its `<!--#include -->` unresolved and looks like a blank page. nginx has
-  no such problem (`index index.html` + `ssi on` resolve it), so this is a dev-
-  server quirk, not a broken page.
-- **The includes are resolved by nginx, not by a build.** `<!--#include
-  file="..." -->` is nginx's own SSI directive; the vhost sets `ssi on`. Output
-  is byte-identical to `build.py`'s resolver (verified for both pages).
-- ⚠️ **`ssi_silent_errors on` is load-bearing, not cosmetic.** `landing/index.html`
-  marks its stylesheet block with `<!--#css-bundle-start-->`, which nginx tries
-  to parse as an SSI command and fails. With the default `off` it substitutes
-  `[an error occurred while processing the directive]` into the `<head>` — twice,
-  visibly, on the live landing page. Do not remove that line. The cost is that a
-  genuinely broken include renders as a missing section instead of an error
-  string; `check.mjs` catches that first.
-- The vhost is committed at **`deploy/nginx-preview-extrawoning.conf`** and
-  **copied** into `/etc/nginx/sites-available/extrawoning-preview`. The live file
-  must byte-match it: `diff deploy/nginx-preview-extrawoning.conf /etc/nginx/sites-available/extrawoning-preview`.
-  It moved here from `apps/woningkans/deploy/` in slice 1c; the copy over there
-  is stale.
-- ⚠️ **`sudo nginx -t` before every reload.** This box serves seven vhosts
-  (leadhaus, chatbotx, igtracker, apex-dashboard, benedek.studio, denzelchain,
-  extrawoning); a bad config fails the reload for all of them. Never touch the
-  apex vhost, `sshd_config`, `ufw` or the SSH port.
-- The CSP is `default-src 'self'` — **no inline `<script>`, ever**. `check/`
-  uses external ES modules for exactly this reason. `style-src` still carries
-  `'unsafe-inline'` for one attribute in `landing/sections/sprites.html`; move
-  it to a class and the token can go.
+- Canonical URLs are `/landing/`, `/check/`, and `/privacy/`; `/` redirects to
+  `/landing/`. Historical `index.html` URLs redirect to their canonical routes.
+- The whole host remains behind nginx Basic Auth (user `ben`), except `/health`.
+  `/api/` continues to proxy to woningkans on `127.0.0.1:8001`.
+- A source edit is **not** live until `web/` has been built and the service
+  restarted. This prevents half-written source files from reaching the preview.
+- The compatibility routes still read `landing/`, `check/`, `privacy/`, and the
+  design system at build/runtime. Keep those sources until the corresponding
+  route has been converted to typed React components and visually approved.
+- Next generates a fresh CSP nonce per HTML response. nginx must not add a
+  second fixed CSP header because browsers intersect multiple policies and
+  would block the framework scripts.
+- The service unit and vhost are committed at
+  `deploy/extrawoning-web.service` and
+  `deploy/nginx-preview-extrawoning.conf`. Their live copies belong in
+  `/etc/systemd/system/` and `/etc/nginx/sites-available/`.
+- ⚠️ **Run `sudo nginx -t` before every reload.** This box serves several
+  unrelated vhosts; a bad config can prevent all of them from reloading. Never
+  touch the apex vhost, `sshd_config`, `ufw`, or the SSH port.
 
 ## Run / preview
 
-For local work off the VPS. Use the in-app Browser pane, never Bash, for servers.
+For the live application:
+
+- `cd web && npm install && npm run dev`
+- Production verification: `npm run lint && npm run build`
+
+For legacy comparison work, use the in-app Browser pane, never Bash, for servers.
 
 - `preview_start` with name **`extrawoning-static`** (config in `.claude/launch.json`), then open `/landing/index.html` on the port it reports. `autoPort` is on, so if another session already holds 8124 you get a free port instead — read it from the `preview_start` result, don't assume 8124.
 - Or standalone: `python serve.py 8124`
@@ -72,7 +65,8 @@ For local work off the VPS. Use the in-app Browser pane, never Bash, for servers
 
 The dev server is a background process tied to the session; it gets torn down on idle/reset. Just `preview_start` again — it's not crashing.
 
-**Deploy build:** `python build.py` → `dist/` (includes resolved, the 11 section stylesheets concatenated into one, optimised assets only). `dist/` mirrors the source URL structure, so every relative path keeps working.
+**Legacy comparison build:** `python build.py` → `dist/`. This output is no
+longer served by the protected preview.
 
 ## Design system (`design-system/`)
 
