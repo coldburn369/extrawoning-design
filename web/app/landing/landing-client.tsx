@@ -2,11 +2,9 @@
 
 import { useEffect } from "react";
 
-const SPEED = 55;
-
 export default function LandingClient() {
   useEffect(() => {
-    const rail = document.getElementById("examples-rail");
+    const explorer = document.querySelector<HTMLElement>("[data-example-explorer]");
     const cleanups: Array<() => void> = [];
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -206,154 +204,200 @@ export default function LandingClient() {
       }
     }
 
-    if (!rail || rail.dataset.enhanced === "true") {
+    if (!explorer || explorer.dataset.enhanced === "true") {
       return () => cleanups.forEach((cleanup) => cleanup());
     }
 
-    rail.dataset.enhanced = "true";
-    const originals = Array.from(rail.children);
-    const count = originals.length;
+    explorer.dataset.enhanced = "true";
+    const tabs = Array.from(explorer.querySelectorAll<HTMLButtonElement>("[data-example-tab]"));
+    const panels = Array.from(explorer.querySelectorAll<HTMLElement>("[data-example-panel]"));
+    const stage = explorer.querySelector<HTMLElement>("[data-example-stage]");
+    const currentLabel = explorer.querySelector<HTMLElement>("[data-example-current]");
+    const announcer = explorer.querySelector<HTMLElement>("[data-example-announcer]");
+    const previous = explorer.querySelector<HTMLButtonElement>("[data-example-prev]");
+    const next = explorer.querySelector<HTMLButtonElement>("[data-example-next]");
+    const toggle = explorer.querySelector<HTMLButtonElement>("[data-example-toggle]");
+    const count = Math.min(tabs.length, panels.length);
 
-    for (const item of originals) {
-      const clone = item.cloneNode(true) as HTMLElement;
-      clone.setAttribute("aria-hidden", "true");
-      rail.appendChild(clone);
+    if (!stage || !count) {
+      delete explorer.dataset.enhanced;
+      return () => cleanups.forEach((cleanup) => cleanup());
     }
 
-    const period = () => {
-      const clone = rail.children[count] as HTMLElement | undefined;
-      const first = rail.children[0] as HTMLElement | undefined;
-      return clone && first ? clone.offsetLeft - first.offsetLeft : 0;
-    };
+    const explorerRoot = explorer;
+    const stageRoot = stage;
+    let current = 0;
+    let manualPaused = reduce;
+    let temporaryPaused = false;
+    let inView = false;
+    let autoplayTimer: number | undefined;
+    let leavingTimer: number | undefined;
+    let focusPauseTimer: number | undefined;
 
-    const wrap = () => {
-      const distance = period();
-      if (distance <= 0) return;
-      if (rail.scrollLeft >= distance) rail.scrollLeft -= distance;
-      else if (rail.scrollLeft < 0) rail.scrollLeft += distance;
-    };
+    const normalise = (index: number) => (index + count) % count;
+    const canPlay = () => inView && !manualPaused && !temporaryPaused && !reduce;
 
-    let paused = false;
-    let dragging = false;
-    let frame: number | null = null;
-    let resumeTimer: ReturnType<typeof setTimeout> | undefined;
-    let lastTime: number | null = null;
-    let startX = 0;
-    let startScroll = 0;
+    function schedule() {
+      if (autoplayTimer !== undefined) window.clearTimeout(autoplayTimer);
+      autoplayTimer = undefined;
+      if (!canPlay()) return;
+      autoplayTimer = window.setTimeout(() => activate(current + 1, "next"), 8000);
+    }
 
-    const tick = (time: number) => {
-      const elapsed = lastTime === null ? 0 : Math.min(time - lastTime, 50);
-      lastTime = time;
-      if (!paused && !dragging && !reduce) {
-        rail.scrollLeft += SPEED * (elapsed / 1000);
+    function syncPlayback() {
+      const playing = canPlay();
+      explorerRoot.classList.toggle("is-playing", playing);
+      explorerRoot.classList.toggle("is-temporarily-paused", temporaryPaused);
+      toggle?.setAttribute("aria-pressed", String(manualPaused));
+      toggle?.setAttribute(
+        "aria-label",
+        manualPaused ? "Automatisch afspelen hervatten" : "Automatisch afspelen pauzeren",
+      );
+      schedule();
+    }
+
+    function activate(targetIndex: number, direction: "next" | "prev" = "next", announce = true) {
+      const target = normalise(targetIndex);
+      if (target === current) {
+        syncPlayback();
+        return;
       }
-      wrap();
-      frame = requestAnimationFrame(tick);
+
+      const outgoing = panels[current];
+      const incoming = panels[target];
+      if (leavingTimer !== undefined) window.clearTimeout(leavingTimer);
+      for (const panel of panels) panel.classList.remove("is-leaving");
+
+      stageRoot.dataset.direction = direction;
+      outgoing.classList.remove("is-active");
+      outgoing.classList.add("is-leaving");
+      outgoing.setAttribute("aria-hidden", "true");
+      incoming.classList.add("is-active");
+      incoming.setAttribute("aria-hidden", "false");
+
+      tabs[current].setAttribute("aria-selected", "false");
+      tabs[current].setAttribute("tabindex", "-1");
+      tabs[target].setAttribute("aria-selected", "true");
+      tabs[target].setAttribute("tabindex", "0");
+
+      current = target;
+      if (currentLabel) currentLabel.textContent = String(current + 1).padStart(2, "0");
+      explorerRoot.style.setProperty("--example-progress", String((current + 1) / count));
+
+      if (announce && announcer) {
+        const title = incoming.querySelector("h3")?.textContent?.trim() || "Scenario";
+        announcer.textContent = `${title}, scenario ${current + 1} van ${count}`;
+      }
+
+      leavingTimer = window.setTimeout(() => outgoing.classList.remove("is-leaving"), 760);
+      syncPlayback();
+    }
+
+    const selectManually = (target: number, direction: "next" | "prev") => {
+      manualPaused = true;
+      activate(target, direction);
     };
 
-    const start = () => {
-      if (frame !== null) return;
-      lastTime = null;
-      frame = requestAnimationFrame(tick);
+    for (const [index, tab] of tabs.entries()) {
+      const click = () => selectManually(index, index < current ? "prev" : "next");
+      const keydown = (event: KeyboardEvent) => {
+        let target: number;
+        if (event.key === "ArrowDown" || event.key === "ArrowRight") target = normalise(index + 1);
+        else if (event.key === "ArrowUp" || event.key === "ArrowLeft") target = normalise(index - 1);
+        else if (event.key === "Home") target = 0;
+        else if (event.key === "End") target = count - 1;
+        else return;
+
+        event.preventDefault();
+        manualPaused = true;
+        activate(target, target < current ? "prev" : "next");
+        tabs[target].focus();
+        tabs[target].scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      };
+      tab.addEventListener("click", click);
+      tab.addEventListener("keydown", keydown);
+      cleanups.push(() => {
+        tab.removeEventListener("click", click);
+        tab.removeEventListener("keydown", keydown);
+      });
+    }
+
+    if (previous) {
+      const click = () => selectManually(current - 1, "prev");
+      previous.addEventListener("click", click);
+      cleanups.push(() => previous.removeEventListener("click", click));
+    }
+    if (next) {
+      const click = () => selectManually(current + 1, "next");
+      next.addEventListener("click", click);
+      cleanups.push(() => next.removeEventListener("click", click));
+    }
+    if (toggle) {
+      const click = () => {
+        manualPaused = !manualPaused;
+        syncPlayback();
+      };
+      toggle.addEventListener("click", click);
+      cleanups.push(() => toggle.removeEventListener("click", click));
+    }
+
+    const setTemporaryPause = (paused: boolean) => {
+      temporaryPaused = paused;
+      syncPlayback();
+    };
+    const pointerEnter = () => setTemporaryPause(true);
+    const pointerLeave = () => setTemporaryPause(false);
+    const focusIn = () => setTemporaryPause(true);
+    const focusOut = () => {
+      if (focusPauseTimer !== undefined) window.clearTimeout(focusPauseTimer);
+      focusPauseTimer = window.setTimeout(
+        () => setTemporaryPause(explorer.contains(document.activeElement)),
+        0,
+      );
     };
 
-    const stop = () => {
-      if (frame === null) return;
-      cancelAnimationFrame(frame);
-      frame = null;
-      lastTime = null;
-    };
+    if (finePointer) {
+      explorer.addEventListener("pointerenter", pointerEnter);
+      explorer.addEventListener("pointerleave", pointerLeave);
+    }
+    explorer.addEventListener("focusin", focusIn);
+    explorer.addEventListener("focusout", focusOut);
 
     const observer = new IntersectionObserver(
-      ([entry]) => (entry?.isIntersecting ? start() : stop()),
-      { threshold: 0 },
+      ([entry]) => {
+        inView = Boolean(entry?.isIntersecting);
+        syncPlayback();
+      },
+      { threshold: 0.2 },
     );
-    observer.observe(rail);
-
-    const hold = (milliseconds = 2500) => {
-      paused = true;
-      clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(() => {
-        paused = false;
-      }, milliseconds);
-    };
-
-    const pointerEnter = () => {
-      paused = true;
-    };
-    const pointerLeave = () => {
-      if (!dragging) paused = false;
-    };
-    const focusIn = () => {
-      paused = true;
-    };
-    const focusOut = () => {
-      paused = false;
-    };
-    const pointerDown = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
-      dragging = true;
-      startX = event.clientX;
-      startScroll = rail.scrollLeft;
-      rail.setPointerCapture(event.pointerId);
-      rail.classList.add("is-dragging");
-    };
-    const pointerMove = (event: PointerEvent) => {
-      if (!dragging) return;
-      rail.scrollLeft = startScroll - (event.clientX - startX);
-      wrap();
-    };
-    const endDrag = (event: PointerEvent) => {
-      if (!dragging) return;
-      dragging = false;
-      rail.classList.remove("is-dragging");
-      try {
-        rail.releasePointerCapture(event.pointerId);
-      } catch {
-        // The capture can already be gone after pointercancel.
-      }
-      hold();
-    };
-
-    rail.addEventListener("pointerenter", pointerEnter);
-    rail.addEventListener("pointerleave", pointerLeave);
-    rail.addEventListener("focusin", focusIn);
-    rail.addEventListener("focusout", focusOut);
-    rail.addEventListener("pointerdown", pointerDown);
-    rail.addEventListener("pointermove", pointerMove);
-    rail.addEventListener("pointerup", endDrag);
-    rail.addEventListener("pointercancel", endDrag);
-
-    for (const button of document.querySelectorAll<HTMLButtonElement>("[data-rail]")) {
-      const click = () => {
-        const card = rail.querySelector<HTMLElement>(".example");
-        const step = card ? card.getBoundingClientRect().width + 16 : 240;
-        hold();
-        rail.scrollBy({
-          left: button.dataset.rail === "next" ? step : -step,
-          behavior: "smooth",
-        });
-      };
-      button.addEventListener("click", click);
-      cleanups.push(() => button.removeEventListener("click", click));
-    }
+    observer.observe(explorer);
+    syncPlayback();
 
     return () => {
       observer.disconnect();
-      stop();
-      clearTimeout(resumeTimer);
-      rail.removeEventListener("pointerenter", pointerEnter);
-      rail.removeEventListener("pointerleave", pointerLeave);
-      rail.removeEventListener("focusin", focusIn);
-      rail.removeEventListener("focusout", focusOut);
-      rail.removeEventListener("pointerdown", pointerDown);
-      rail.removeEventListener("pointermove", pointerMove);
-      rail.removeEventListener("pointerup", endDrag);
-      rail.removeEventListener("pointercancel", endDrag);
-      for (const clone of Array.from(rail.querySelectorAll('[aria-hidden="true"]'))) {
-        clone.remove();
+      if (autoplayTimer !== undefined) window.clearTimeout(autoplayTimer);
+      if (leavingTimer !== undefined) window.clearTimeout(leavingTimer);
+      if (focusPauseTimer !== undefined) window.clearTimeout(focusPauseTimer);
+      if (finePointer) {
+        explorer.removeEventListener("pointerenter", pointerEnter);
+        explorer.removeEventListener("pointerleave", pointerLeave);
       }
-      delete rail.dataset.enhanced;
+      explorer.removeEventListener("focusin", focusIn);
+      explorer.removeEventListener("focusout", focusOut);
+      explorer.classList.remove("is-playing", "is-temporarily-paused");
+      explorer.style.removeProperty("--example-progress");
+      panels.forEach((panel, index) => {
+        panel.classList.toggle("is-active", index === 0);
+        panel.classList.remove("is-leaving");
+        panel.setAttribute("aria-hidden", String(index !== 0));
+      });
+      tabs.forEach((tab, index) => {
+        tab.setAttribute("aria-selected", String(index === 0));
+        tab.setAttribute("tabindex", index === 0 ? "0" : "-1");
+      });
+      if (currentLabel) currentLabel.textContent = "01";
+      stage.dataset.direction = "next";
+      delete explorer.dataset.enhanced;
       cleanups.forEach((cleanup) => cleanup());
     };
   }, []);

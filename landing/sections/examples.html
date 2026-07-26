@@ -1,24 +1,205 @@
-<!-- Examples carousel (#waar-we-helpen) — styles: css/examples.css · behaviour: rail.js
-     NEXT UP for review against the concept. Marquee motion is unverified. -->
+<!-- Interactive scenario explorer (#waar-we-helpen)
+     Styles: css/examples.css · behaviour: rail.js / LandingClient -->
 <section class="section container" id="waar-we-helpen">
-  <div class="examples reveal-group">
-    <div class="stack">
-      <h2>Misschien zit er meer in je woning dan je denkt</h2>
-      <p class="lead">Van zolder tot kelder: dit zijn voorbeelden van manieren waarop bestaande woningen extra woonruimte kunnen opleveren.</p>
-      <a class="btn btn--ghost self-start" href="#">Bekijk meer mogelijkheden <svg class="arrow" width="16" height="16"><use href="#i-arrow"/></svg></a>
-      <div class="rail-controls">
-        <button class="rail-btn" type="button" data-rail="prev" aria-label="Vorige voorbeelden"><svg width="16" height="16"><use href="#i-left"/></svg></button>
-        <button class="rail-btn" type="button" data-rail="next" aria-label="Volgende voorbeelden"><svg width="16" height="16"><use href="#i-right"/></svg></button>
+  <div class="examples reveal-group" data-example-explorer>
+    <header class="examples__intro">
+      <div class="stack">
+        <p class="eyebrow">Ontdek de mogelijkheden</p>
+        <h2>Misschien zit er meer in je woning dan je denkt</h2>
+      </div>
+      <div class="stack examples__intro-copy">
+        <p class="lead">Van zolder tot kelder: ontdek per scenario welke kans er kan liggen en welke regels, technische eisen en aandachtspunten eerst onderzocht moeten worden.</p>
+        <a class="btn btn--ghost self-start" href="#adrescheck">Onderzoek mijn woning <svg class="arrow" width="16" height="16"><use href="#i-arrow"/></svg></a>
+      </div>
+    </header>
+
+    <div class="example-explorer">
+      <aside class="scenario-nav" aria-label="Mogelijke woningontwikkelingen">
+        <div class="scenario-nav__top">
+          <div class="example-progress" aria-hidden="true">
+            <span data-example-current>01</span>
+            <span class="example-progress__track"><span class="example-progress__fill"></span></span>
+            <span>06</span>
+          </div>
+          <div class="scenario-controls">
+            <button class="scenario-control" type="button" data-example-prev aria-label="Vorig scenario">
+              <svg width="16" height="16"><use href="#i-left"/></svg>
+            </button>
+            <button class="scenario-control scenario-control--playback" type="button" data-example-toggle aria-label="Automatisch afspelen pauzeren" aria-pressed="false">
+              <svg class="playback-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <g class="playback-icon__pause"><path d="M5 3.5v9M11 3.5v9" /></g>
+                <path class="playback-icon__play" d="m5.5 3.5 7 4.5-7 4.5z" />
+              </svg>
+            </button>
+            <button class="scenario-control" type="button" data-example-next aria-label="Volgend scenario">
+              <svg width="16" height="16"><use href="#i-right"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="scenario-tabs" role="tablist" aria-label="Kies een scenario" aria-orientation="vertical">
+          <button class="scenario-tab" id="scenario-tab-1" type="button" role="tab" aria-selected="true" aria-controls="scenario-panel-1" tabindex="0" data-example-tab="0">
+            <span class="scenario-tab__number">01</span>
+            <span><strong>Zolderopbouw</strong><small>Dak &amp; volume</small></span>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+          <button class="scenario-tab" id="scenario-tab-2" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-2" tabindex="-1" data-example-tab="1">
+            <span class="scenario-tab__number">02</span>
+            <span><strong>Dakterras &amp; uitbreiding</strong><small>Buitenruimte</small></span>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+          <button class="scenario-tab" id="scenario-tab-3" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-3" tabindex="-1" data-example-tab="2">
+            <span class="scenario-tab__number">03</span>
+            <span><strong>Souterrainwoning</strong><small>Ruimte beneden</small></span>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+          <button class="scenario-tab" id="scenario-tab-4" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-4" tabindex="-1" data-example-tab="3">
+            <span class="scenario-tab__number">04</span>
+            <span><strong>Woningsplitsing</strong><small>Meerdere woningen</small></span>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+          <button class="scenario-tab" id="scenario-tab-5" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-5" tabindex="-1" data-example-tab="4">
+            <span class="scenario-tab__number">05</span>
+            <span><strong>Aanbouw of studio</strong><small>Tuinzijde</small></span>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+          <button class="scenario-tab" id="scenario-tab-6" type="button" role="tab" aria-selected="false" aria-controls="scenario-panel-6" tabindex="-1" data-example-tab="5">
+            <span class="scenario-tab__number">06</span>
+            <span><strong>Optoppen</strong><small>Nieuwe woonlaag</small></span>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <div class="scenario-stage" data-example-stage data-direction="next">
+        <article class="scenario-panel is-active" id="scenario-panel-1" role="tabpanel" aria-labelledby="scenario-tab-1" aria-hidden="false" data-example-panel="0">
+          <div class="scenario-panel__media">
+            <img src="../assets/architectural_concept_with_illuminated_cutaway.webp" alt="Architectonisch concept van een zolderopbouw met verlichte nieuwe woonruimte" width="640" height="640" />
+            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
+            <span class="scenario-panel__scan" aria-hidden="true"></span>
+          </div>
+          <div class="scenario-panel__heading">
+            <span class="scenario-panel__category">Dak &amp; volume</span>
+            <span class="scenario-panel__number">01</span>
+          </div>
+          <div class="scenario-card" data-cursor-glow>
+            <span class="scenario-card__status"><span></span>Vergunning meestal nodig</span>
+            <h3>Zolderopbouw</h3>
+            <p>Voeg boven de bestaande woning extra woonruimte toe zonder tuinoppervlak te verliezen.</p>
+            <div class="scenario-card__checks" aria-label="Belangrijke controles">
+              <span>Bouwhoogte</span><span>Draagconstructie</span><span>Straatbeeld</span>
+            </div>
+            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
+
+        <article class="scenario-panel" id="scenario-panel-2" role="tabpanel" aria-labelledby="scenario-tab-2" aria-hidden="true" data-example-panel="1">
+          <div class="scenario-panel__media">
+            <img src="../assets/modern_townhouse_with_glowing_extension_highlights.webp" alt="Moderne stadswoning met verlichte uitbreiding en dakterras" width="640" height="640" loading="lazy" />
+            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
+            <span class="scenario-panel__scan" aria-hidden="true"></span>
+          </div>
+          <div class="scenario-panel__heading">
+            <span class="scenario-panel__category">Buitenruimte</span>
+            <span class="scenario-panel__number">02</span>
+          </div>
+          <div class="scenario-card" data-cursor-glow>
+            <span class="scenario-card__status"><span></span>Situatieafhankelijk</span>
+            <h3>Dakterras &amp; uitbreiding</h3>
+            <p>Combineer bruikbare buitenruimte met een gerichte uitbreiding van het bestaande woonvolume.</p>
+            <div class="scenario-card__checks" aria-label="Belangrijke controles">
+              <span>Privacy</span><span>Dakbelasting</span><span>Omgevingsplan</span>
+            </div>
+            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
+
+        <article class="scenario-panel" id="scenario-panel-3" role="tabpanel" aria-labelledby="scenario-tab-3" aria-hidden="true" data-example-panel="2">
+          <div class="scenario-panel__media">
+            <img src="../assets/victorian_renovation_concept_with_modern_interior.webp" alt="Renovatieconcept met een moderne woonlaag in het souterrain" width="640" height="640" loading="lazy" />
+            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
+            <span class="scenario-panel__scan" aria-hidden="true"></span>
+          </div>
+          <div class="scenario-panel__heading">
+            <span class="scenario-panel__category">Ruimte beneden</span>
+            <span class="scenario-panel__number">03</span>
+          </div>
+          <div class="scenario-card" data-cursor-glow>
+            <span class="scenario-card__status"><span></span>Technische toets essentieel</span>
+            <h3>Souterrainwoning</h3>
+            <p>Benut ruimte onder maaiveld als een volwaardige woonlaag met voldoende comfort en veiligheid.</p>
+            <div class="scenario-card__checks" aria-label="Belangrijke controles">
+              <span>Daglicht</span><span>Plafondhoogte</span><span>Waterdichting</span>
+            </div>
+            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
+
+        <article class="scenario-panel" id="scenario-panel-4" role="tabpanel" aria-labelledby="scenario-tab-4" aria-hidden="true" data-example-panel="3">
+          <div class="scenario-panel__media">
+            <img src="../assets/elegant_townhouse_in_moody_blueprint_setting.webp" alt="Stadswoning in een bouwkundige blauwdruk als concept voor woningsplitsing" width="640" height="640" loading="lazy" />
+            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
+            <span class="scenario-panel__scan" aria-hidden="true"></span>
+          </div>
+          <div class="scenario-panel__heading">
+            <span class="scenario-panel__category">Meerdere woningen</span>
+            <span class="scenario-panel__number">04</span>
+          </div>
+          <div class="scenario-card" data-cursor-glow>
+            <span class="scenario-card__status"><span></span>Gemeentelijk beleid bepalend</span>
+            <h3>Woningsplitsing</h3>
+            <p>Maak binnen één pand meerdere zelfstandige woonruimtes met ieder een heldere ontsluiting.</p>
+            <div class="scenario-card__checks" aria-label="Belangrijke controles">
+              <span>Minimumoppervlak</span><span>Eigen toegang</span><span>Brandveiligheid</span>
+            </div>
+            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
+
+        <article class="scenario-panel" id="scenario-panel-5" role="tabpanel" aria-labelledby="scenario-tab-5" aria-hidden="true" data-example-panel="4">
+          <div class="scenario-panel__media">
+            <img src="../assets/miniature_3d_home_model_on_blueprint.webp" alt="Driedimensionaal woningmodel met ruimte voor een aanbouw of studio" width="1200" height="676" loading="lazy" />
+            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
+            <span class="scenario-panel__scan" aria-hidden="true"></span>
+          </div>
+          <div class="scenario-panel__heading">
+            <span class="scenario-panel__category">Tuinzijde</span>
+            <span class="scenario-panel__number">05</span>
+          </div>
+          <div class="scenario-card" data-cursor-glow>
+            <span class="scenario-card__status"><span></span>Soms vergunningsvrij</span>
+            <h3>Aanbouw of studio</h3>
+            <p>Creëer aan de tuinzijde een extra woonplek die onderdeel of juist zelfstandig kan functioneren.</p>
+            <div class="scenario-card__checks" aria-label="Belangrijke controles">
+              <span>Bebouwingspercentage</span><span>Tuinruimte</span><span>Toegang</span>
+            </div>
+            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
+
+        <article class="scenario-panel" id="scenario-panel-6" role="tabpanel" aria-labelledby="scenario-tab-6" aria-hidden="true" data-example-panel="5">
+          <div class="scenario-panel__media">
+            <img src="../assets/architectural_blueprint_layers_in_dark_space.webp" alt="Gelaagde architectuurtekening voor een extra woonlaag op een bestaand gebouw" width="640" height="640" loading="lazy" />
+            <span class="scenario-panel__blueprint" aria-hidden="true"></span>
+            <span class="scenario-panel__scan" aria-hidden="true"></span>
+          </div>
+          <div class="scenario-panel__heading">
+            <span class="scenario-panel__category">Nieuwe woonlaag</span>
+            <span class="scenario-panel__number">06</span>
+          </div>
+          <div class="scenario-card" data-cursor-glow>
+            <span class="scenario-card__status"><span></span>Complex maar kansrijk</span>
+            <h3>Optoppen</h3>
+            <p>Voeg één of meer woonlagen toe wanneer constructie, omgeving en bouwhoogte daarvoor ruimte bieden.</p>
+            <div class="scenario-card__checks" aria-label="Belangrijke controles">
+              <span>Draagconstructie</span><span>Bouwhoogte</span><span>Beschermd gezicht</span>
+            </div>
+            <a class="scenario-card__link" href="#adrescheck">Onderzoek dit scenario <svg width="15" height="15"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
       </div>
     </div>
 
-    <ul class="rail" id="examples-rail">
-      <li class="example"><img src="../assets/architectural_concept_with_illuminated_cutaway.webp" alt="Zolderopbouw" width="640" height="640" loading="lazy" /><span class="example__label"><svg width="14" height="14"><use href="#i-build"/></svg> Zolderopbouw</span></li>
-      <li class="example"><img src="../assets/modern_townhouse_with_glowing_extension_highlights.webp" alt="Dakterras en uitbreiding" width="640" height="640" loading="lazy" /><span class="example__label"><svg width="14" height="14"><use href="#i-build"/></svg> Dakterras en uitbreiding</span></li>
-      <li class="example"><img src="../assets/victorian_renovation_concept_with_modern_interior.webp" alt="Souterrainwoning" width="640" height="640" loading="lazy" /><span class="example__label"><svg width="14" height="14"><use href="#i-build"/></svg> Souterrainwoning</span></li>
-      <li class="example"><img src="../assets/elegant_townhouse_in_moody_blueprint_setting.webp" alt="Woningsplitsing" width="640" height="640" loading="lazy" /><span class="example__label"><svg width="14" height="14"><use href="#i-layout"/></svg> Woningsplitsing</span></li>
-      <li class="example"><img src="../assets/miniature_3d_home_model_on_blueprint.webp" alt="Aanbouw of studio" width="1200" height="676" loading="lazy" /><span class="example__label"><svg width="14" height="14"><use href="#i-layout"/></svg> Aanbouw of studio</span></li>
-      <li class="example"><img src="../assets/architectural_blueprint_layers_in_dark_space.webp" alt="Optoppen" width="640" height="640" loading="lazy" /><span class="example__label">Optoppen <span class="badge">Binnenkort</span></span></li>
-    </ul>
+    <p class="example-announcer" aria-live="polite" data-example-announcer>Zolderopbouw, scenario 1 van 6</p>
   </div>
 </section>

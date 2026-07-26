@@ -1,98 +1,141 @@
-/* Examples rail — a continuously sliding marquee.
-   Markup: sections/examples.html · styles: css/examples.css
+/* Examples — an accessible scenario explorer rather than a passive marquee.
+   The active case advances every eight seconds while visible. Pointer/focus
+   pauses it, and any direct selection pauses it until the play control is
+   explicitly resumed. */
+const exampleExplorer = document.querySelector('[data-example-explorer]');
+if (exampleExplorer && exampleExplorer.dataset.enhanced !== 'true') {
+  exampleExplorer.dataset.enhanced = 'true';
 
-   The item set is duplicated once so the loop is seamless: when the rail
-   has travelled exactly one set, scrollLeft rewinds by that distance and
-   the copy is pixel-identical, so there is no visible jump.
-   Touch keeps native momentum scrolling; pointer-drag is added for mouse. */
-const rail = document.getElementById('examples-rail');
-if (rail) {
+  const tabs = [...exampleExplorer.querySelectorAll('[data-example-tab]')];
+  const panels = [...exampleExplorer.querySelectorAll('[data-example-panel]')];
+  const stage = exampleExplorer.querySelector('[data-example-stage]');
+  const currentLabel = exampleExplorer.querySelector('[data-example-current]');
+  const announcer = exampleExplorer.querySelector('[data-example-announcer]');
+  const previous = exampleExplorer.querySelector('[data-example-prev]');
+  const next = exampleExplorer.querySelector('[data-example-next]');
+  const toggle = exampleExplorer.querySelector('[data-example-toggle]');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const count = rail.children.length;
-  [...rail.children].forEach((li) => {
-    const clone = li.cloneNode(true);
-    clone.setAttribute('aria-hidden', 'true');   // decorative duplicate
-    rail.appendChild(clone);
-  });
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const count = Math.min(tabs.length, panels.length);
+  let current = 0;
+  let manualPaused = reduce;
+  let temporaryPaused = false;
+  let inView = false;
+  let autoplayTimer;
+  let leavingTimer;
 
-  // Exact loop distance: where the first clone starts.
-  const period = () => rail.children[count].offsetLeft - rail.children[0].offsetLeft;
+  const normalise = (index) => (index + count) % count;
+  const canPlay = () => inView && !manualPaused && !temporaryPaused && !reduce;
 
-  /* px per SECOND, not per frame. The old `scrollLeft += 0.35` was both too
-     slow to read as motion (≈21px/s — a 16rem card took 12s to pass) and
-     frame-rate dependent, so it ran at double speed on a 120Hz display.
-     Advancing by elapsed time fixes both. */
-  const SPEED = 55;
-  let paused = false, dragging = false, rafId = null, resumeTimer, lastT = null;
-
-  const wrap = () => {
-    const p = period();
-    if (p <= 0) return;
-    if (rail.scrollLeft >= p) rail.scrollLeft -= p;
-    else if (rail.scrollLeft < 0) rail.scrollLeft += p;
+  const schedule = () => {
+    clearTimeout(autoplayTimer);
+    if (!canPlay()) return;
+    autoplayTimer = setTimeout(() => activate(current + 1, 'next'), 8000);
   };
 
-  const tick = (t) => {
-    // Clamp the delta: after a tab has been backgrounded, the first frame can
-    // report a multi-second gap, which would jump the rail instead of sliding.
-    const dt = lastT === null ? 0 : Math.min(t - lastT, 50);
-    lastT = t;
-    if (!paused && !dragging && !reduce) rail.scrollLeft += SPEED * (dt / 1000);
-    wrap();
-    rafId = requestAnimationFrame(tick);
-  };
-  const start = () => { if (rafId === null) { lastT = null; rafId = requestAnimationFrame(tick); } };
-  const stop = () => { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; lastT = null; } };
-
-  // Only animate while the rail is actually on screen.
-  new IntersectionObserver(
-    (entries) => (entries[0].isIntersecting ? start() : stop()),
-    { threshold: 0 }
-  ).observe(rail);
-
-  const hold = (ms = 2500) => {
-    paused = true;
-    clearTimeout(resumeTimer);
-    resumeTimer = setTimeout(() => { paused = false; }, ms);
+  const syncPlayback = () => {
+    const playing = canPlay();
+    exampleExplorer.classList.toggle('is-playing', playing);
+    exampleExplorer.classList.toggle('is-temporarily-paused', temporaryPaused);
+    toggle?.setAttribute('aria-pressed', String(manualPaused));
+    toggle?.setAttribute(
+      'aria-label',
+      manualPaused ? 'Automatisch afspelen hervatten' : 'Automatisch afspelen pauzeren'
+    );
+    schedule();
   };
 
-  rail.addEventListener('pointerenter', () => { paused = true; });
-  rail.addEventListener('pointerleave', () => { if (!dragging) paused = false; });
-  rail.addEventListener('focusin', () => { paused = true; });
-  rail.addEventListener('focusout', () => { paused = false; });
+  const activate = (targetIndex, direction = 'next', announce = true) => {
+    if (!count || !stage) return;
+    const target = normalise(targetIndex);
+    if (target === current) {
+      syncPlayback();
+      return;
+    }
 
-  let startX = 0, startScroll = 0;
-  rail.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'mouse') return;      // let touch scroll natively
-    dragging = true;
-    startX = e.clientX;
-    startScroll = rail.scrollLeft;
-    rail.setPointerCapture(e.pointerId);
-    rail.classList.add('is-dragging');
-  });
-  rail.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    rail.scrollLeft = startScroll - (e.clientX - startX);
-    wrap();
-  });
-  const endDrag = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    rail.classList.remove('is-dragging');
-    try { rail.releasePointerCapture(e.pointerId); } catch (_) {}
-    hold();
+    const outgoing = panels[current];
+    const incoming = panels[target];
+    clearTimeout(leavingTimer);
+    panels.forEach((panel) => panel.classList.remove('is-leaving'));
+
+    stage.dataset.direction = direction;
+    outgoing.classList.remove('is-active');
+    outgoing.classList.add('is-leaving');
+    outgoing.setAttribute('aria-hidden', 'true');
+    incoming.classList.add('is-active');
+    incoming.setAttribute('aria-hidden', 'false');
+
+    tabs[current].setAttribute('aria-selected', 'false');
+    tabs[current].setAttribute('tabindex', '-1');
+    tabs[target].setAttribute('aria-selected', 'true');
+    tabs[target].setAttribute('tabindex', '0');
+
+    current = target;
+    currentLabel.textContent = String(current + 1).padStart(2, '0');
+    exampleExplorer.style.setProperty('--example-progress', String((current + 1) / count));
+
+    if (announce && announcer) {
+      const title = incoming.querySelector('h3')?.textContent?.trim() || 'Scenario';
+      announcer.textContent = `${title}, scenario ${current + 1} van ${count}`;
+    }
+
+    leavingTimer = setTimeout(() => outgoing.classList.remove('is-leaving'), 760);
+    syncPlayback();
   };
-  rail.addEventListener('pointerup', endDrag);
-  rail.addEventListener('pointercancel', endDrag);
 
-  document.querySelectorAll('[data-rail]').forEach((b) => {
-    b.addEventListener('click', () => {
-      const card = rail.querySelector('.example');
-      const step = card ? card.getBoundingClientRect().width + 16 : 240;
-      hold();
-      rail.scrollBy({ left: b.dataset.rail === 'next' ? step : -step, behavior: 'smooth' });
+  const selectManually = (target, direction) => {
+    manualPaused = true;
+    activate(target, direction);
+  };
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectManually(index, index < current ? 'prev' : 'next'));
+    tab.addEventListener('keydown', (event) => {
+      let target;
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') target = normalise(index + 1);
+      else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') target = normalise(index - 1);
+      else if (event.key === 'Home') target = 0;
+      else if (event.key === 'End') target = count - 1;
+      else return;
+
+      event.preventDefault();
+      manualPaused = true;
+      activate(target, target < current ? 'prev' : 'next');
+      tabs[target].focus();
+      tabs[target].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
     });
   });
+
+  previous?.addEventListener('click', () => selectManually(current - 1, 'prev'));
+  next?.addEventListener('click', () => selectManually(current + 1, 'next'));
+  toggle?.addEventListener('click', () => {
+    manualPaused = !manualPaused;
+    syncPlayback();
+  });
+
+  const setTemporaryPause = (paused) => {
+    temporaryPaused = paused;
+    syncPlayback();
+  };
+
+  if (finePointer) {
+    exampleExplorer.addEventListener('pointerenter', () => setTemporaryPause(true));
+    exampleExplorer.addEventListener('pointerleave', () => setTemporaryPause(false));
+  }
+  exampleExplorer.addEventListener('focusin', () => setTemporaryPause(true));
+  exampleExplorer.addEventListener('focusout', () => {
+    setTimeout(() => setTemporaryPause(exampleExplorer.contains(document.activeElement)), 0);
+  });
+
+  new IntersectionObserver(
+    ([entry]) => {
+      inView = Boolean(entry?.isIntersecting);
+      syncPlayback();
+    },
+    { threshold: .2 }
+  ).observe(exampleExplorer);
+
+  syncPlayback();
 }
 
 /* Fine-pointer enhancement for the selected glass cards. The Next route has
