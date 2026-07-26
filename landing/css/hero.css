@@ -36,11 +36,43 @@
    full-bleed button looked broken), and the house + its flanking cards were
    cramped at the old near-even split. */
 .hero__grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: var(--space-7); align-items: stretch; }
+.hero__copy {
+  /* The artwork grows much faster than the copy column. Use that extra height
+     to settle the headline/form nearer the house's visual centre while the
+     trust row remains pinned to the shared baseline below. */
+  padding-top: clamp(0rem, calc((100vw - 62rem) * .22), var(--space-8));
+}
 
 /* Title — the page's one loud typographic moment. Inherits the fluid
    --display-lg from h1 (48 -> 88px, was capped at 57.6px). */
 .hero__title { max-width: 14ch; margin: 0; }
-.hero__title .hl { color: var(--color-text-accent); }
+.hero__title .hl {
+  color: var(--color-text-accent);
+  filter: drop-shadow(0 0 18px var(--color-bloom));
+}
+@keyframes hero-highlight-flow {
+  0%, 14% { background-position: 100% 50%; }
+  58%, 100% { background-position: 0 50%; }
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .hero__title .hl {
+    background:
+      linear-gradient(
+        108deg,
+        var(--color-text-accent) 5%,
+        var(--color-accent) 38%,
+        color-mix(in srgb, var(--color-text) 82%, var(--color-accent)) 50%,
+        var(--color-accent) 62%,
+        var(--color-text-accent) 95%
+      );
+    background-size: 240% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: hero-highlight-flow calc(var(--duration-trace) * 4) var(--ease-trace) infinite;
+  }
+}
 .hero__intro { font-size: var(--text-md); line-height: var(--leading-normal); color: var(--color-text-muted); max-width: 44ch; }
 
 /* -- Hero visual: house on the map, cards flanking it -- */
@@ -109,17 +141,27 @@
 .hero-card--verdict .btn { margin-top: var(--space-2); }
 
 /* -- Medallions: compass-bezel icons for the trust rows -- */
-.medallion { flex: none; }
+.medallion {
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  transition:
+    translate var(--duration-base) var(--ease-settle),
+    scale var(--duration-base) var(--ease-settle),
+    filter var(--duration-base) var(--ease-standard);
+}
 .medallion svg {
-  width: 2.6rem; height: 2.6rem;
+  width: 3rem; height: 3rem;
   fill: none; stroke: currentColor; stroke-width: 1.6;
   stroke-linecap: round; stroke-linejoin: round; color: var(--color-text);
+  transition: color var(--duration-fast) var(--ease-standard), rotate var(--duration-base) var(--ease-settle);
 }
 .medallion .bezel { stroke-width: 1; stroke-dasharray: .5 3.1; opacity: .55; }
 .medallion .ring  { stroke-width: 1; opacity: .3; }
 
 .trust-row, .hero__proof { display: grid; list-style: none; padding: 0; }
-.trust-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin: var(--space-4) 0 0; }
+.trust-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); margin: auto 0 0; }
 .hero__proof { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin: var(--space-4) 0 0; }
 /* Pin the right-hand proof row to the bottom of its column so it lines up with
    .trust-row on the left. The house takes the matching auto margin, so the
@@ -129,8 +171,27 @@
 .trust-row li, .hero__proof li { display: flex; align-items: center; gap: var(--space-3); }
 /* Concept treatment: a single label beside the medallion, wrapping to 2 lines. */
 .trust-row h4, .hero__proof h4 {
-  font-size: var(--text-base); font-weight: var(--weight-medium);
+  font-size: var(--text-sm); font-weight: var(--weight-medium);
   color: var(--color-text); line-height: 1.3; letter-spacing: normal;
+}
+@keyframes medallion-trace {
+  to { stroke-dashoffset: -18; }
+}
+.trust-row li:hover .medallion,
+.hero__proof li:hover .medallion {
+  translate: 0 -3px;
+  scale: 1.08;
+  filter: drop-shadow(0 0 12px var(--color-bloom));
+}
+.trust-row li:hover .medallion svg,
+.hero__proof li:hover .medallion svg {
+  color: var(--color-text-accent);
+  rotate: -4deg;
+}
+.trust-row li:hover .medallion .bezel,
+.hero__proof li:hover .medallion .bezel {
+  opacity: 1;
+  animation: medallion-trace var(--duration-trace) linear infinite;
 }
 
 /* ---- Responsive -------------------------------------------------------- */
@@ -145,7 +206,15 @@
   .hero-card--steps, .hero-card--verdict { left: auto; right: auto; top: auto; }
 }
 @media (max-width: 40rem) {
-  .trust-row, .hero__proof { grid-template-columns: minmax(0, 1fr); }
+  .trust-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  .hero__proof { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+  .trust-row li {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    text-align: center;
+  }
+  .trust-row h4, .hero__proof h4 { font-size: var(--text-xs); }
 }
 /* Wide screens: give a little more to the visual. The copy column is already
    bounded by .hero__title (14ch), .hero__intro (44ch) and .addresscheck
