@@ -105,30 +105,26 @@
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: radial-gradient(55% 60% at 50% 100%, var(--color-bloom) 0%, transparent 72%);
 }
-.final-cta { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+.final-cta { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+.final-cta__copy { position: relative; z-index: 2; }
 
-/* The map is an atmospheric SECTION layer, deliberately larger than the
-   content shell so the blueprint reaches left, right and above the miniature.
-   Its z-index is below the orange bloom (::before), while the content and
-   transparent miniature remain above both. */
-.final-cta__map {
-  position: absolute;
-  top: 2%;
-  right: -3%;
-  width: min(61rem, 72vw);
-  aspect-ratio: 4 / 3;
-  z-index: 0;
-  pointer-events: none;
-  background: url("../../assets/miniatur-map-bg.webp") no-repeat center / cover;
-}
-
+/* The stage does not create a stacking context: its map therefore sits at
+   section level 0, the section's orange bloom at 1, and the miniature at 2.
+   Anchoring the map here keeps it centred on the artwork at every viewport. */
 .final-cta__visual {
   position: relative;
   aspect-ratio: 4 / 3;
 }
+.final-cta__map {
+  position: absolute;
+  inset: -16% 0 -10% -16%;
+  z-index: 0;
+  pointer-events: none;
+  background: url("../../assets/miniatur-map-bg.webp") no-repeat center / cover;
+}
 .final-cta__miniature {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: block;
   width: 100%;
   height: auto;
@@ -139,9 +135,6 @@
 @media (max-width: 62rem) {
   .final-cta { grid-template-columns: minmax(0, 1fr); }
   .final-cta__map {
-    top: auto;
-    right: -25%;
-    bottom: -6%;
-    width: 150%;
+    inset: -18% 0 -10% -12%;
   }
 }
