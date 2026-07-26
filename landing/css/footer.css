@@ -8,6 +8,7 @@
    change alone does not separate the footer. Keep the hairline. */
 .site-footer { padding-block: var(--space-9) var(--space-6); background: var(--color-surface); border-top: 1px solid var(--color-border-subtle); }
 .footer__grid { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, 1fr)); gap: var(--space-6); }
+.footer__col .logo--beam-motion { align-self: flex-start; }
 .footer__col h4 { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3); font-weight: var(--weight-medium); }
 .footer__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .footer__col a {

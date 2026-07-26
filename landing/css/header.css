@@ -12,7 +12,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 .site-header__inner { display: flex; align-items: center; gap: var(--space-5); padding-block: var(--space-4); }
-.site-header .logo {
+.logo--beam-motion {
   position: relative;
 }
 .nav-logo__reveal {
@@ -22,7 +22,7 @@
 }
 .site-header .logo.is-revealing .nav-logo__static { display: none; }
 .site-header .logo.is-revealing .nav-logo__reveal { display: block; }
-.nav-logo__beams {
+.logo__beams {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -31,14 +31,14 @@
   pointer-events: none;
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--color-accent) 65%, transparent));
 }
-.nav-logo__beam {
+.logo__beam {
   fill: color-mix(in srgb, var(--color-accent) 46%, white);
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
   will-change: transform, opacity;
 }
-.site-header .logo::after {
+.logo--beam-motion::after {
   content: "";
   position: absolute;
   left: 39.25%;
@@ -53,13 +53,13 @@
   scale: .3;
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .site-header .logo:is(:hover, :focus-visible)::after {
+  .logo--beam-motion:is(:hover, :focus-visible)::after {
     animation: nav-logo-crossing-pulse 720ms var(--ease-settle) both;
   }
-  .site-header .logo:is(:hover, :focus-visible) .nav-logo__beam--left {
+  .logo--beam-motion:is(:hover, :focus-visible) .logo__beam--left {
     animation: nav-logo-beam-left 760ms var(--ease-settle) both;
   }
-  .site-header .logo:is(:hover, :focus-visible) .nav-logo__beam--right {
+  .logo--beam-motion:is(:hover, :focus-visible) .logo__beam--right {
     animation: nav-logo-beam-right 760ms var(--ease-settle) 70ms both;
   }
 }
