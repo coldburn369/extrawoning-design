@@ -100,29 +100,28 @@
 /* ---- Final CTA ---------------------------------------------------------
    The page's closing statement, so it gets the same atmosphere as the hero —
    the two accent blooms bracket the page top and bottom. */
-.final-cta-section { position: relative; overflow: hidden; }
+.final-cta-section { position: relative; isolation: isolate; overflow: hidden; }
 .final-cta-section::before {
-  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: radial-gradient(55% 60% at 50% 100%, var(--color-bloom) 0%, transparent 72%);
 }
-.final-cta { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+.final-cta { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
 
-/* Matching 4:3 layers: the map supplies the setting while the transparent
-   miniature stays independently positionable above it, just like the hero's
-   map and house. Keeping the layers separate also avoids baking atmosphere
-   into content imagery. */
-.final-cta__visual {
-  position: relative;
-  isolation: isolate;
-  aspect-ratio: 4 / 3;
-}
+/* The map is an atmospheric SECTION layer, deliberately larger than the
+   content shell so the blueprint reaches left, right and above the miniature.
+   Its z-index is below the orange bloom (::before), while the content and
+   transparent miniature remain above both. */
 .final-cta__map {
   position: absolute;
-  inset: 0;
+  inset: -24% -12% -10%;
   z-index: 0;
   pointer-events: none;
-  border-radius: var(--radius-xl);
   background: url("../../assets/miniatur-map-bg.webp") no-repeat center / cover;
+}
+
+.final-cta__visual {
+  position: relative;
+  aspect-ratio: 4 / 3;
 }
 .final-cta__miniature {
   position: relative;
