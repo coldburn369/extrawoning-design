@@ -64,19 +64,42 @@
 .btn:hover::before { opacity: 1; }
 .btn:active { translate: 0; transform: scale(.97); }
 .btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
-.btn--primary { background: var(--color-accent); color: var(--color-text-on-accent); font-weight: var(--weight-semibold); }
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  font-weight: var(--weight-semibold);
+  box-shadow: 0 .8rem 2.2rem color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
 .btn--primary::before {
   background:
     radial-gradient(
-      5.5rem circle at var(--btn-x) var(--btn-y),
-      color-mix(in srgb, var(--color-text-on-accent) 14%, transparent),
-      transparent 72%
+      7rem circle at var(--btn-x) var(--btn-y),
+      color-mix(in srgb, var(--color-sheen) 28%, transparent),
+      transparent 62%
     );
+}
+.btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: -55%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 35%,
+      color-mix(in srgb, var(--color-sheen) 22%, transparent) 48%,
+      transparent 61%
+    );
+  translate: -70% 0;
+  rotate: 8deg;
+  transition: translate var(--duration-slow) var(--ease-settle);
 }
 .btn--primary:hover {
   background: var(--color-accent);
-  box-shadow: 0 8px 22px var(--color-bloom);
+  box-shadow: 0 1.1rem 3rem color-mix(in srgb, var(--color-accent) 28%, transparent);
 }
+.btn--primary:hover::after { translate: 70% 0; }
 /* Secondary action reads as a filled, tinted surface rather than an outline —
    outlines everywhere were part of the boxed-in feel. */
 .btn--ghost { background: color-mix(in srgb, var(--color-text) 8%, transparent); color: var(--color-text); }
@@ -177,6 +200,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .btn::before { display: none; }
+  .btn--primary::after { display: none; }
   .btn:hover { translate: none; }
   [data-cursor-glow]::after { display: none; }
   [data-cursor-glow]:hover { translate: none; }

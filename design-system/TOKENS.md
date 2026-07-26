@@ -28,7 +28,7 @@ Colours are declared once with `light-dark()`; the theme toggle flips only
 | `--color-text` | clay-800 `#2b2b28` / clay-100 | brand ink |
 | `--color-text-muted` | clay-600 / clay-500 | 5.5:1 / 5.1:1 |
 | `--color-text-accent` | orange-700 `#a84c11` / orange-400 | **accent-coloured TEXT** |
-| `--color-text-on-accent` | clay-50 (both) | on an accent fill |
+| `--color-text-on-accent` | clay-950 (both) | dark ink on an accent fill; 6.2:1+ |
 
 ### Accent — three roles, do not swap
 | Token | light / dark | use for |

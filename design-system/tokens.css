@@ -143,7 +143,9 @@
   /* Accent-coloured TEXT. Deliberately darker than --color-accent on light:
      the brand orange is only 2.7:1 on clay-50 and cannot carry small copy.  */
   --color-text-accent:     light-dark(var(--ew-orange-700), var(--ew-orange-400));
-  --color-text-on-accent:  var(--ew-clay-50);
+  /* Dark ink on the orange fill holds 6.2–6.8:1 and gives primary actions
+     the crisp, high-contrast treatment used by the public launch page. */
+  --color-text-on-accent:  var(--ew-clay-950);
 
   /* -- Accent roles --
      --color-accent    : fills, the mark, large graphics. Brand-true.

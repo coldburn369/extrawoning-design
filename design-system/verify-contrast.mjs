@@ -46,6 +46,8 @@ const CHECKS = [
   ['text-accent dark ', 'orange-400', 'clay-900', 4.5],
   ['accent-ui   light', 'orange-600', 'clay-50', 3.0],
   ['accent-ui   dark ', 'orange-400', 'clay-900', 3.0],
+  ['on-accent   light', 'clay-950', 'orange-500', 4.5],
+  ['on-accent   dark ', 'clay-950', 'orange-400', 4.5],
   ['success-txt light', 'green-700', 'clay-50', 4.5],
   ['success-txt dark ', 'green-400', 'clay-900', 4.5],
   ['success-ui  light', 'green-600', 'clay-50', 3.0],
