@@ -26,12 +26,15 @@
   transition: background var(--duration-fast) var(--ease-standard),
               border-color var(--duration-fast) var(--ease-standard),
               transform var(--duration-fast) var(--ease-standard),
+              translate var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard),
               color var(--duration-fast) var(--ease-standard);
 }
-.btn:active { transform: scale(.97); }
+.btn:hover { translate: 0 -2px; }
+.btn:active { translate: 0; transform: scale(.97); }
 .btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
 .btn--primary { background: var(--color-accent); color: var(--color-text-on-accent); font-weight: var(--weight-semibold); }
-.btn--primary:hover { background: var(--color-accent-hover); }
+.btn--primary:hover { background: var(--color-accent-hover); box-shadow: 0 10px 28px var(--color-bloom); }
 /* Secondary action reads as a filled, tinted surface rather than an outline —
    outlines everywhere were part of the boxed-in feel. */
 .btn--ghost { background: color-mix(in srgb, var(--color-text) 8%, transparent); color: var(--color-text); }
@@ -65,9 +68,18 @@
    a soft cast shadow. This one change does more to shed the "dashboard" look
    than anything else in this file. */
 .panel {
-  background: var(--card-bg); border: var(--card-border);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-text) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--card-bg) 72%, transparent);
+  border: var(--card-border);
   border-radius: var(--card-radius); padding: var(--space-6);
   box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  transition:
+    translate var(--duration-base) var(--ease-settle),
+    box-shadow var(--duration-base) var(--ease-settle),
+    background var(--duration-base) var(--ease-standard);
 }
 .panel--raised { background: var(--color-surface-raised); }
 .panel--sunken { background: var(--color-surface-sunken); }
@@ -75,6 +87,50 @@
 /* The one panel that keeps an edge — it is a callout, so it must read as
    deliberately marked rather than merely raised. */
 .panel--accent { border: 1px solid var(--color-accent-ui); background: var(--color-accent-wash); box-shadow: none; }
+
+/* Pointer-tracked edge light. JavaScript only updates the two coordinates;
+   the visual remains CSS, and defaults to the centre without enhancement. */
+[data-cursor-glow] {
+  --glow-x: 50%;
+  --glow-y: 50%;
+  position: relative;
+  isolation: isolate;
+}
+[data-cursor-glow]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      15rem circle at var(--glow-x) var(--glow-y),
+      color-mix(in srgb, var(--color-accent-ui) 82%, transparent),
+      transparent 68%
+    );
+  -webkit-mask:
+    linear-gradient(var(--color-text) 0 0) content-box,
+    linear-gradient(var(--color-text) 0 0);
+  -webkit-mask-composite: xor;
+          mask:
+    linear-gradient(var(--color-text) 0 0) content-box,
+    linear-gradient(var(--color-text) 0 0);
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+[data-cursor-glow]:hover {
+  translate: 0 -4px;
+  box-shadow: var(--elevation-3), var(--surface-highlight);
+}
+[data-cursor-glow]:hover::after { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-cursor-glow]::after { display: none; }
+  [data-cursor-glow]:hover { translate: none; }
+}
 
 /* ---- Lists -------------------------------------------------------------
    Checklist rows are now a real reading size, and the marks are quieter than
@@ -115,6 +171,29 @@
 .icon-tile--round { border-radius: var(--radius-full); }
 .icon-tile--lg { width: 3.25rem; height: 3.25rem; border-radius: var(--radius-md); }
 .icon-tile--lg svg { width: 1.4rem; height: 1.4rem; }
+
+.feature,
+.icon-tile,
+.checklist li,
+.checklist .ico {
+  transition:
+    translate var(--duration-fast) var(--ease-standard),
+    scale var(--duration-fast) var(--ease-standard),
+    rotate var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+.feature:hover { translate: var(--space-1) 0; }
+.feature:hover .icon-tile {
+  translate: 0 -2px;
+  rotate: -3deg;
+  color: var(--color-text-accent);
+  background: var(--color-accent-wash);
+}
+.price .checklist li:hover,
+.invest-panel .checklist li:hover { translate: var(--space-1) 0; }
+.price .checklist li:hover .ico,
+.invest-panel .checklist li:hover .ico { scale: 1.18; rotate: -8deg; }
 
 /* ---- Badge ------------------------------------------------------------- */
 .badge {

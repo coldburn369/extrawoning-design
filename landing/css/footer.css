@@ -10,8 +10,12 @@
 .footer__grid { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, 1fr)); gap: var(--space-6); }
 .footer__col h4 { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3); font-weight: var(--weight-medium); }
 .footer__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.footer__col a { font-size: var(--text-sm); color: var(--color-text-muted); }
-.footer__col a:hover { color: var(--color-text); }
+.footer__col a {
+  display: inline-block;
+  font-size: var(--text-sm); color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-standard), translate var(--duration-fast) var(--ease-standard);
+}
+.footer__col a:hover { color: var(--color-text); translate: var(--space-1) 0; }
 /* The lead-in headline in the first column: sentence case, display face —
    deliberately not the mono uppercase treatment of the other column heads.
    Was an inline style override. The selector must out-specify

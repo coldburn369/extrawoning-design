@@ -12,7 +12,17 @@
 /* Divided research list — icon tile + single two-line label per row.
    Rows separate by spacing now; the hairlines went with the rest of them. */
 .research-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.research-list li { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
+.research-list li {
+  display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) 0;
+  transition: translate var(--duration-fast) var(--ease-standard);
+}
+.research-list li:hover { translate: var(--space-1) 0; }
+.research-list li:hover .icon-tile {
+  color: var(--color-text-accent);
+  background: var(--color-accent-wash);
+  translate: 0 -2px;
+  rotate: -3deg;
+}
 .research-list li > span:last-child { font-size: var(--text-base); line-height: 1.35; color: var(--color-text); }
 
 /* Intro heading a step smaller than the site h2, to match the concept.

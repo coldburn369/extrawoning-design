@@ -94,3 +94,35 @@ if (rail) {
     });
   });
 }
+
+/* Fine-pointer enhancement for the selected glass cards. The Next route has
+   the same behavior in LandingClient; this keeps the legacy comparison server
+   visually equivalent without introducing an inline script. */
+if (
+  matchMedia('(hover: hover) and (pointer: fine)').matches &&
+  !matchMedia('(prefers-reduced-motion: reduce)').matches
+) {
+  document.querySelectorAll('[data-cursor-glow]').forEach((card) => {
+    let frame = null;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const render = () => {
+      const bounds = card.getBoundingClientRect();
+      card.style.setProperty('--glow-x', `${pointerX - bounds.left}px`);
+      card.style.setProperty('--glow-y', `${pointerY - bounds.top}px`);
+      frame = null;
+    };
+    card.addEventListener('pointermove', (event) => {
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (frame === null) frame = requestAnimationFrame(render);
+    });
+    card.addEventListener('pointerleave', () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
+      card.style.removeProperty('--glow-x');
+      card.style.removeProperty('--glow-y');
+    });
+  });
+}

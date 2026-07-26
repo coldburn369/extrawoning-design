@@ -13,12 +13,42 @@
 
 body {
   margin: 0;
+  position: relative;
+  isolation: isolate;
   background: var(--color-page);
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
+}
+
+/* A slow fixed aurora gives translucent surfaces something to refract. The
+   gradients stay deliberately faint; cards should read as glass, not as neon
+   panels. Moving one compositor layer is cheaper than animating every card. */
+.page-aurora {
+  position: fixed;
+  inset: -14%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 38% at 14% 20%, var(--color-bloom) 0%, transparent 72%),
+    radial-gradient(36% 42% at 84% 34%, color-mix(in srgb, var(--color-glow) 16%, transparent) 0%, transparent 74%),
+    radial-gradient(46% 38% at 48% 88%, var(--color-bloom) 0%, transparent 72%),
+    var(--color-page);
+  transform: translate3d(-2%, -1%, 0) scale(1.06);
+  will-change: transform;
+}
+
+@keyframes aurora-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1.06) rotate(-1deg); }
+  to   { transform: translate3d( 2%,  1%, 0) scale(1.11) rotate( 1deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-aurora {
+    animation: aurora-drift calc(var(--duration-trace) * 12) var(--ease-trace) infinite alternate;
+  }
 }
 
 img { max-width: 100%; height: auto; display: block; }

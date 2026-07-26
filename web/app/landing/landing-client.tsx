@@ -8,6 +8,8 @@ export default function LandingClient() {
   useEffect(() => {
     const rail = document.getElementById("examples-rail");
     const cleanups: Array<() => void> = [];
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
 
     for (const form of document.querySelectorAll<HTMLFormElement>(".addresscheck")) {
       const preventPlaceholderSubmit = (event: SubmitEvent) => event.preventDefault();
@@ -15,12 +17,47 @@ export default function LandingClient() {
       cleanups.push(() => form.removeEventListener("submit", preventPlaceholderSubmit));
     }
 
+    if (!reduce && finePointer) {
+      for (const card of document.querySelectorAll<HTMLElement>("[data-cursor-glow]")) {
+        let frame: number | null = null;
+        let pointerX = 0;
+        let pointerY = 0;
+
+        const renderGlow = () => {
+          const bounds = card.getBoundingClientRect();
+          card.style.setProperty("--glow-x", `${pointerX - bounds.left}px`);
+          card.style.setProperty("--glow-y", `${pointerY - bounds.top}px`);
+          frame = null;
+        };
+        const pointerMove = (event: PointerEvent) => {
+          pointerX = event.clientX;
+          pointerY = event.clientY;
+          if (frame === null) frame = requestAnimationFrame(renderGlow);
+        };
+        const pointerLeave = () => {
+          if (frame !== null) cancelAnimationFrame(frame);
+          frame = null;
+          card.style.removeProperty("--glow-x");
+          card.style.removeProperty("--glow-y");
+        };
+
+        card.addEventListener("pointermove", pointerMove);
+        card.addEventListener("pointerleave", pointerLeave);
+        cleanups.push(() => {
+          card.removeEventListener("pointermove", pointerMove);
+          card.removeEventListener("pointerleave", pointerLeave);
+          if (frame !== null) cancelAnimationFrame(frame);
+          card.style.removeProperty("--glow-x");
+          card.style.removeProperty("--glow-y");
+        });
+      }
+    }
+
     if (!rail || rail.dataset.enhanced === "true") {
       return () => cleanups.forEach((cleanup) => cleanup());
     }
 
     rail.dataset.enhanced = "true";
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const originals = Array.from(rail.children);
     const count = originals.length;
 

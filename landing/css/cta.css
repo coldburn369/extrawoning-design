@@ -129,7 +129,9 @@
   width: 100%;
   height: auto;
   filter: drop-shadow(0 24px 50px rgb(0 0 0 / .45));
+  transition: translate var(--duration-slow) var(--ease-settle), scale var(--duration-slow) var(--ease-settle);
 }
+.final-cta__visual:hover .final-cta__miniature { translate: 0 -5px; scale: 1.015; }
 
 /* ---- Responsive -------------------------------------------------------- */
 @media (max-width: 62rem) {

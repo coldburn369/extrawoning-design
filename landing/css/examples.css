@@ -19,7 +19,11 @@
 .rail.is-dragging { cursor: grabbing; user-select: none; }
 .rail.is-dragging img { pointer-events: none; }
 
-.example { flex: 0 0 16rem; display: flex; flex-direction: column; gap: var(--space-3); }
+.example {
+  flex: 0 0 16rem; display: flex; flex-direction: column; gap: var(--space-3);
+  transition: translate var(--duration-base) var(--ease-settle);
+}
+.example:hover { translate: 0 -6px; }
 /* Source images are a mix of 1:1 and 16:9. Lock the card to one ratio so the
    rail can't go ragged and labels stay on a common baseline. Taller than
    square now — portrait cards read as editorial rather than as a thumbnail
@@ -27,17 +31,32 @@
 .example img {
   width: 100%; aspect-ratio: 4 / 5; height: auto; object-fit: cover;
   border-radius: var(--radius-lg); background: var(--color-surface-sunken);
+  box-shadow: var(--elevation-1);
+  transition:
+    scale var(--duration-slow) var(--ease-settle),
+    box-shadow var(--duration-base) var(--ease-standard),
+    filter var(--duration-base) var(--ease-standard);
 }
-.example__label { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
+.example:hover img { scale: 1.025; box-shadow: var(--elevation-3); filter: saturate(1.06); }
+.example__label {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-sm); color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-standard), translate var(--duration-fast) var(--ease-standard);
+}
+.example:hover .example__label { color: var(--color-text); translate: var(--space-1) 0; }
 
 .rail-controls { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
 .rail-btn {
   width: 2.5rem; height: 2.5rem; border-radius: var(--radius-full); display: grid; place-items: center;
   border: 0; color: var(--color-text); cursor: pointer;
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  transition: background var(--duration-fast) var(--ease-standard);
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    translate var(--duration-fast) var(--ease-standard),
+    scale var(--duration-fast) var(--ease-standard);
 }
-.rail-btn:hover { background: color-mix(in srgb, var(--color-text) 15%, transparent); }
+.rail-btn:hover { background: color-mix(in srgb, var(--color-text) 15%, transparent); translate: 0 -2px; scale: 1.04; }
+.rail-btn:active { translate: 0; scale: .96; }
 .rail-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
 
 /* ---- Responsive -------------------------------------------------------- */

@@ -49,7 +49,9 @@
 .hero__house {
   width: 100%; height: auto;
   filter: drop-shadow(0 24px 50px rgb(0 0 0 / .55));
+  transition: translate var(--duration-slow) var(--ease-settle), scale var(--duration-slow) var(--ease-settle);
 }
+.hero__stage:hover .hero__house { translate: 0 -4px; scale: 1.012; }
 /* Floating glass cards. These keep a real cast shadow (--elevation-float):
    they overlap the artwork, so they need to separate from it, which a top
    highlight alone cannot do. The hairline border is replaced by the highlight

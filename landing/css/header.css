@@ -12,12 +12,36 @@
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 .site-header__inner { display: flex; align-items: center; gap: var(--space-5); padding-block: var(--space-4); }
+.site-header .logo {
+  transition: translate var(--duration-fast) var(--ease-standard), scale var(--duration-fast) var(--ease-standard);
+}
+.site-header .logo:hover { translate: 0 -1px; scale: 1.015; }
 .site-nav { display: flex; gap: var(--space-6); margin-inline: auto; }
-.site-nav a { font-size: var(--text-sm); color: var(--color-text-muted); transition: color var(--duration-fast) var(--ease-standard); }
+.site-nav a {
+  position: relative;
+  font-size: var(--text-sm); color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+.site-nav a::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -.45rem;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--duration-base) var(--ease-settle);
+}
 .site-nav a:hover { color: var(--color-text); }
+.site-nav a:hover::after { transform: scaleX(1); transform-origin: left; }
 .header-actions { display: flex; align-items: center; gap: var(--space-5); }
-.header-actions .login { font-size: var(--text-sm); color: var(--color-text-muted); }
-.header-actions .login:hover { color: var(--color-text); }
+.header-actions .login {
+  font-size: var(--text-sm); color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-standard), translate var(--duration-fast) var(--ease-standard);
+}
+.header-actions .login:hover { color: var(--color-text); translate: 0 -1px; }
 /* Mobile burger is STUBBED — the nav just hides below 62rem. */
 .nav-toggle { display: none; }
 

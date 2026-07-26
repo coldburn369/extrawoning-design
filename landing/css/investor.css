@@ -40,7 +40,12 @@
   background: linear-gradient(to top,
     color-mix(in srgb, var(--color-text) 8%, transparent),
     color-mix(in srgb, var(--color-text) 22%, transparent));
+  transition:
+    translate var(--duration-fast) var(--ease-standard),
+    filter var(--duration-fast) var(--ease-standard);
 }
+.invest-panel:hover .growth__bars span { translate: 0 -3px; }
+.invest-panel:hover .growth__bars span:nth-child(2n) { translate: 0 -6px; }
 .growth__bars span:nth-child(1) { height: 30%; }
 .growth__bars span:nth-child(2) { height: 38%; }
 .growth__bars span:nth-child(3) { height: 45%; }
@@ -54,6 +59,9 @@
     color-mix(in srgb, var(--color-accent) 45%, transparent),
     var(--color-accent));
   box-shadow: 0 0 32px var(--color-bloom);
+}
+.invest-panel:hover .growth__bars span:last-child {
+  filter: brightness(1.12) saturate(1.08);
 }
 
 .growth__axis { display: flex; justify-content: space-between; }

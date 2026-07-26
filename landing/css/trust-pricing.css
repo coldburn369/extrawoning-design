@@ -14,14 +14,30 @@
 
 /* ---- Rating ------------------------------------------------------------ */
 .rating { display: flex; align-items: center; gap: var(--space-2); }
-.rating .stars { color: var(--color-accent); letter-spacing: .1em; }
+.rating .stars {
+  color: var(--color-accent); letter-spacing: .1em;
+  transition: letter-spacing var(--duration-base) var(--ease-settle), filter var(--duration-base) var(--ease-standard);
+}
+.rating:hover .stars { letter-spacing: .16em; filter: drop-shadow(0 0 8px var(--color-bloom)); }
 .rating strong { font-size: var(--text-sm); }
 
 /* ---- Pricing ----------------------------------------------------------- */
 .pricing { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
-.price { display: flex; flex-direction: column; gap: var(--space-5); }
+.price {
+  display: flex; flex-direction: column; gap: var(--space-5);
+  transition:
+    translate var(--duration-base) var(--ease-settle),
+    scale var(--duration-base) var(--ease-settle),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+.price:hover { translate: 0 -6px; scale: 1.008; }
 .price__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
-.price__amount { font-family: var(--font-display); font-size: var(--display-sm); font-weight: var(--weight-bold); letter-spacing: var(--tracking-display); }
+.price__amount {
+  font-family: var(--font-display); font-size: var(--display-sm);
+  font-weight: var(--weight-bold); letter-spacing: var(--tracking-display);
+  transition: color var(--duration-fast) var(--ease-standard), translate var(--duration-fast) var(--ease-standard);
+}
+.price:hover .price__amount { color: var(--color-text-accent); translate: var(--space-1) 0; }
 .price__amount small { font-size: var(--text-sm); font-weight: var(--weight-regular); color: var(--color-text-muted); margin-inline-start: var(--space-2); }
 /* Pinned to the bottom of each card AND given a floor height, so the two cards'
    buttons line up even though "Start gratis adrescheck" takes two lines in this
@@ -29,7 +45,80 @@
 .price .btn { margin-top: auto; min-height: 3.5rem; }
 /* Highlighted plan. The only panel on the page that keeps an outline — it has
    to win against its neighbour, and a raised surface alone won't do that. */
-.price--featured { border: 1px solid var(--color-accent-ui); background: var(--color-surface-raised); }
+@property --price-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.price--featured {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-text) 7%, transparent), transparent 40%),
+    color-mix(in srgb, var(--color-surface-raised) 76%, transparent);
+  box-shadow: var(--card-shadow), 0 0 32px var(--color-bloom);
+}
+.price--featured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    conic-gradient(
+      from var(--price-border-angle),
+      transparent 0 58%,
+      color-mix(in srgb, var(--color-accent-ui) 24%, transparent) 66%,
+      var(--color-accent-ui) 75%,
+      color-mix(in srgb, var(--color-accent-ui) 32%, transparent) 84%,
+      transparent 92%
+    );
+  -webkit-mask:
+    linear-gradient(var(--color-text) 0 0) content-box,
+    linear-gradient(var(--color-text) 0 0);
+  -webkit-mask-composite: xor;
+          mask:
+    linear-gradient(var(--color-text) 0 0) content-box,
+    linear-gradient(var(--color-text) 0 0);
+          mask-composite: exclude;
+  animation: price-border-orbit calc(var(--duration-trace) * 3) linear infinite;
+}
+.price--featured > * { position: relative; z-index: 1; }
+.price--featured .badge {
+  transition: scale var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+.price--featured:hover .badge { scale: 1.06; box-shadow: 0 0 20px var(--color-bloom); }
+
+@keyframes price-border-orbit {
+  to { --price-border-angle: 1turn; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes price-arrive {
+      from { opacity: 0; transform: translateY(34px) scale(.965); }
+      to   { opacity: 1; transform: none; }
+    }
+    .pricing .price {
+      animation: price-arrive linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 34%;
+    }
+    .pricing .price:nth-child(2) { animation-range: entry 14% cover 42%; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .price--featured::before {
+    animation: none;
+    background: var(--color-accent-ui);
+  }
+}
 
 /* ---- Responsive -------------------------------------------------------- */
 @media (max-width: 62rem) {

@@ -65,9 +65,18 @@
 /* Left sidebar: address · thumbnail · research nav · download. */
 .report__aside { display: flex; flex-direction: column; gap: var(--space-3); }
 .report__thumb { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--color-border-subtle); background: var(--color-surface-sunken); }
-.report__thumb img { width: 100%; aspect-ratio: 4 / 3; height: auto; object-fit: cover; }
+.report__thumb img {
+  width: 100%; aspect-ratio: 4 / 3; height: auto; object-fit: cover;
+  transition: scale var(--duration-slow) var(--ease-settle);
+}
+.report__thumb:hover img { scale: 1.045; }
 .report__nav { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-direction: column; }
-.report__nav li { font-size: var(--text-xs); color: var(--color-text-muted); padding-block: var(--space-2); border-bottom: 1px solid var(--color-border-subtle); }
+.report__nav li {
+  font-size: var(--text-xs); color: var(--color-text-muted);
+  padding-block: var(--space-2); border-bottom: 1px solid var(--color-border-subtle);
+  transition: color var(--duration-fast) var(--ease-standard), translate var(--duration-fast) var(--ease-standard);
+}
+.report__nav li:hover { color: var(--color-text); translate: var(--space-1) 0; }
 .report__nav li:first-child { color: var(--color-text); }
 .report__nav li:last-child { border-bottom: 0; }
 .report__nav li.is-active { color: var(--color-text); font-weight: var(--weight-medium); }
@@ -85,7 +94,21 @@
 /* Sunken tiles need the hairline: --color-surface-sunken on dark computes to
    the same value as --color-page, so on a panel the recess is only 1.09:1 and
    reads as nothing without an edge. */
-.stat { background: var(--color-surface-sunken); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); padding: var(--space-4); }
+.stat {
+  background: color-mix(in srgb, var(--color-surface-sunken) 82%, transparent);
+  border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); padding: var(--space-4);
+  transition:
+    translate var(--duration-fast) var(--ease-standard),
+    scale var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+.stat:hover {
+  translate: 0 -3px;
+  scale: 1.015;
+  background: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
+  border-color: var(--color-border-strong);
+}
 .stat dt { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-1); overflow-wrap: anywhere; }
 .stat dd { margin: 0; font-size: var(--text-xs); font-weight: var(--weight-medium); }
 .stat dd.is-success { color: var(--color-text-success); }
@@ -112,7 +135,9 @@
   display: grid; grid-template-columns: minmax(0, .9fr) repeat(3, minmax(0, 1fr));
   gap: var(--space-3); align-items: start; padding-block: var(--space-3);
   border-top: 1px solid var(--color-border-subtle);
+  transition: background var(--duration-fast) var(--ease-standard);
 }
+.analysis__row:hover { background: color-mix(in srgb, var(--color-text) 3%, transparent); }
 .analysis__row:first-child { border-top: 0; padding-top: 0; }
 .analysis__cat { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--color-text); }
 .analysis dl { margin: 0; display: flex; flex-direction: column; gap: 2px; }
