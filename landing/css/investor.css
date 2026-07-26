@@ -13,7 +13,7 @@
 .split-invest { display: grid; grid-template-columns: minmax(0, .6fr) minmax(0, 1.4fr); gap: var(--space-8); align-items: start; }
 /* Intro column: headline, checklist and CTA each need room to separate. The
    default .stack gap ran them together. */
-.split-invest > .stack { gap: var(--space-5); }
+.split-invest > .stack { gap: var(--space-6); padding-block: var(--space-5); }
 .split-invest > .stack .btn { margin-top: var(--space-2); }
 
 /* ---- The panel --------------------------------------------------------- */

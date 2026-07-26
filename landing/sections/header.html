@@ -2,7 +2,11 @@
      Mobile burger is STUBBED: the nav simply hides below 62rem. -->
 <header class="site-header">
   <div class="container site-header__inner">
-    <a class="logo" href="#" aria-label="ExtraWoning — home"><svg role="img" viewBox="0 0 129.53934 21.930241"><use href="#ew-logo"/></svg></a>
+    <a class="logo" href="#" aria-label="ExtraWoning — home" data-nav-logo>
+      <svg class="nav-logo__static" role="img" viewBox="0 0 129.53934 21.930241"><use href="#ew-logo"/></svg>
+      <img class="nav-logo__reveal" data-logo-reveal data-src="../assets/extrawoning-reveal.svg"
+           alt="" width="490" height="83" />
+    </a>
     <nav class="site-nav" aria-label="Hoofdnavigatie">
       <a href="#hoe-het-werkt">Hoe het werkt</a>
       <a href="#voor-wie">Voor wie</a>

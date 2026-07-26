@@ -6,6 +6,7 @@
    ========================================================================== */
 
 .examples { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 2.15fr); gap: var(--space-8); align-items: center; }
+.examples > .stack { gap: var(--space-6); padding-block: var(--space-5); }
 
 /* Auto-sliding marquee. No scroll-snap: it fights the per-frame scrollLeft
    the autoplay writes, snapping the rail back every frame. Native touch

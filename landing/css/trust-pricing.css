@@ -11,6 +11,11 @@
    were badly cramped at an even split. Give the width to the side that needs
    it. */
 #onze-belofte .split { grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); }
+#onze-belofte .split > .stack:not(.panel) {
+  gap: var(--space-6);
+  padding-block: var(--space-5);
+}
+#onze-belofte .split > .panel.stack-lg { gap: var(--space-6); }
 
 /* ---- Rating ------------------------------------------------------------ */
 .rating { display: flex; align-items: center; gap: var(--space-2); }

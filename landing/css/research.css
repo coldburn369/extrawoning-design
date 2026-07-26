@@ -9,6 +9,11 @@
    sheets replace the old flattened image so the stack can assemble and fan.
    ========================================================================== */
 
+.split--4 > .stack-lg {
+  gap: var(--space-6);
+  padding-block: var(--space-5);
+}
+
 /* Divided research list — icon tile + single two-line label per row.
    Rows separate by spacing now; the hairlines went with the rest of them. */
 .research-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }

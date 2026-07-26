@@ -31,6 +31,7 @@ const bundles = [
       "landing/css/trust-pricing.css",
       "landing/css/footer.css",
       "landing/css/motion.css",
+      "landing/css/loader.css",
     ],
   },
   {
@@ -79,6 +80,7 @@ const sectionMarkup = sectionRoots
   .join("\n");
 
 const assetNames = new Set();
+assetNames.add("extrawoning-favicon.svg");
 for (const match of sectionMarkup.matchAll(/\.\.\/assets\/([^"'<> ]+)/g)) {
   assetNames.add(match[1]);
 }

@@ -147,21 +147,33 @@
   background: radial-gradient(55% 60% at 50% 100%, var(--color-bloom) 0%, transparent 72%);
 }
 .final-cta { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; }
-.final-cta__copy { position: relative; z-index: 2; }
+.final-cta__copy { position: relative; z-index: 2; gap: var(--space-6); }
 
 /* The stage does not create a stacking context: its map therefore sits at
    section level 0, the section's orange bloom at 1, and the miniature at 2.
    Anchoring the map here keeps it centred on the artwork at every viewport. */
 .final-cta__visual {
   position: relative;
+  isolation: isolate;
   aspect-ratio: 4 / 3;
+}
+.final-cta__visual::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 62% at 50% 55%, transparent 38%, var(--color-bloom) 70%, transparent 82%);
 }
 .final-cta__map {
   position: absolute;
-  inset: -16% 0 -10% -16%;
+  inset: -20% -12% -16% -30%;
   z-index: 0;
   pointer-events: none;
   background: url("../../assets/miniatur-map-bg.webp") no-repeat center / cover;
+  -webkit-mask-image: radial-gradient(ellipse 70% 74% at 50% 52%, var(--color-text) 34%, color-mix(in srgb, var(--color-text) 58%, transparent) 56%, transparent 82%);
+          mask-image: radial-gradient(ellipse 70% 74% at 50% 52%, var(--color-text) 34%, color-mix(in srgb, var(--color-text) 58%, transparent) 56%, transparent 82%);
 }
 .final-cta__miniature {
   position: relative;
@@ -178,6 +190,6 @@
 @media (max-width: 62rem) {
   .final-cta { grid-template-columns: minmax(0, 1fr); }
   .final-cta__map {
-    inset: -18% 0 -10% -12%;
+    inset: -22% -12% -16% -24%;
   }
 }

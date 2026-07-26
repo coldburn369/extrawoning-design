@@ -6,6 +6,7 @@ import LandingClient from "./landing-client";
 import "./route-legacy.css";
 
 const SECTION_ORDER = [
+  "loader",
   "sprites",
   "header",
   "hero",
@@ -39,6 +40,7 @@ function landingMarkup() {
   // external client component prevents the two placeholder forms instead,
   // which remains compatible with the preview CSP.
   return [
+    sections.loader,
     sections.sprites,
     sections.header,
     "<main>",

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ExtraWoning">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24221f"/>
+      <stop offset="1" stop-color="#100f0e"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="14" y1="12" x2="50" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff9a5f"/>
+      <stop offset=".5" stop-color="#f6813c"/>
+      <stop offset="1" stop-color="#d95f1c"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" fill="none" stroke="#f6813c" stroke-opacity=".28" stroke-width="1.5"/>
+  <g fill="url(#beam)" filter="url(#glow)">
+    <path d="M15 11h8.5L51 53h-8.7z"/>
+    <path d="M49 11h-8.5L13 53h8.7z"/>
+  </g>
+  <circle cx="32" cy="32" r="3.2" fill="#fff7ef" fill-opacity=".86"/>
+</svg>

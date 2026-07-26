@@ -14,6 +14,7 @@ list of includes. Sections live in `sections/`, styles in `css/`.
 
 | # | Section | Markup | Styles | vs concept |
 |---|---|---|---|---|
+| — | Initial loader | `sections/loader.html` | `css/loader.css` | supplied animated mark |
 | — | Sprites (mark + 25 icons) | `sections/sprites.html` | — | n/a |
 | — | Header + nav | `sections/header.html` | `css/header.css` | n/a |
 | 1 | Hero `#adrescheck` | `sections/hero.html` | `css/hero.css` + `css/cta.css` | **DONE — user-approved** |
@@ -36,7 +37,8 @@ When the copy doc and the concept screenshots disagree, **the concept wins**
 |---|---|
 | `css/base.css` | reset, `body`, `.container`/`.section`, type roles (`h1`–`h4`, `.lead`, `.muted`, `.note`, `.eyebrow`), `.stack*`, `.self-start`, `.logo`, the **sprite stroke list**, reduced-motion |
 | `css/components.css` | `.btn*`, `.panel*`, `.checklist`, `.deflist`, `.bullets`, `.feature`/`.icon-tile`, `.badge`, the `.split*` grid system |
-| `css/motion.css` | `.reveal` / `.reveal-group` scroll-driven entrances. **Loaded last.** |
+| `css/motion.css` | `.reveal` / `.reveal-group` scroll-driven entrances |
+| `css/loader.css` | fullscreen loading phase + coordinated first-view/nav-logo reveal. **Loaded after motion.** |
 
 Anything used by exactly one section belongs in that section's file, not here.
 

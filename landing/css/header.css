@@ -15,6 +15,13 @@
 .site-header .logo {
   transition: translate var(--duration-fast) var(--ease-standard), scale var(--duration-fast) var(--ease-standard);
 }
+.nav-logo__reveal {
+  display: none;
+  width: auto;
+  height: 1.75rem;
+}
+.site-header .logo.is-revealing .nav-logo__static { display: none; }
+.site-header .logo.is-revealing .nav-logo__reveal { display: block; }
 .site-header .logo:hover { translate: 0 -1px; scale: 1.015; }
 .site-nav { display: flex; gap: var(--space-6); margin-inline: auto; }
 .site-nav a {

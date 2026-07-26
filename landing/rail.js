@@ -99,13 +99,54 @@ if (rail) {
    the same behavior in LandingClient; this keeps the legacy comparison server
    visually equivalent without introducing an inline script. */
 const initialPostcode = document.getElementById('pc1');
-if (initialPostcode && document.activeElement === document.body) {
-  initialPostcode.focus({ preventScroll: true });
+const introRoot = document.body;
+const pageLoader = document.querySelector('[data-page-loader]');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const focusInitialPostcode = () => initialPostcode?.focus({ preventScroll: true });
+
+const startNavLogoReveal = () => {
+  const navLogo = document.querySelector('[data-nav-logo]');
+  const reveal = document.querySelector('[data-logo-reveal]');
+  const source = reveal?.dataset.src;
+  if (!navLogo || !reveal || !source) return;
+  reveal.addEventListener('load', () => navLogo.classList.add('is-revealing'), { once: true });
+  reveal.src = source;
+};
+
+const revealPage = () => {
+  if (!pageLoader || pageLoader.dataset.finished === 'true') {
+    focusInitialPostcode();
+    return;
+  }
+  pageLoader.dataset.finished = 'true';
+  startNavLogoReveal();
+  focusInitialPostcode();
+  requestAnimationFrame(() => {
+    introRoot.classList.add('is-intro-ready');
+    pageLoader.classList.add('is-leaving');
+  });
+  setTimeout(() => {
+    pageLoader.hidden = true;
+    pageLoader.setAttribute('aria-hidden', 'true');
+  }, 850);
+};
+
+if (pageLoader) {
+  introRoot.classList.add('is-intro-pending');
+  if (reduceMotion) {
+    revealPage();
+  } else {
+    const releaseAfterLoad = () => setTimeout(revealPage, Math.max(0, 900 - performance.now()));
+    if (document.readyState === 'complete') releaseAfterLoad();
+    else window.addEventListener('load', releaseAfterLoad, { once: true });
+  }
+} else if (document.activeElement === document.body) {
+  focusInitialPostcode();
 }
 
 if (
   matchMedia('(hover: hover) and (pointer: fine)').matches &&
-  !matchMedia('(prefers-reduced-motion: reduce)').matches
+  !reduceMotion
 ) {
   const hero = document.querySelector('.hero');
   if (hero) {
@@ -130,12 +171,12 @@ if (
       hero.style.setProperty('--hero-back-y', `${y * -7}px`);
       hero.style.setProperty('--hero-copy-x', `${x * -3}px`);
       hero.style.setProperty('--hero-copy-y', `${y * -2}px`);
-      hero.style.setProperty('--hero-house-x', `${x * 8}px`);
-      hero.style.setProperty('--hero-house-y', `${y * 5}px`);
-      hero.style.setProperty('--hero-card-a-x', `${x * 12}px`);
-      hero.style.setProperty('--hero-card-a-y', `${y * 8}px`);
-      hero.style.setProperty('--hero-card-b-x', `${x * 10}px`);
-      hero.style.setProperty('--hero-card-b-y', `${y * 7}px`);
+      hero.style.setProperty('--hero-house-x', `${x * 6}px`);
+      hero.style.setProperty('--hero-house-y', `${y * 4}px`);
+      hero.style.setProperty('--hero-card-a-x', `${x * -10}px`);
+      hero.style.setProperty('--hero-card-a-y', `${y * -7}px`);
+      hero.style.setProperty('--hero-card-b-x', `${x * 13}px`);
+      hero.style.setProperty('--hero-card-b-y', `${y * -9}px`);
       hero.style.setProperty('--hero-proof-x', `${x * 3}px`);
       hero.style.setProperty('--hero-proof-y', `${y * 2}px`);
       frame = null;

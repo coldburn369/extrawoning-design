@@ -1,6 +1,7 @@
 /* ============================================================================
    motion — scroll-driven entrance choreography
-   Loaded LAST so it can animate anything.
+   Loaded after section styles so it can animate anything. loader.css follows
+   it only to coordinate the one-time first-view transition.
 
    Pure CSS: `animation-timeline: view()` drives each element from its own
    position in the viewport. No JavaScript, no IntersectionObserver, no

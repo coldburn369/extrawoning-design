@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "ExtraWoning — Zit er een extra woning in jouw huis?",
   description:
     "Ontdek binnen enkele minuten of jouw woning kansrijk is voor een vergunde extra wooneenheid — inclusief rapport met regels, waarde-impact en vervolgstappen.",
+  icons: {
+    icon: [{ url: "/assets/extrawoning-favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

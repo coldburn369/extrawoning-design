@@ -1,0 +1,163 @@
+/* ============================================================================
+   page loader + first-view reveal
+   The overlay is progressive enhancement: without JavaScript it dismisses
+   itself after five seconds and the page beneath was never hidden.
+   ========================================================================== */
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(42% 38% at 50% 48%, var(--color-bloom), transparent 72%),
+    var(--color-page);
+  animation: page-loader-failsafe .01ms linear 5s forwards;
+}
+.page-loader::before,
+.page-loader::after {
+  content: "";
+  position: absolute;
+  width: min(72vw, 34rem);
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--color-accent-ui) 16%, transparent);
+  pointer-events: none;
+}
+.page-loader::before { animation: page-loader-ring calc(var(--duration-trace) * 2) var(--ease-trace) infinite; }
+.page-loader::after {
+  width: min(52vw, 23rem);
+  animation: page-loader-ring calc(var(--duration-trace) * 2) var(--ease-trace) calc(var(--duration-trace) * -1) infinite;
+}
+.page-loader__stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+}
+.page-loader__halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9rem;
+  aspect-ratio: 1;
+  translate: -50% -62%;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, var(--color-glow), transparent 68%);
+  filter: blur(12px);
+  animation: page-loader-breathe calc(var(--duration-trace) * 1.5) var(--ease-standard) infinite alternate;
+}
+.page-loader__mark {
+  position: relative;
+  width: 4rem;
+  height: 4rem;
+  filter: drop-shadow(0 0 18px var(--color-glow));
+}
+.page-loader__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.page-loader__status span {
+  width: .35rem;
+  height: .35rem;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: 0 0 12px var(--color-glow);
+  animation: page-loader-dot var(--duration-trace) var(--ease-standard) infinite;
+}
+
+.page-loader.is-leaving {
+  pointer-events: none;
+  animation: page-loader-exit var(--duration-slow) var(--ease-settle) forwards;
+}
+.page-loader.is-leaving .page-loader__stage {
+  animation: page-loader-mark-exit var(--duration-base) var(--ease-standard) forwards;
+}
+
+@keyframes page-loader-ring {
+  0%, 100% { opacity: .18; scale: .84; }
+  50% { opacity: .5; scale: 1; }
+}
+@keyframes page-loader-breathe {
+  from { opacity: .55; scale: .88; }
+  to { opacity: 1; scale: 1.08; }
+}
+@keyframes page-loader-dot {
+  0%, 100% { opacity: .3; scale: .82; }
+  50% { opacity: 1; scale: 1; }
+}
+@keyframes page-loader-exit {
+  0% { clip-path: circle(150% at 50% 50%); opacity: 1; }
+  72% { opacity: 1; }
+  100% { clip-path: circle(0 at 50% 50%); opacity: 0; visibility: hidden; }
+}
+@keyframes page-loader-mark-exit {
+  to { opacity: 0; scale: .82; filter: blur(5px); }
+}
+@keyframes page-loader-failsafe {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+/* The loader is opaque, so hydration may safely prepare these start states
+   behind it. They only apply after JavaScript opts into the intro sequence. */
+body.is-intro-pending:not(.is-intro-ready) :is(
+  .site-nav,
+  .header-actions,
+  .hero__copy > *,
+  .hero__visual,
+  .hero__proof
+) {
+  opacity: 0;
+  translate: 0 18px;
+  animation: none;
+}
+
+@keyframes page-intro-in {
+  from { opacity: 0; translate: 0 18px; }
+  to { opacity: 1; translate: none; }
+}
+body.is-intro-ready .site-nav {
+  animation: page-intro-in var(--duration-slow) var(--ease-settle) 80ms both;
+}
+body.is-intro-ready .header-actions {
+  animation: page-intro-in var(--duration-slow) var(--ease-settle) 140ms both;
+}
+body.is-intro-ready .hero__copy > :nth-child(1) {
+  animation: page-intro-in var(--duration-slow) var(--ease-settle) 100ms both;
+}
+body.is-intro-ready .hero__copy > :nth-child(2) {
+  animation: page-intro-in var(--duration-slow) var(--ease-settle) 180ms both;
+}
+body.is-intro-ready .hero__copy > :nth-child(3) {
+  animation: page-intro-in var(--duration-slow) var(--ease-settle) 260ms both;
+}
+body.is-intro-ready .hero__visual {
+  animation: page-intro-in calc(var(--duration-slow) * 1.15) var(--ease-settle) 170ms both;
+}
+body.is-intro-ready .hero__proof {
+  animation: page-intro-in var(--duration-slow) var(--ease-settle) 360ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loader { display: none; }
+  body.is-intro-pending :is(
+    .site-nav,
+    .header-actions,
+    .hero__copy > *,
+    .hero__visual,
+    .hero__proof
+  ) {
+    opacity: 1;
+    translate: none;
+    animation: none;
+  }
+}

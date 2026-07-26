@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="44.2 126.8 14.6 14.6" role="img" aria-label="ExtraWoning loading">
+  <style>
+    :root { --ease: cubic-bezier(.22,1,.36,1); }
+    #logo-beam-left, #logo-beam-right {
+      transform-box: fill-box;
+      transform-origin: center;
+      will-change: transform, opacity;
+    }
+    #logo-beam-left {
+      animation: beam-left 1.15s var(--ease) infinite;
+    }
+    #logo-beam-right {
+      animation: beam-right 1.15s var(--ease) infinite;
+    }
+    @keyframes beam-left {
+      0%   { opacity: 0; transform: translate(-5px,5px) scale(.45); }
+      24%  { opacity: 1; transform: translate(0,0) scale(1); }
+      62%  { opacity: 1; transform: translate(0,0) scale(1); }
+      86%,100% { opacity: 0; transform: translate(5px,-5px) scale(.45); }
+    }
+    @keyframes beam-right {
+      0%,15% { opacity: 0; transform: translate(5px,5px) scale(.45); }
+      39%  { opacity: 1; transform: translate(0,0) scale(1); }
+      68%  { opacity: 1; transform: translate(0,0) scale(1); }
+      92%,100% { opacity: 0; transform: translate(-5px,-5px) scale(.45); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #logo-beam-left, #logo-beam-right { animation: none; opacity: 1; transform: none; }
+    }
+  </style>
+  <g id="logo-x">
+    <path id="logo-beam-left" fill="#f2762e" d="m 54.435954,128.01286 -8.90385,12.08867 h 2.813265 l 8.902816,-12.08867 z"/>
+    <path id="logo-beam-right" fill="#f2762e" d="m 45.695402,128.01286 8.903849,12.08867 h 2.812232 l -8.902816,-12.08867 z"/>
+  </g>
+</svg>

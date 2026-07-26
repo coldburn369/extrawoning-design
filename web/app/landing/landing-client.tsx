@@ -10,6 +10,12 @@ export default function LandingClient() {
     const cleanups: Array<() => void> = [];
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const introRoot = document.body;
+    const loader = document.querySelector<HTMLElement>("[data-page-loader]");
+    const postcode = document.getElementById("pc1") as HTMLInputElement | null;
+    let introTimer: number | undefined;
+    let loaderRemovalTimer: number | undefined;
+    let loadListener: (() => void) | undefined;
 
     for (const form of document.querySelectorAll<HTMLFormElement>(".addresscheck")) {
       const preventPlaceholderSubmit = (event: SubmitEvent) => event.preventDefault();
@@ -17,10 +23,61 @@ export default function LandingClient() {
       cleanups.push(() => form.removeEventListener("submit", preventPlaceholderSubmit));
     }
 
-    const postcode = document.getElementById("pc1") as HTMLInputElement | null;
-    if (postcode && document.activeElement === document.body) {
-      postcode.focus({ preventScroll: true });
+    const focusPostcode = () => postcode?.focus({ preventScroll: true });
+    const startLogoReveal = () => {
+      const navLogo = document.querySelector<HTMLElement>("[data-nav-logo]");
+      const reveal = document.querySelector<HTMLImageElement>("[data-logo-reveal]");
+      const source = reveal?.dataset.src;
+      if (!navLogo || !reveal || !source) return;
+
+      const showReveal = () => navLogo.classList.add("is-revealing");
+      reveal.addEventListener("load", showReveal, { once: true });
+      reveal.src = source;
+      cleanups.push(() => reveal.removeEventListener("load", showReveal));
+    };
+    const revealPage = () => {
+      if (!loader || loader.dataset.finished === "true") {
+        focusPostcode();
+        return;
+      }
+
+      loader.dataset.finished = "true";
+      startLogoReveal();
+      focusPostcode();
+      requestAnimationFrame(() => {
+        introRoot.classList.add("is-intro-ready");
+        loader.classList.add("is-leaving");
+      });
+      loaderRemovalTimer = window.setTimeout(() => {
+        loader.hidden = true;
+        loader.setAttribute("aria-hidden", "true");
+      }, 850);
+    };
+
+    if (loader) {
+      introRoot.classList.add("is-intro-pending");
+      if (reduce) {
+        revealPage();
+      } else {
+        const releaseAfterLoad = () => {
+          const remaining = Math.max(0, 900 - performance.now());
+          introTimer = window.setTimeout(revealPage, remaining);
+        };
+        if (document.readyState === "complete") {
+          releaseAfterLoad();
+        } else {
+          loadListener = releaseAfterLoad;
+          window.addEventListener("load", loadListener, { once: true });
+        }
+      }
+    } else if (document.activeElement === document.body) {
+      focusPostcode();
     }
+    cleanups.push(() => {
+      if (introTimer !== undefined) window.clearTimeout(introTimer);
+      if (loaderRemovalTimer !== undefined) window.clearTimeout(loaderRemovalTimer);
+      if (loadListener) window.removeEventListener("load", loadListener);
+    });
 
     if (!reduce && finePointer) {
       const hero = document.querySelector<HTMLElement>(".hero");
@@ -46,12 +103,12 @@ export default function LandingClient() {
           hero.style.setProperty("--hero-back-y", `${y * -7}px`);
           hero.style.setProperty("--hero-copy-x", `${x * -3}px`);
           hero.style.setProperty("--hero-copy-y", `${y * -2}px`);
-          hero.style.setProperty("--hero-house-x", `${x * 8}px`);
-          hero.style.setProperty("--hero-house-y", `${y * 5}px`);
-          hero.style.setProperty("--hero-card-a-x", `${x * 12}px`);
-          hero.style.setProperty("--hero-card-a-y", `${y * 8}px`);
-          hero.style.setProperty("--hero-card-b-x", `${x * 10}px`);
-          hero.style.setProperty("--hero-card-b-y", `${y * 7}px`);
+          hero.style.setProperty("--hero-house-x", `${x * 6}px`);
+          hero.style.setProperty("--hero-house-y", `${y * 4}px`);
+          hero.style.setProperty("--hero-card-a-x", `${x * -10}px`);
+          hero.style.setProperty("--hero-card-a-y", `${y * -7}px`);
+          hero.style.setProperty("--hero-card-b-x", `${x * 13}px`);
+          hero.style.setProperty("--hero-card-b-y", `${y * -9}px`);
           hero.style.setProperty("--hero-proof-x", `${x * 3}px`);
           hero.style.setProperty("--hero-proof-y", `${y * 2}px`);
           frame = null;

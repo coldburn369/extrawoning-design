@@ -8,6 +8,10 @@
 
 /* Report layout: intro column + the dashboard mockup (per concept). */
 .report-layout { display: grid; grid-template-columns: minmax(0, .55fr) minmax(0, 1.45fr); gap: var(--space-8); align-items: start; }
+.report-layout > .stack {
+  gap: var(--space-6);
+  padding-block: var(--space-5);
+}
 
 /* A SCROLLABLE WINDOW ONTO A REAL DASHBOARD.
    This first cropped the panel and faded the bottom edge out, which hid content
