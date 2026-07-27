@@ -55,7 +55,8 @@ function landingMarkup() {
     sections.footer,
   ]
     .join("\n")
-    .replaceAll(/\s+onsubmit="return false"/g, "");
+    .replaceAll(/\s+onsubmit="return false"/g, "")
+    .replaceAll('href="#inloggen"', 'href="/login/"');
 }
 
 const LANDING_MARKUP = landingMarkup();
